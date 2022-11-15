@@ -18,10 +18,12 @@ bot.remove_command('help')
 
 client = discord.Client(intents=discord.Intents.all())
 
+
 @bot.event
 async def on_ready():
     bot.add_cog(music_cog(bot))
     await bot.change_presence(status=discord.Status.online, activity=discord.Game("sc.inspect"))
+
 
 @bot.event
 async def on_member_join(member):
@@ -29,6 +31,8 @@ async def on_member_join(member):
     await member.add_roles(role)
 
 # Success embed
+
+
 def successEmbed(text):
     embed = discord.Embed(title=None, color=0x00FF00)
     embed.add_field(name="✅ Success", value=text)
@@ -37,11 +41,14 @@ def successEmbed(text):
 
 # Functions
 # Clear User Massage
+
+
 async def clearMsg(ctx):
     mgs = []
     async for x in ctx.channel.history(limit = 1):
         mgs.append(x)
     await ctx.channel.delete_messages(mgs)
+
 
 # Bot Commands
 @bot.command()
@@ -71,6 +78,7 @@ async def inspect(ctx, command=None):
         case _:
             await ctx.send(embed=embeds.default())
 
+
 @bot.command()
 async def ban(ctx, user: discord.User = None, reason=None, deleteMassageDays = 0):
     if user == None:
@@ -90,6 +98,7 @@ async def ban(ctx, user: discord.User = None, reason=None, deleteMassageDays = 0
         await clearMsg(ctx)
         await ctx.send(embed=embeds.errorEmbed())
 
+
 @bot.command()
 async def unban(ctx, user: discord.User = None):
     if user == None:
@@ -101,6 +110,7 @@ async def unban(ctx, user: discord.User = None):
     else:
         await clearMsg(ctx)
         await ctx.send(embed=embeds.errorEmbed())
+
 
 @bot.command()
 async def clearchat(ctx, number=None):
@@ -117,6 +127,7 @@ async def clearchat(ctx, number=None):
         await clearMsg(ctx)
         await ctx.send(embed=embeds.errorEmbed())
 
+
 @bot.command()
 async def closechat(ctx):
     await clearMsg(ctx)
@@ -126,6 +137,7 @@ async def closechat(ctx):
     else:
         await ctx.send(embed=embeds.errorEmbed())
 
+
 @bot.command()
 async def openchat(ctx):
     await clearMsg(ctx)
@@ -134,6 +146,7 @@ async def openchat(ctx):
         await ctx.send(embed=successEmbed(f'Chat successfully **opened**'))
     else:
         await ctx.send(embed=embeds.errorEmbed())
+
 
 @bot.command(name="connectkernel")
 async def back(ctx):
