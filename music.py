@@ -174,5 +174,9 @@ class music_cog(commands.Cog):
 
     @commands.command(name='loop', aliases=["lp"], help="Loops current song")
     async def loop(self, ctx):
-        if not self.loop: self.loop = True
-        else: self.loop = False
+        if not self.loop:
+            self.loop = True
+            await ctx.send(embed=eventEmbed(name="✅ Success!", text="Loop turned on current song"))
+        else:
+            self.loop = False
+            await ctx.send(embed=eventEmbed(name="✅ Success!", text="Loop turned off"))
