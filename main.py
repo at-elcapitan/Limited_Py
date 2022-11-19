@@ -7,7 +7,6 @@ import embeds
 from nextcord.ext import commands
 from dotenv import load_dotenv
 from music import music_cog
-import curses
 print("start...")
 
 load_dotenv()

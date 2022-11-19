@@ -140,7 +140,7 @@ class music_cog(commands.Cog):
                 embed.add_field(name="🎵 Now playing", value="- " + self.now_playing + " (loop)", inline=False)
             else:
                 embed.add_field(name="🎵 Now playing", value="- " + self.now_playing, inline=False)
-            embed.add_field(name="📄 Queue", value=retval, inline=False)
+                embed.add_field(name="📄 Queue", value=retval, inline=False)
 
         if retval != "":
             await ctx.send(embed = embed)
