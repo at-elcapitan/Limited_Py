@@ -21,7 +21,7 @@ client = discord.Client(intents=discord.Intents.all())
 @bot.event
 async def on_ready():
     bot.add_cog(music_cog(bot))
-    await bot.change_presence(status=discord.Status.online, activity=discord.Game("sc.inspect"))
+    await bot.change_presence(status=discord.Status.online, activity=discord.Game("Link, start.."))
 
 
 @bot.event
@@ -112,7 +112,7 @@ async def unban(ctx, user: discord.User = None):
 
 
 @bot.command()
-async def clearchat(ctx, number=None):
+async def clear(ctx, number=None):
     if number == None:
         await inspect(ctx, command="clearchat")
     elif ctx.message.author.guild_permissions.manage_messages:

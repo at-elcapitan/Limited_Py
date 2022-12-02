@@ -15,7 +15,7 @@ class music_cog(commands.Cog):
         self.loop = False
 
         self.music_queue = []
-        self.YDL_OPTIONS = {'format': 'bestaudio'}
+        self.YDL_OPTIONS = {'format': 'bestaudio/best', 'noplaylist':'True'}
         self.FFMPEG_OPTIONS = {'before_options': '-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5', 'options': '-vn'}
 
         self.vc = None
@@ -158,7 +158,7 @@ class music_cog(commands.Cog):
 
                 await ctx.send(embed = embed)
 
-    @commands.command(name="clear", aliases=["c", "bin"], help="Stops the music and clears the queue")
+    @commands.command(name="clearqueue", aliases=["cq", "bin"], help="Stops the music and clears the queue")
     async def clear(self, ctx):
         if self.vc != None and self.is_playing:
             self.vc.stop()
