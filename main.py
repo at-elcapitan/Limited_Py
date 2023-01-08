@@ -1,5 +1,5 @@
 # by ElCapitan, PROJECT Limited 2022
-print("PROJECT Limited, 2022; by ElCapitan")
+print("PROJECT Limited, 2022; by ElCapitan, ATLB-v1.2.16-final")
 print("Link, ", end='')
 import nextcord as discord
 import os
