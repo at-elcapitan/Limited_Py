@@ -1,4 +1,4 @@
-# AT PROJECT Limited 2022 - 2023; ATLB-v1.3.1
+# AT PROJECT Limited 2022 - 2023; ATLB-v1.3.2
 from ast import alias
 import discord
 from discord.ext import commands
@@ -16,7 +16,7 @@ class music_cog(commands.Cog):
         self.loop = False
 
         self.music_queue = []
-        self.YDL_OPTIONS = {'format': 'bestaudio/best', 'noplaylist':'True'}
+        self.YDL_OPTIONS = {'format': 'bestaudio/best', 'noplaylist':'True', 'cookiefile': 'cookies.txt'}
         self.FFMPEG_OPTIONS = {'before_options': '-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5', 'options': '-vn'}
         self.vc = None
 
@@ -26,16 +26,17 @@ class music_cog(commands.Cog):
             await ctx.send(embed=eventEmbed(name="🎵   Now playing", text= f'**{self.song_title}**'))
 
 
-    async def change_song(self, ctx):
+    def change_song(self, ctx):
         if len(self.music_queue) > 0:
-            self.song_source[0] = self.music_queue[0][0]['source']
-            self.song_title = self.music_queue[0][0]['title']
-            self.music_queue.pop(0)
-            await self.play_music(ctx)
+            if not self.loop:
+                self.song_source[0] = self.music_queue[0][0]['source']
+                self.song_title = self.music_queue[0][0]['title']
+                self.music_queue.pop(0)
+            self.play_next(ctx)
         else:
             self.is_playing = False
-            self.song_source = None
-            self.song_title = None
+            self.song_source = ""
+            self.song_title = ""
 
 
     def search_yt(self, item):
@@ -46,6 +47,15 @@ class music_cog(commands.Cog):
                 return False
 
         return {'source': info['formats'][0]['url'], 'title': info['title']}
+
+
+    def play_next(self, ctx):
+        self.is_playing = True
+
+        m_url = self.song_source[0]
+
+        self.bot.dispatch("display_song", self, ctx)
+        self.vc.play(discord.FFmpegPCMAudio(m_url, **self.FFMPEG_OPTIONS), after=lambda e: self.change_song(ctx))
 
 
     async def play_music(self, ctx):
@@ -64,8 +74,7 @@ class music_cog(commands.Cog):
             await self.vc.move_to(self.song_source[1])
 
         self.bot.dispatch("display_song", self, ctx)
-        self.vc.play(discord.FFmpegPCMAudio(m_url, **self.FFMPEG_OPTIONS))
-
+        self.vc.play(discord.FFmpegPCMAudio(m_url, **self.FFMPEG_OPTIONS), after=lambda e: self.change_song(ctx))
 
 
     @commands.command(name="play", aliases=["p"])
@@ -162,3 +171,13 @@ class music_cog(commands.Cog):
 
         self.music_queue = []
         await ctx.send(embed=eventEmbed(text="✅ Success!", name="Queue cleared"))
+
+
+    @commands.command(name='loop', aliases=["lp"])
+    async def loop(self, ctx):
+        if not self.loop:
+            self.loop = True
+            await ctx.send(embed=eventEmbed(name="✅ Success!", text="Loop turned on current song"))
+        else:
+            self.loop = False
+            await ctx.send(embed=eventEmbed(name="✅ Success!", text="Loop turned off"))
