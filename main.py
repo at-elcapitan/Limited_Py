@@ -1,13 +1,12 @@
 # by ElCapitan, PROJECT Limited 2022
-print("PROJECT Limited, 2022; by ElCapitan")
-print("Link, ", end='')
-import nextcord as discord
+print("AT PROJECT Limited, 2022 - 2023; ATLB-v.1.3.0a")
+print("by ElCapitan\n")
+import discord
 import os
 import embeds
-from nextcord.ext import commands
+from discord.ext import commands
 from dotenv import load_dotenv
 from music import music_cog
-print("start...")
 
 load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
@@ -20,7 +19,7 @@ client = discord.Client(intents=discord.Intents.all())
 
 @bot.event
 async def on_ready():
-    bot.add_cog(music_cog(bot))
+    await bot.add_cog(music_cog(bot))
     await bot.change_presence(status=discord.Status.online, activity=discord.Game("Link, start.."))
 
 
