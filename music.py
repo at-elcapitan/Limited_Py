@@ -1,4 +1,4 @@
-# AT PROJECT Limited 2022 - 2023; ATLB-v1.3.2
+# AT PROJECT Limited 2022 - 2023; ATLB-v1.3.3
 from ast import alias
 import discord
 from discord.ext import commands
@@ -34,9 +34,12 @@ class music_cog(commands.Cog):
                 self.music_queue.pop(0)
             self.play_next(ctx)
         else:
-            self.is_playing = False
-            self.song_source = ""
-            self.song_title = ""
+            if self.loop:
+                self.play_next(ctx)
+            else:
+                self.is_playing = False
+                self.song_source = ""
+                self.song_title = ""
 
 
     def search_yt(self, item):
@@ -154,6 +157,7 @@ class music_cog(commands.Cog):
     async def skip(self, ctx):
         if self.vc != None and self.vc:
             self.vc.stop()
+            self.loop = False
             self.bot.dispatch("change_song", self, ctx)
 
     
