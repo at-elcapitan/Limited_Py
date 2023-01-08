@@ -1,5 +1,5 @@
 # by ElCapitan, PROJECT Limited 2022
-print("AT PROJECT Limited, 2022 - 2023; ATLB-v.1.3.0a")
+print("AT PROJECT Limited, 2022 - 2023; ATLB-v1.3.0")
 print("by ElCapitan\n")
 import discord
 import os
