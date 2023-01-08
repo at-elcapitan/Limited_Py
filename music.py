@@ -1,4 +1,4 @@
-# AT PROJECT Limited 2022 - 2023; ATLB-v1.3.3
+# AT PROJECT Limited 2022 - 2023; ATLB-v1.3.4
 from ast import alias
 import discord
 from discord.ext import commands
