@@ -1,5 +1,5 @@
 # by ElCapitan, PROJECT Limited 2022
-print("PROJECT Limited, 2022; by ElCapitan, ATLB-v1.2.16-final")
+print("PROJECT Limited, 2022; by ElCapitan, ATLB-v1.2.16_2-final")
 print("Link, ", end='')
 import nextcord as discord
 import os
@@ -38,21 +38,10 @@ def successEmbed(text):
 
     return embed
 
-# Functions
-# Clear User Massage
-
-
-async def clearMsg(ctx):
-    mgs = []
-    async for x in ctx.channel.history(limit = 1):
-        mgs.append(x)
-    await ctx.channel.delete_messages(mgs)
-
 
 # Bot Commands
 @bot.command()
 async def inspect(ctx, command=None):
-    await clearMsg(ctx)
     match command:
         case "ban":
             await ctx.send(embed=embeds.ban())
@@ -83,7 +72,6 @@ async def ban(ctx, user: discord.User = None, reason=None, deleteMassageDays = 0
     if user == None:
         await inspect(ctx, command="ban")
     elif ctx.message.author.guild_permissions.ban_members:
-        await clearMsg(ctx)
         if reason == None:
             rsn = "No reason given"
         else:
@@ -94,7 +82,6 @@ async def ban(ctx, user: discord.User = None, reason=None, deleteMassageDays = 0
         except:
             await ctx.send(embed=embeds.errorEmbed2())
     else:
-        await clearMsg(ctx)
         await ctx.send(embed=embeds.errorEmbed())
 
 
@@ -103,11 +90,9 @@ async def unban(ctx, user: discord.User = None):
     if user == None:
         await inspect(ctx, command="unban")
     elif ctx.message.author.guild_permissions.administrator:
-        await clearMsg(ctx)
         await ctx.guild.unban(user=user)
         await ctx.send(embed=successEmbed(f'***User @{user.name} successfully unbanned!***'))
     else:
-        await clearMsg(ctx)
         await ctx.send(embed=embeds.errorEmbed())
 
 
@@ -116,20 +101,17 @@ async def clear(ctx, number=None):
     if number == None:
         await inspect(ctx, command="clearchat")
     elif ctx.message.author.guild_permissions.manage_messages:
-        await clearMsg(ctx)
         mgs = []
         number = int(number)
         async for x in ctx.channel.history(limit = number):
             mgs.append(x)
         await ctx.channel.delete_messages(mgs)
     else:
-        await clearMsg(ctx)
         await ctx.send(embed=embeds.errorEmbed())
 
 
 @bot.command()
 async def closechat(ctx):
-    await clearMsg(ctx)
     if ctx.message.author.guild_permissions.manage_messages:
         await ctx.channel.set_permissions(ctx.guild.default_role, send_messages=False)
         await ctx.send(embed=successEmbed(f'Chat successfully **closed**'))
@@ -139,7 +121,6 @@ async def closechat(ctx):
 
 @bot.command()
 async def openchat(ctx):
-    await clearMsg(ctx)
     if ctx.message.author.guild_permissions.manage_messages:
         await ctx.channel.set_permissions(ctx.guild.default_role, send_messages=True)
         await ctx.send(embed=successEmbed(f'Chat successfully **opened**'))
