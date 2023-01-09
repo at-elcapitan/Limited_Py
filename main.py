@@ -1,5 +1,5 @@
 # by ElCapitan, PROJECT Limited 2022
-print("AT PROJECT Limited, 2022 - 2023; ATLB-v1.3.5")
+print("AT PROJECT Limited, 2022 - 2023; ATLB-v1.3.6")
 import discord
 import os
 import embeds
@@ -100,7 +100,7 @@ async def clear(ctx, number=None):
         await inspect(ctx, command="clearchat")
     elif ctx.message.author.guild_permissions.manage_messages:
         mgs = []
-        number = int(number)
+        number = int(number) + 1
         async for x in ctx.channel.history(limit = number):
             mgs.append(x)
         await ctx.channel.delete_messages(mgs)

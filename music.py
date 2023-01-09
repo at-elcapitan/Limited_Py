@@ -1,4 +1,4 @@
-# AT PROJECT Limited 2022 - 2023; ATLB-v1.3.5
+# AT PROJECT Limited 2022 - 2023; ATLB-v1.3.6
 from ast import alias
 import discord
 from discord.ext import commands
@@ -37,6 +37,7 @@ class music_cog(commands.Cog):
             if self.loop:
                 self.play_next(ctx)
             else:
+                self.loop = False
                 self.is_playing = False
                 self.song_source = ""
                 self.song_title = ""
@@ -115,7 +116,7 @@ class music_cog(commands.Cog):
         for i in range(len(self.music_queue)):
             # display a max of 5 songs in the current queue
             if (i > 4): break
-            retval += '- ' + self.music_queue[i][0]['title'] + "\n"
+            retval += str(i + 1) + ". " + self.music_queue[i][0]['title'] + "\n"
 
             embed = discord.Embed(color=0x915AF2)
 
@@ -170,12 +171,18 @@ class music_cog(commands.Cog):
 
 
     @commands.command(name="clearqueue", aliases=["cq"])
-    async def clear(self, ctx):
-        if self.vc != None and self.is_playing:
-            self.vc.stop()
-
-        self.music_queue = []
-        await ctx.send(embed=eventEmbed(text="✅ Success!", name="Queue cleared"))
+    async def clear(self, ctx, num = None):
+        if num == None:
+            if self.vc != None and self.is_playing:
+                self.vc.stop()
+            self.music_queue = []
+            await ctx.send(embed=eventEmbed(text="✅ Success!", name="Queue cleared"))
+        else:
+            title = self.music_queue[int(num) - 1][0]['title']
+            self.music_queue.pop(int(num) - 1)
+            await ctx.send(embed=eventEmbed(name="✅ Success!", text="Song **" + title + "** succesfully cleared!"))
+        
+        
 
 
     @commands.command(name='loop', aliases=["lp"])
