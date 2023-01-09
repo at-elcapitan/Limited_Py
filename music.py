@@ -1,4 +1,4 @@
-# AT PROJECT Limited 2022 - 2023; ATLB-v1.4.0
+# AT PROJECT Limited 2022 - 2023; ATLB-v1.4.1
 from ast import alias
 import discord
 import json
@@ -220,7 +220,7 @@ class music_cog(commands.Cog):
                 self.song_source = [song['source'], voice_channel]
                 self.song_title = song['title']
                 await self.play_music(ctx)
-                await ctx.send(embed=eventEmbed(name="🔵 Processing...", text="List import process started."))
+                await ctx.send(embed=eventEmbed(name="🔵 Processing...", text="List import process started, please wait..."))
             else:
                 self.music_queue.append([song, voice_channel])
         
