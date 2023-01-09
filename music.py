@@ -1,4 +1,4 @@
-# AT PROJECT Limited 2022 - 2023; ATLB-v1.4.2
+# AT PROJECT Limited 2022 - 2023; ATLB-v1.4.3
 from ast import alias
 import discord
 import json
@@ -200,7 +200,7 @@ class music_cog(commands.Cog):
     async def import_list(self, ctx):
         id = str(ctx.author.id)
 
-        with open('lists.json', 'r') as f:
+        with open('lists.json', 'r', encoding="utf-8") as f:
             list = json.load(f)
             if id in list:
                 list = list[id]
@@ -213,6 +213,7 @@ class music_cog(commands.Cog):
             return
 
         for item in list:
+            item = item[1]
             voice_channel = ctx.author.voice.channel
             song = self.search_yt(item)
 
@@ -235,12 +236,12 @@ class music_cog(commands.Cog):
 
         await ctx.send(embed=eventEmbed(name="✅ Success!", text= f'Song added to the list \n **{song["title"]}**'))
 
-        with open('lists.json', 'r+') as f:
+        with open('lists.json', 'r+', encoding="utf-8") as f:
             data = json.load(f)
             id = str(ctx.author.id)
 
             if id in data:
-                data[id].append(query)
+                data[id].append([song['title'], query])
             else: await ctx.send(embed=errorEmbedCustom("804", "Uknown list", "Error: you don`t have saved list!"))
             f.seek(0)
             json.dump(data, f, indent=4, ensure_ascii=False)
@@ -249,7 +250,7 @@ class music_cog(commands.Cog):
 
     @commands.command(name="printlist", aliases=['ptl'])
     async def load_print(self, ctx): 
-        with open('lists.json', 'r') as f:
+        with open('lists.json', 'r', encoding="utf-8") as f:
             data = json.load(f)
             id = str(ctx.author.id)
 
@@ -259,6 +260,7 @@ class music_cog(commands.Cog):
                 embed = discord.Embed(color=0x915AF2)
 
                 for i, z in enumerate(lst):
+                    z = z[0]
                     if (i > 15): break
                     retval += str(i + 1) + ". " + z + "\n"
 
@@ -270,15 +272,16 @@ class music_cog(commands.Cog):
 
     @commands.command(name="clearlist", aliases=['cll'])
     async def load_delete(self, ctx, num = None):
-        with open('lists.json', 'r+') as f:
+        with open('lists.json', 'r+', encoding="utf-8") as f:
             data = json.load(f)
             id = str(ctx.author.id)
 
             if num == None:
-                data[id] = ['empty']
+                data[id] = []
+                await ctx.send(embed=eventEmbed(name="✅ Success!", text="Your playlist was cleared!"))
             else:
                 if id in data:
-                    a = data[id][int(num) - 1]
+                    a = data[id][int(num) - 1][0]
                     await ctx.send(embed=eventEmbed(name="✅ Success!", text="Song **" + a + "** succesfully cleared!"))
                     data[id].pop(int(num) - 1)
                 else: await ctx.send(embed=errorEmbedCustom("804", "Uknown list", "Error: you don`t have saved list!"))
@@ -290,7 +293,7 @@ class music_cog(commands.Cog):
     async def init_list(self, ctx):
         id = str(ctx.author.id)
 
-        with open('lists.json', 'r+') as f:
+        with open('lists.json', 'r+', encoding="utf-8") as f:
             data = json.load(f)
             
             if id in data: 
