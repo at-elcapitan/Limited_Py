@@ -1,4 +1,4 @@
-# AT PROJECT Limited 2022 - 2023; ATLB-v1.3.4
+# AT PROJECT Limited 2022 - 2023; ATLB-v1.3.5
 from ast import alias
 import discord
 from discord.ext import commands
@@ -57,7 +57,8 @@ class music_cog(commands.Cog):
 
         m_url = self.song_source[0]
 
-        self.bot.dispatch("display_song", self, ctx)
+        if not self.loop:
+            self.bot.dispatch("display_song", self, ctx)
         self.vc.play(discord.FFmpegPCMAudio(m_url, **self.FFMPEG_OPTIONS), after=lambda e: self.change_song(ctx))
 
 
