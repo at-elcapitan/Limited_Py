@@ -1,4 +1,4 @@
-# AT PROJECT Limited 2022 - 2023; ATLB-v1.3.6
+# AT PROJECT Limited 2022 - 2023; ATLB-v1.3.6_2
 from ast import alias
 import discord
 from discord.ext import commands
@@ -122,6 +122,7 @@ class music_cog(commands.Cog):
 
             if self.loop:
                 embed.add_field(name="🎵 Now playing", value="- " + self.song_title + " (loop)", inline=False)
+                embed.add_field(name="📄 Queue", value=retval, inline=False)
             else:
                 embed.add_field(name="🎵 Now playing", value="- " + self.song_title, inline=False)
                 embed.add_field(name="📄 Queue", value=retval, inline=False)
