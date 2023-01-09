@@ -1,6 +1,7 @@
-# AT PROJECT Limited 2022 - 2023; ATLB-v1.3.6_2
+# AT PROJECT Limited 2022 - 2023; ATLB-v1.4.0
 from ast import alias
 import discord
+import json
 from discord.ext import commands
 from embeds import errorEmbedCustom, eventEmbed
 from youtube_dl import YoutubeDL
@@ -144,7 +145,7 @@ class music_cog(commands.Cog):
                 await ctx.send(embed = embed)
     
 
-    @commands.command(name="pause")
+    @commands.command(name="pause", aliases=["pa"])
     async def pause(self, ctx, *args):
         if self.is_playing:
             self.is_playing = False
@@ -177,15 +178,13 @@ class music_cog(commands.Cog):
             if self.vc != None and self.is_playing:
                 self.vc.stop()
             self.music_queue = []
-            await ctx.send(embed=eventEmbed(text="✅ Success!", name="Queue cleared"))
+            await ctx.send(embed=eventEmbed(name="✅ Success!", text="Queue cleared"))
         else:
             title = self.music_queue[int(num) - 1][0]['title']
             self.music_queue.pop(int(num) - 1)
             await ctx.send(embed=eventEmbed(name="✅ Success!", text="Song **" + title + "** succesfully cleared!"))
         
         
-
-
     @commands.command(name='loop', aliases=["lp"])
     async def loop(self, ctx):
         if not self.loop:
@@ -194,3 +193,112 @@ class music_cog(commands.Cog):
         else:
             self.loop = False
             await ctx.send(embed=eventEmbed(name="✅ Success!", text="Loop turned off"))
+
+
+    # User playlist
+    @commands.command(name='playlist', aliases=['pll'])
+    async def import_list(self, ctx):
+        id = str(ctx.author.id)
+
+        with open('lists.json', 'r') as f:
+            list = json.load(f)
+            if id in list:
+                list = list[id]
+            else: 
+                await ctx.send(embed=errorEmbedCustom("804", "Uknown list", "Error: you don`t have saved list!"))
+                return
+
+        if len(list) == 0:
+            await ctx.send(embed=errorEmbedCustom("804.5", "Can`t read list!", "Error: your list is empty!"))
+            return
+
+        for item in list:
+            voice_channel = ctx.author.voice.channel
+            song = self.search_yt(item)
+
+            if self.song_source == "":
+                self.song_source = [song['source'], voice_channel]
+                self.song_title = song['title']
+                await self.play_music(ctx)
+                await ctx.send(embed=eventEmbed(name="🔵 Processing...", text="List import process started."))
+            else:
+                self.music_queue.append([song, voice_channel])
+        
+        await ctx.send(embed=eventEmbed(name="✅ Success!", text= f'Track list succesfully imported!'))
+
+
+    @commands.command(name="addtolist", aliases=['atl'])
+    async def load_save(self, ctx, *args): 
+        query = " ".join(args)
+        song = self.search_yt(query)
+
+        await ctx.send(embed=eventEmbed(name="✅ Success!", text= f'Song added to the list \n **{song["title"]}**'))
+
+        with open('lists.json', 'r+') as f:
+            data = json.load(f)
+            id = str(ctx.author.id)
+
+            if id in data:
+                data[id].append(query)
+            else: await ctx.send(embed=errorEmbedCustom("804", "Uknown list", "Error: you don`t have saved list!"))
+            f.seek(0)
+            json.dump(data, f, indent=4, ensure_ascii=False)
+            f.truncate()
+
+
+    @commands.command(name="printlist", aliases=['ptl'])
+    async def load_print(self, ctx): 
+        with open('lists.json', 'r') as f:
+            data = json.load(f)
+            id = str(ctx.author.id)
+
+            if id in data:
+                lst = data[id]
+                retval = ""
+                embed = discord.Embed(color=0x915AF2)
+
+                for i, z in enumerate(lst):
+                    if (i > 15): break
+                    retval += str(i + 1) + ". " + z + "\n"
+
+                if retval == "": embed.add_field(name="📄 Saved List", value="List is empty.", inline=False)
+                else: embed.add_field(name="📄 Saved List", value=retval, inline=False)
+                await ctx.send(embed = embed)
+
+            else: await ctx.send(embed=errorEmbedCustom("804", "Uknown list", "Error: you don`t have saved list!"))
+
+    @commands.command(name="clearlist", aliases=['cll'])
+    async def load_delete(self, ctx, num = None):
+        with open('lists.json', 'r+') as f:
+            data = json.load(f)
+            id = str(ctx.author.id)
+
+            if num == None:
+                data[id] = ['empty']
+            else:
+                if id in data:
+                    a = data[id][int(num) - 1]
+                    await ctx.send(embed=eventEmbed(name="✅ Success!", text="Song **" + a + "** succesfully cleared!"))
+                    data[id].pop(int(num) - 1)
+                else: await ctx.send(embed=errorEmbedCustom("804", "Uknown list", "Error: you don`t have saved list!"))
+            f.seek(0)
+            json.dump(data, f, indent=4, ensure_ascii=False)
+            f.truncate()
+
+    @commands.command(name="initlist", aliases=['inl'])
+    async def init_list(self, ctx):
+        id = str(ctx.author.id)
+
+        with open('lists.json', 'r+') as f:
+            data = json.load(f)
+            
+            if id in data: 
+                await ctx.send(embed=errorEmbedCustom("805", "List exists!", "Error: you already have saved list!"))
+                return
+            else:
+                data[id] = []
+            f.seek(0)
+            json.dump(data, f, indent=4, ensure_ascii=False)
+            f.truncate()
+            await ctx.send(embed=eventEmbed(name="✅ Success!", text="Your list have been succesfully initialized!"))
+    

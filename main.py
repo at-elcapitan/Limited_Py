@@ -1,5 +1,5 @@
 # by ElCapitan, PROJECT Limited 2022
-print("AT PROJECT Limited, 2022 - 2023; ATLB-v1.3.6_2")
+print("AT PROJECT Limited, 2022 - 2023; ATLB-v1.4.0")
 import discord
 import os
 import embeds
@@ -45,22 +45,16 @@ async def inspect(ctx, command=None):
             await ctx.send(embed=embeds.ban())
         case "unban":
             await ctx.send(embed=embeds.unban())
-        case "kick":
-            await ctx.send(embed=embeds.kick())
-        case "mute":
-            await ctx.send(embed=embeds.mute())
-        case "gag":
-            await ctx.send(embed=embeds.gag())
-        case "add":
-            await ctx.send(embed=embeds.add())
         case "clearchat":
             await ctx.send(embed=embeds.clearchat())
-        case "embed":
-            await ctx.send(embed=embeds.embed())
         case "closechat":
             await ctx.send(embed=embeds.closechat())
         case "openchat":
             await ctx.send(embed=embeds.openchat())
+        case "clearqueue":
+            await ctx.send(embed=embeds.clearqueue())
+        case "loop":
+            await ctx.send(embed=embeds.loop())
         case _:
             await ctx.send(embed=embeds.default())
 
