@@ -1,4 +1,4 @@
-# AT PROJECT Limited 2022 - 2023; ATLB-v1.4.9
+# AT PROJECT Limited 2022 - 2023; ATLB-v1.4.10
 from ast import alias
 import discord
 import json
@@ -134,10 +134,10 @@ class music_cog(commands.Cog):
         retval = ""
         for i in range(len(self.music_queue)):
             # display a max of 5 songs in the current queue
-            if (i > 9): 
+            if (i > 7): 
                 if len(self.music_queue) > 8:
                     retval += "... \n"
-                    retval += str(len(self.music_queue)) + ". " + self.music_queue[i][0]['title'] + "\n"
+                    retval += str(len(self.music_queue)) + ". " + self.music_queue[len(self.music_queue) - 1][0]['title'] + "\n"
                     print(retval)
                     break
             
@@ -184,6 +184,14 @@ class music_cog(commands.Cog):
             self.is_paused = False
             self.is_playing = True
             self.vc.resume()
+    
+
+    @commands.command(name="prev", aliases=['pr']):
+    async def prev_song(self, ctx):
+        if self.song_position != 0:
+            self.song_position -= 1
+        else:
+            self.song_position = len(self.music_queue) - 1
 
 
     @commands.command(name="skip", aliases=["s"])
