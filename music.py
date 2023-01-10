@@ -1,4 +1,4 @@
-# AT PROJECT Limited 2022 - 2023; ATLB-v1.4.10
+# AT PROJECT Limited 2022 - 2023; ATLB-v1.4.10_2
 from ast import alias
 import discord
 import json
@@ -138,7 +138,6 @@ class music_cog(commands.Cog):
                 if len(self.music_queue) > 8:
                     retval += "... \n"
                     retval += str(len(self.music_queue)) + ". " + self.music_queue[len(self.music_queue) - 1][0]['title'] + "\n"
-                    print(retval)
                     break
             
             retval += str(i + 1) + ". " + self.music_queue[i][0]['title'] + "\n"
@@ -186,16 +185,20 @@ class music_cog(commands.Cog):
             self.vc.resume()
     
 
-    @commands.command(name="prev", aliases=['pr']):
+    @commands.command(name="prev", aliases=['pr'])
     async def prev_song(self, ctx):
         if self.song_position != 0:
-            self.song_position -= 1
+            self.vc.stop()
+            self.song_position -= 2
+            self.bot.dispatch("change_song", self, ctx)
         else:
-            self.song_position = len(self.music_queue) - 1
+            self.vc.stop()
+            self.song_position = len(self.music_queue) - 2
+            self.bot.dispatch("change_song", self, ctx)
 
 
-    @commands.command(name="skip", aliases=["s"])
-    async def skip(self, ctx):
+    @commands.command(name="next", aliases=["n"])
+    async def next(self, ctx):
         if self.vc != None and self.vc:
             if self.loop == 2:
                 if len(self.music_queue) == 0:
