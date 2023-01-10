@@ -1,4 +1,4 @@
-# AT PROJECT Limited 2022 - 2023; ATLB-v1.4.3
+# AT PROJECT Limited 2022 - 2023; ATLB-v1.4.4
 from ast import alias
 import discord
 import json
@@ -14,6 +14,7 @@ class music_cog(commands.Cog):
         self.is_paused = False
         self.song_source = ""
         self.song_title = ""
+        self.song_position = 0
         self.loop = False
 
         self.music_queue = []
@@ -29,19 +30,29 @@ class music_cog(commands.Cog):
 
     def change_song(self, ctx):
         if len(self.music_queue) > 0:
-            if not self.loop:
-                self.song_source[0] = self.music_queue[0][0]['source']
-                self.song_title = self.music_queue[0][0]['title']
+            if self.loop == 0:
+                self.song_source[0] = self.music_queue[0][self.song_position]['source']
+                self.song_title = self.music_queue[0][self.song_position]['title']
                 self.music_queue.pop(0)
+            elif self.loop == 2:
+                if self.song_position == len(self.music_queue):
+                    self.song_position = 0
+                elif len(self.music_queue) != 0:
+                    self.song_position += 1
+                self.song_source[0] = self.music_queue[0][self.song_position]['source']
+                self.song_title = self.music_queue[0][self.song_position]['title']
             self.play_next(ctx)
         else:
-            if self.loop:
+            if self.loop == 1:
+                self.play_next(ctx)
+            elif self.loop == 2:
                 self.play_next(ctx)
             else:
-                self.loop = False
+                self.loop = 0
                 self.is_playing = False
                 self.song_source = ""
                 self.song_title = ""
+                self.song_position = 0
 
 
     def search_yt(self, item):
@@ -95,7 +106,6 @@ class music_cog(commands.Cog):
             self.is_playing = True
             self.is_paused = False
             return
-
         else:
             song = self.search_yt(query)
 
@@ -124,6 +134,9 @@ class music_cog(commands.Cog):
             if self.loop:
                 embed.add_field(name="🎵 Now playing", value="- " + self.song_title + " (loop)", inline=False)
                 embed.add_field(name="📄 Queue", value=retval, inline=False)
+            elif self.loop == 2:
+                embed.add_field(name="🎵 Now playing", value="- " + self.song_title + " (loop on playlist)", inline=False)
+                embed.add_field(name="📄 Queue", value=retval, inline=False)
             else:
                 embed.add_field(name="🎵 Now playing", value="- " + self.song_title, inline=False)
                 embed.add_field(name="📄 Queue", value=retval, inline=False)
@@ -136,8 +149,10 @@ class music_cog(commands.Cog):
             else:
                 embed = discord.Embed(color=0x915AF2)
 
-                if self.loop:
+                if self.loop == 1:
                     embed.add_field(name="🎵 Now playing", value="- " + self.song_title + " (loop)", inline=False)
+                elif self.loop == 2:
+                    embed.add_field(name="🎵 Now playing", value="- " + self.song_title + " (loop on playlist)", inline=False)
                 else:
                     embed.add_field(name="🎵 Now playing", value="- " + self.song_title, inline=False)
                 embed.add_field(name="📄 Empty", value="No music in queue", inline=False)
@@ -160,9 +175,23 @@ class music_cog(commands.Cog):
     @commands.command(name="skip", aliases=["s"])
     async def skip(self, ctx):
         if self.vc != None and self.vc:
-            self.vc.stop()
-            self.loop = False
-            self.bot.dispatch("change_song", self, ctx)
+            if self.loop == 2:
+                if len(self.music_queue) == 0:
+                    self.vc.stop()
+                    self.loop = 0
+                    self.is_playing = False
+                    self.song_source = ""
+                    self.song_title = ""
+                    self.song_position = 0
+                if self.song_position == len(self.music_queue):
+                    self.song_position = 0
+                elif len(self.music_queue) != 0:
+                    self.song_position += 1
+                self.vc.stop()
+                self.bot.dispatch("change_song", self, ctx)
+            else:
+                self.vc.stop()
+                self.bot.dispatch("change_song", self, ctx)
 
     
     @commands.command(name="disconnect", aliases=["d"])
@@ -187,12 +216,19 @@ class music_cog(commands.Cog):
         
     @commands.command(name='loop', aliases=["lp"])
     async def loop(self, ctx):
-        if not self.loop:
-            self.loop = True
-            await ctx.send(embed=eventEmbed(name="✅ Success!", text="Loop turned on current song"))
-        else:
-            self.loop = False
-            await ctx.send(embed=eventEmbed(name="✅ Success!", text="Loop turned off"))
+        match self.loop:
+            case 0:
+                self.loop += 1
+                await ctx.send(embed=eventEmbed(name="✅ Success!", text="Loop turned on current song."))
+            case 1:
+                self.loop += 1
+                await ctx.send(embed=eventEmbed(name="✅ Success!", text="Loop turned on playlist."))
+                if len(self.music_queue) > 0:
+                    self.music_queue[0].insert(0, {'source' : self.song_source[0], 'title' : self.song_title})
+                    print(self.music_queue[0][0])
+            case 2:
+                self.loop = 0
+                await ctx.send(embed=eventEmbed(name="✅ Success!", text="Loop turned off."))
 
 
     # User playlist
