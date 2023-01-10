@@ -1,4 +1,4 @@
-# AT PROJECT Limited 2022 - 2023; ATLB-v1.4.4
+# AT PROJECT Limited 2022 - 2023; ATLB-v1.4.5
 from ast import alias
 import discord
 import json
@@ -207,6 +207,11 @@ class music_cog(commands.Cog):
             if self.vc != None and self.is_playing:
                 self.vc.stop()
             self.music_queue = []
+            self.loop = 0
+            self.is_playing = False
+            self.song_source = ""
+            self.song_title = ""
+            self.song_position = 0
             await ctx.send(embed=eventEmbed(name="✅ Success!", text="Queue cleared"))
         else:
             title = self.music_queue[int(num) - 1][0]['title']
