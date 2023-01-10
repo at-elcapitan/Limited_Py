@@ -1,4 +1,4 @@
-# AT PROJECT Limited 2022 - 2023; ATLB-v1.4.5_2
+# AT PROJECT Limited 2022 - 2023; ATLB-v1.4.6
 from ast import alias
 import discord
 import json
@@ -31,16 +31,16 @@ class music_cog(commands.Cog):
     def change_song(self, ctx):
         if len(self.music_queue) > 0:
             if self.loop == 0:
-                self.song_source[0] = self.music_queue[0][self.song_position]['source']
-                self.song_title = self.music_queue[0][self.song_position]['title']
+                self.song_source[0] = self.music_queue[self.song_position][0]['source']
+                self.song_title = self.music_queue[self.song_position][0]['title']
                 self.music_queue.pop(0)
             elif self.loop == 2:
                 if self.song_position == len(self.music_queue):
                     self.song_position = 0
                 elif len(self.music_queue) != 0:
                     self.song_position += 1
-                self.song_source[0] = self.music_queue[0][self.song_position]['source']
-                self.song_title = self.music_queue[0][self.song_position]['title']
+                self.song_source[0] = self.music_queue[self.song_position][0]['source']
+                self.song_title = self.music_queue[self.song_position][0]['title']
             self.play_next(ctx)
         else:
             if self.loop == 1:
@@ -126,20 +126,26 @@ class music_cog(commands.Cog):
         retval = ""
         for i in range(len(self.music_queue)):
             # display a max of 5 songs in the current queue
-            if (i > 9): break
+            if (i > 9): 
+                if len(self.music_queue) > 8:
+                    retval += "... \n"
+                    retval += str(len(self.music_queue)) + ". " + self.music_queue[i][0]['title'] + "\n"
+                    print(retval)
+                    break
+
             retval += str(i + 1) + ". " + self.music_queue[i][0]['title'] + "\n"
 
             embed = discord.Embed(color=0x915AF2)
 
-            if self.loop:
-                embed.add_field(name="🎵 Now playing", value="- " + self.song_title + " (loop)", inline=False)
-                embed.add_field(name="📄 Queue", value=retval, inline=False)
-            elif self.loop == 2:
-                embed.add_field(name="🎵 Now playing", value="- " + self.song_title + " (loop on playlist)", inline=False)
-                embed.add_field(name="📄 Queue", value=retval, inline=False)
-            else:
-                embed.add_field(name="🎵 Now playing", value="- " + self.song_title, inline=False)
-                embed.add_field(name="📄 Queue", value=retval, inline=False)
+        if self.loop == 1:
+            embed.add_field(name="🎵 Now playing", value="- " + self.song_title + " (loop)", inline=False)
+            embed.add_field(name="📄 Queue", value=retval, inline=False)
+        elif self.loop == 2:
+            embed.add_field(name="🎵 Now playing", value="- " + self.song_title + " (loop on playlist)", inline=False)
+            embed.add_field(name="📄 Queue", value=retval, inline=False)
+        else:
+            embed.add_field(name="🎵 Now playing", value="- " + self.song_title, inline=False)
+            embed.add_field(name="📄 Queue", value=retval, inline=False)
 
         if retval != "":
             await ctx.send(embed = embed)
@@ -185,8 +191,6 @@ class music_cog(commands.Cog):
                     self.song_position = 0
                 if self.song_position == len(self.music_queue):
                     self.song_position = 0
-                elif len(self.music_queue) != 0:
-                    self.song_position += 1
                 self.vc.stop()
                 self.bot.dispatch("change_song", self, ctx)
             else:
@@ -230,7 +234,6 @@ class music_cog(commands.Cog):
                 await ctx.send(embed=eventEmbed(name="✅ Success!", text="Loop turned on playlist."))
                 if len(self.music_queue) > 0:
                     self.music_queue[0].insert(0, {'source' : self.song_source[0], 'title' : self.song_title})
-                    print(self.music_queue[0][0])
             case 2:
                 self.loop = 0
                 await ctx.send(embed=eventEmbed(name="✅ Success!", text="Loop turned off."))
