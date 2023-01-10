@@ -1,5 +1,5 @@
 # by ElCapitan, PROJECT Limited 2022
-print("AT PROJECT Limited, 2022 - 2023; ATLB-v1.4.7")
+print("AT PROJECT Limited, 2022 - 2023; ATLB-v1.4.8")
 import discord
 import os
 import embeds

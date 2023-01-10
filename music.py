@@ -1,4 +1,4 @@
-# AT PROJECT Limited 2022 - 2023; ATLB-v1.4.7
+# AT PROJECT Limited 2022 - 2023; ATLB-v1.4.8
 from ast import alias
 import discord
 import json
@@ -35,9 +35,9 @@ class music_cog(commands.Cog):
                 self.song_title = self.music_queue[self.song_position][0]['title']
                 self.music_queue.pop(0)
             elif self.loop == 2:
-                if self.song_position == len(self.music_queue):
+                if self.song_position == len(self.music_queue) - 1:
                     self.song_position = 0
-                elif len(self.music_queue) != 0:
+                else:
                     self.song_position += 1
                 self.song_source[0] = self.music_queue[self.song_position][0]['source']
                 self.song_title = self.music_queue[self.song_position][0]['title']
@@ -132,7 +132,7 @@ class music_cog(commands.Cog):
                     retval += str(len(self.music_queue)) + ". " + self.music_queue[i][0]['title'] + "\n"
                     print(retval)
                     break
-
+            
             retval += str(i + 1) + ". " + self.music_queue[i][0]['title'] + "\n"
 
             embed = discord.Embed(color=0x915AF2)
