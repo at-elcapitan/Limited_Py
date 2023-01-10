@@ -1,4 +1,4 @@
-# AT PROJECT Limited 2022 - 2023; ATLB-v1.4.5
+# AT PROJECT Limited 2022 - 2023; ATLB-v1.4.5_2
 from ast import alias
 import discord
 import json
@@ -126,7 +126,7 @@ class music_cog(commands.Cog):
         retval = ""
         for i in range(len(self.music_queue)):
             # display a max of 5 songs in the current queue
-            if (i > 4): break
+            if (i > 9): break
             retval += str(i + 1) + ". " + self.music_queue[i][0]['title'] + "\n"
 
             embed = discord.Embed(color=0x915AF2)
