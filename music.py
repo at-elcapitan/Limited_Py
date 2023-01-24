@@ -1,4 +1,4 @@
-# AT PROJECT Limited 2022 - 2023; ATLB-v1.4.10_2
+# AT PROJECT Limited 2022 - 2023; ATLB-v1.4.10_3
 from ast import alias
 import discord
 import json
@@ -15,7 +15,7 @@ class music_cog(commands.Cog):
         self.song_source = ""
         self.song_title = ""
         self.song_position = 0
-        self.loop = False
+        self.loop = 0
 
         self.music_queue = []
         self.YDL_OPTIONS = {'format': 'bestaudio/best', 'noplaylist':'True', 'cookiefile': 'cookies.txt'}
@@ -102,7 +102,7 @@ class music_cog(commands.Cog):
 
 
     @commands.command(name="play", aliases=["p"])
-    async def play(self, ctx, *args):
+    async def play(self, ctx, *args): 
         query = " ".join(args)
 
         voice_channel = ctx.author.voice.channel
