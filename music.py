@@ -1,4 +1,4 @@
-# AT PROJECT Limited 2022 - 2023; ATLB-v1.4.10_3
+# AT PROJECT Limited 2022 - 2023; ATLB-v1.4.10_4
 from ast import alias
 import discord
 import json
@@ -132,6 +132,7 @@ class music_cog(commands.Cog):
     @commands.command(name="queue", aliases=["q", "qu"])
     async def queue(self, ctx):
         retval = ""
+        embed = discord.Embed(color=0x915AF2)
         for i in range(len(self.music_queue)):
             # display a max of 5 songs in the current queue
             if (i > 7): 
@@ -141,8 +142,6 @@ class music_cog(commands.Cog):
                     break
             
             retval += str(i + 1) + ". " + self.music_queue[i][0]['title'] + "\n"
-
-            embed = discord.Embed(color=0x915AF2)
 
         if self.loop == 1:
             embed.add_field(name="🎵 Now playing", value="- " + self.song_title + " (loop)", inline=False)
