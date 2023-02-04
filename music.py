@@ -1,4 +1,4 @@
-# AT PROJECT Limited 2022 - 2023; ATLB-v1.4.10_4
+# AT PROJECT Limited 2022 - 2023; ATLB-v1.5.1
 from ast import alias
 import discord
 import json
@@ -130,18 +130,20 @@ class music_cog(commands.Cog):
     
 
     @commands.command(name="queue", aliases=["q", "qu"])
-    async def queue(self, ctx):
+    async def queue(self, ctx, page = 0):
         retval = ""
         embed = discord.Embed(color=0x915AF2)
         for i in range(len(self.music_queue)):
-            # display a max of 5 songs in the current queue
             if (i > 7): 
                 if len(self.music_queue) > 8:
                     retval += "... \n"
-                    retval += str(len(self.music_queue)) + ". " + self.music_queue[len(self.music_queue) - 1][0]['title'] + "\n"
+                    retval += "" + self.music_queue[len(self.music_queue) - 1][0]['title'] + "\n"
                     break
             
-            retval += str(i + 1) + ". " + self.music_queue[i][0]['title'] + "\n"
+            if self.song_title == self.music_queue[i][0]['title']:
+                retval += "** • " + self.music_queue[i][0]['title'] + "**\n"
+                continue
+            retval += "" + self.music_queue[i][0]['title'] + "\n"
 
         if self.loop == 1:
             embed.add_field(name="🎵 Now playing", value="- " + self.song_title + " (loop)", inline=False)
@@ -158,19 +160,46 @@ class music_cog(commands.Cog):
         else:
             if self.song_title == "":
                 await ctx.send(embed=eventEmbed(name= "📄 Empty", text = "No music in playlist"))
-            else:
-                embed = discord.Embed(color=0x915AF2)
-
-                if self.loop == 1:
-                    embed.add_field(name="🎵 Now playing", value="- " + self.song_title + " (loop)", inline=False)
-                elif self.loop == 2:
-                    embed.add_field(name="🎵 Now playing", value="- " + self.song_title + " (loop on playlist)", inline=False)
-                else:
-                    embed.add_field(name="🎵 Now playing", value="- " + self.song_title, inline=False)
-                embed.add_field(name="📄 Empty", value="No music in playlist", inline=False)
-
-                await ctx.send(embed = embed)
     
+    @commands.command(name="nqueue", aliases=["nq"])
+    async def nqueue(self, ctx, page = 1):
+        retval = ""
+        page = int(page)
+        embed = discord.Embed(color=0x915AF2)
+
+        if len(self.music_queue) == 0:
+            await ctx.send(embed=eventEmbed(name= "📄 Empty", text = "No music in playlist"))
+            return
+
+        if len(self.music_queue) > 10:
+            for i in range(0, 9):
+                if self.song_title == self.music_queue[i][0]['title']:
+                    retval += "** • " + self.music_queue[i][0]['title'] + "**\n"
+                    continue
+                retval += "" + self.music_queue[i][0]['title'] + "\n"
+            
+            pages = int(len(self.music_queue) / 10)
+            if page > pages or page == 0: 
+                await ctx.send(embed=errorEmbedCustom("801.9", "Incorrect Page", "Requested page is not exist."))
+                return
+            
+            if self.loop == 1:
+                embed.add_field(name="🎵 Now playing", value="- " + self.song_title + " (loop)", inline=False)
+                embed.add_field(name="📄 Playlist", value=retval, inline=False)
+            elif self.loop == 2:
+                embed.add_field(name="🎵 Now playing", value="- " + self.song_title + " (loop on playlist)", inline=False)
+                embed.add_field(name="📄 Playlist", value=retval, inline=False)
+            else:
+                embed.add_field(name="🎵 Now playing", value="- " + self.song_title, inline=False)
+                embed.add_field(name="📄 Playlist", value=retval, inline=False)
+            
+            footer = f"Pages: {page} of {pages}"
+            embed.set_footer(text=footer)
+
+            await ctx.send(embed = embed)
+
+        
+                
 
     @commands.command(name="pause", aliases=["pa"])
     async def pause(self, ctx, *args):
@@ -196,7 +225,7 @@ class music_cog(commands.Cog):
             self.bot.dispatch("change_song", self, ctx)
 
 
-    @commands.command(name="next", aliases=["n"])
+    @commands.command(name="next", aliases=["n", "s"])
     async def next(self, ctx):
         if self.vc != None and self.vc:
             if self.loop == 2:
@@ -257,8 +286,9 @@ class music_cog(commands.Cog):
 
     # User playlist
     @commands.command(name='playlist', aliases=['pll'])
-    async def import_list(self, ctx):
+    async def import_list(self, ctx, num = 0):
         id = str(ctx.author.id)
+        voice_channel = ctx.author.voice.channel
 
         with open('lists.json', 'r', encoding="utf-8") as f:
             list = json.load(f)
@@ -272,9 +302,19 @@ class music_cog(commands.Cog):
             await ctx.send(embed=errorEmbedCustom("804.5", "Can`t read list!", "Error: your list is empty!"))
             return
 
+        if int(num) != 0:
+            item = list[int(num) - 1][1]
+            song = self.search_yt(item)
+            if self.song_source == "":
+                self.song_source = [song['source'], voice_channel]
+                self.song_title = song['title']
+            self.music_queue.append([song, voice_channel])
+            if not self.is_playing:
+                await self.play_music(ctx)
+            return
+
         for item in list:
             item = item[1]
-            voice_channel = ctx.author.voice.channel
             song = self.search_yt(item)
 
             if self.song_source == "":
