@@ -1,4 +1,4 @@
-# AT PROJECT Limited 2022 - 2023; ATLB-v1.5.4
+# AT PROJECT Limited 2022 - 2023; ATLB-v1.5.5
 import math
 import discord
 import json
@@ -138,13 +138,12 @@ class music_cog(commands.Cog):
         else:
             page = int(page)
 
-        if page > pages or page < 0: 
-            print(page, pages)
+        if page > pages or page <= 0:
             await ctx.send(embed=errorEmbedCustom("801.9", "Incorrect Page", "Requested page is not exist or playlist is empty."))
             return
 
         if page == 1:
-            srt, stp = 0, 9
+            srt, stp = 0, 8
         else:
             srt = 10 * (page - 1) - 2
             stp = 10 * page - 2
@@ -155,14 +154,9 @@ class music_cog(commands.Cog):
             if self.song_title == self.music_queue[i][0]['title']:
                 retval += "**  • " + self.music_queue[i][0]['title'] + "**\n"
                 continue
-            retval += "• " + self.music_queue[i][0]['title'] + "\n"
+            retval += f"{i + 1}. " + self.music_queue[i][0]['title'] + "\n"
             
-        if self.loop == 1:
-            embed.add_field(name="📄 Playlist", value=retval)
-        elif self.loop == 2:
-            embed.add_field(name="📄 Playlist", value=retval)
-        else:
-            embed.add_field(name="📄 Playlist", value=retval)
+        embed.add_field(name="📄 Playlist", value=retval)
         
         if self.loop == 1:
             loop_on = "current song"
@@ -321,7 +315,7 @@ class music_cog(commands.Cog):
 
 
     @commands.command(name="printlist", aliases=['ptl'])
-    async def load_print(self, ctx): 
+    async def load_print(self, ctx, page = 1):
         with open('lists.json', 'r', encoding="utf-8") as f:
             data = json.load(f)
             id = str(ctx.author.id)
@@ -331,14 +325,28 @@ class music_cog(commands.Cog):
                 retval = ""
                 embed = discord.Embed(color=0x915AF2)
 
-                for i, z in enumerate(lst):
-                    z = z[0]
-                    if (i > 15): break
-                    retval += str(i + 1) + ". " + z + "\n"
+                pages = math.ceil(len(lst) / 10 + 0.1)
+                page = int(page)
 
-                if retval == "": embed.add_field(name="📄 Saved List", value="List is empty.", inline=False)
-                else: embed.add_field(name="📄 Saved List", value=retval, inline=False)
-                await ctx.send(embed = embed)
+                if page > pages or page <= 0:
+                    await ctx.send(embed=errorEmbedCustom("801.7", "Incorrect Page", "Requested page is not exist."))
+                    return
+
+                if page == 1:
+                    srt, stp = 0, 9
+                else:
+                    srt = 10 * (page - 1) - 1
+                    stp = 10 * page - 1
+
+                for i in range(srt, stp):
+                    if i > len(lst) - 1:
+                        break
+                    retval += f"{i + 1}. " + lst[i][0] + "\n"
+                
+                embed.add_field(name="📄 User list", value=retval)
+                footer = f"Page: {page} of {pages}"
+                embed.set_footer(text=footer)
+                await ctx.send(embed=embed)
 
             else: await ctx.send(embed=errorEmbedCustom("804", "Uknown list", "Error: you don`t have saved list!"))
 
