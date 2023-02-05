@@ -1,4 +1,4 @@
-# AT PROJECT Limited 2022 - 2023; ATLB-v1.5.3
+# AT PROJECT Limited 2022 - 2023; ATLB-v1.5.4
 import math
 import discord
 import json
@@ -132,21 +132,22 @@ class music_cog(commands.Cog):
         retval = ""
         embed = discord.Embed(color=0x915AF2)
 
-        pages = math.ceil(len(self.music_queue) / 10)
+        pages = math.ceil(len(self.music_queue) / 10 + 0.1)
         if page == None:
             page = math.ceil((self.song_position + 1) / 10 + 0.1)
         else:
             page = int(page)
 
         if page > pages or page < 0: 
+            print(page, pages)
             await ctx.send(embed=errorEmbedCustom("801.9", "Incorrect Page", "Requested page is not exist or playlist is empty."))
             return
 
         if page == 1:
             srt, stp = 0, 9
         else:
-            srt = 10 * (page - 1) - 1
-            stp = 10 * page - 1
+            srt = 10 * (page - 1) - 2
+            stp = 10 * page - 2
 
         for i in range(srt, stp):
             if i > len(self.music_queue) - 1:
