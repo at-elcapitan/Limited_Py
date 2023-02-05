@@ -1,4 +1,4 @@
-# AT PROJECT Limited 2022 - 2023; ATLB-v1.5.2_4
+# AT PROJECT Limited 2022 - 2023; ATLB-v1.5.2_5
 import math
 import discord
 import json
@@ -152,9 +152,9 @@ class music_cog(commands.Cog):
             if i > len(self.music_queue) - 1:
                 break
             if self.song_title == self.music_queue[i][0]['title']:
-                retval += "** • " + self.music_queue[i][0]['title'] + "**\n"
+                retval += "**  • " + self.music_queue[i][0]['title'] + "**\n"
                 continue
-            retval += "" + self.music_queue[i][0]['title'] + "\n"
+            retval += "• " + self.music_queue[i][0]['title'] + "\n"
             
         if self.loop == 1:
             embed.add_field(name="🎵 Now playing", value="- " + self.song_title + " (loop)", inline=False)
