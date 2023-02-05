@@ -1,5 +1,5 @@
-# AT PROJECT Limited 2022 - 2023; ATLB-v1.5.1
-from ast import alias
+# AT PROJECT Limited 2022 - 2023; ATLB-v1.5.2
+import math
 import discord
 import json
 from discord.ext import commands
@@ -27,15 +27,17 @@ class music_cog(commands.Cog):
         async def on_display_song(self, ctx):
             await ctx.send(embed=eventEmbed(name="🎵   Now playing", text= f'**{self.song_title}**'))
 
+    def set_none_song(self):
+        self.music_queue = []
+        self.is_playing = False
+        self.song_source = ""
+        self.song_title = ""
+        self.song_position = 0
 
     def change_song(self, ctx):
         if len(self.music_queue) > 0:
             if self.song_position == len(self.music_queue) - 1 and self.loop == 0:
-                self.music_queue = []
-                self.is_playing = False
-                self.song_source = ""
-                self.song_title = ""
-                self.song_position = 0
+                self.set_none_song()
                 return
             if self.loop == 0:
                 self.song_position += 1
@@ -55,11 +57,7 @@ class music_cog(commands.Cog):
             elif self.loop == 2:
                 self.play_next(ctx)
             else:
-                self.music_queue = []
-                self.is_playing = False
-                self.song_source = ""
-                self.song_title = ""
-                self.song_position = 0
+                self.set_none_song()
 
 
     def search_yt(self, item):
@@ -129,22 +127,38 @@ class music_cog(commands.Cog):
                     self.music_queue.append([song, voice_channel])
     
 
-    @commands.command(name="queue", aliases=["q", "qu"])
-    async def queue(self, ctx, page = 0):
+    @commands.command(name="list", aliases=["q", "lst"])
+    async def queue(self, ctx, page = -1):
         retval = ""
+        page = int(page)
         embed = discord.Embed(color=0x915AF2)
-        for i in range(len(self.music_queue)):
-            if (i > 7): 
-                if len(self.music_queue) > 8:
-                    retval += "... \n"
-                    retval += "" + self.music_queue[len(self.music_queue) - 1][0]['title'] + "\n"
-                    break
-            
+
+        if len(self.music_queue) == 0:
+            await ctx.send(embed=eventEmbed(name= "📄 Empty", text = "No music in playlist"))
+            return
+
+        pages = math.ceil(len(self.music_queue) / 10)
+        if page == -1:
+            page = math.ceil((self.song_position + 1) / 10 + 0.1)
+
+        if page > pages or page == 0: 
+            await ctx.send(embed=errorEmbedCustom("801.9", "Incorrect Page", "Requested page is not exist."))
+            return
+
+        if page == 1:
+            srt, stp = 0, 9
+        else:
+            srt = 10 * (page - 1) - 1
+            stp = 10 * page - 1
+
+        for i in range(srt, stp):
+            if i > len(self.music_queue) - 1:
+                break
             if self.song_title == self.music_queue[i][0]['title']:
                 retval += "** • " + self.music_queue[i][0]['title'] + "**\n"
                 continue
             retval += "" + self.music_queue[i][0]['title'] + "\n"
-
+            
         if self.loop == 1:
             embed.add_field(name="🎵 Now playing", value="- " + self.song_title + " (loop)", inline=False)
             embed.add_field(name="📄 Playlist", value=retval, inline=False)
@@ -154,52 +168,12 @@ class music_cog(commands.Cog):
         else:
             embed.add_field(name="🎵 Now playing", value="- " + self.song_title, inline=False)
             embed.add_field(name="📄 Playlist", value=retval, inline=False)
-
-        if retval != "":
-            await ctx.send(embed = embed)
-        else:
-            if self.song_title == "":
-                await ctx.send(embed=eventEmbed(name= "📄 Empty", text = "No music in playlist"))
-    
-    @commands.command(name="nqueue", aliases=["nq"])
-    async def nqueue(self, ctx, page = 1):
-        retval = ""
-        page = int(page)
-        embed = discord.Embed(color=0x915AF2)
-
-        if len(self.music_queue) == 0:
-            await ctx.send(embed=eventEmbed(name= "📄 Empty", text = "No music in playlist"))
-            return
-
-        if len(self.music_queue) > 10:
-            for i in range(0, 9):
-                if self.song_title == self.music_queue[i][0]['title']:
-                    retval += "** • " + self.music_queue[i][0]['title'] + "**\n"
-                    continue
-                retval += "" + self.music_queue[i][0]['title'] + "\n"
-            
-            pages = int(len(self.music_queue) / 10)
-            if page > pages or page == 0: 
-                await ctx.send(embed=errorEmbedCustom("801.9", "Incorrect Page", "Requested page is not exist."))
-                return
-            
-            if self.loop == 1:
-                embed.add_field(name="🎵 Now playing", value="- " + self.song_title + " (loop)", inline=False)
-                embed.add_field(name="📄 Playlist", value=retval, inline=False)
-            elif self.loop == 2:
-                embed.add_field(name="🎵 Now playing", value="- " + self.song_title + " (loop on playlist)", inline=False)
-                embed.add_field(name="📄 Playlist", value=retval, inline=False)
-            else:
-                embed.add_field(name="🎵 Now playing", value="- " + self.song_title, inline=False)
-                embed.add_field(name="📄 Playlist", value=retval, inline=False)
-            
-            footer = f"Pages: {page} of {pages}"
-            embed.set_footer(text=footer)
-
-            await ctx.send(embed = embed)
-
         
-                
+        footer = f"Page: {page} of {pages}"
+        embed.set_footer(text=footer)
+
+        await ctx.send(embed = embed)
+
 
     @commands.command(name="pause", aliases=["pa"])
     async def pause(self, ctx, *args):
@@ -257,12 +231,8 @@ class music_cog(commands.Cog):
         if num == None:
             if self.vc != None and self.is_playing:
                 self.vc.stop()
-            self.music_queue = []
+            self.set_none_song()
             self.loop = 0
-            self.is_playing = False
-            self.song_source = ""
-            self.song_title = ""
-            self.song_position = 0
             await ctx.send(embed=eventEmbed(name="✅ Success!", text="Queue cleared"))
         else:
             title = self.music_queue[int(num) - 1][0]['title']
