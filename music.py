@@ -1,4 +1,4 @@
-# AT PROJECT Limited 2022 - 2023; ATLB-v1.5.2
+# AT PROJECT Limited 2022 - 2023; ATLB-v1.5.2_2
 import math
 import discord
 import json
@@ -128,21 +128,21 @@ class music_cog(commands.Cog):
     
 
     @commands.command(name="list", aliases=["q", "lst"])
-    async def queue(self, ctx, page = -1):
+    async def queue(self, ctx, page = "ns"):
         retval = ""
         page = int(page)
         embed = discord.Embed(color=0x915AF2)
 
-        if len(self.music_queue) == 0:
-            await ctx.send(embed=eventEmbed(name= "📄 Empty", text = "No music in playlist"))
-            return
-
         pages = math.ceil(len(self.music_queue) / 10)
-        if page == -1:
+        if page == "ns":
             page = math.ceil((self.song_position + 1) / 10 + 0.1)
 
-        if page > pages or page == 0: 
+        if page > pages or page <= 0: 
             await ctx.send(embed=errorEmbedCustom("801.9", "Incorrect Page", "Requested page is not exist."))
+            return
+
+        if len(self.music_queue) == 0:
+            await ctx.send(embed=eventEmbed(name= "📄 Empty", text = "No music in playlist"))
             return
 
         if page == 1:
