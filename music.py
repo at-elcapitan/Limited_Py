@@ -1,4 +1,4 @@
-# AT PROJECT Limited 2022 - 2023; ATLB-v1.5.2_5
+# AT PROJECT Limited 2022 - 2023; ATLB-v1.5.3
 import math
 import discord
 import json
@@ -157,16 +157,19 @@ class music_cog(commands.Cog):
             retval += "• " + self.music_queue[i][0]['title'] + "\n"
             
         if self.loop == 1:
-            embed.add_field(name="🎵 Now playing", value="- " + self.song_title + " (loop)", inline=False)
-            embed.add_field(name="📄 Playlist", value=retval, inline=False)
+            embed.add_field(name="📄 Playlist", value=retval)
         elif self.loop == 2:
-            embed.add_field(name="🎵 Now playing", value="- " + self.song_title + " (loop on playlist)", inline=False)
-            embed.add_field(name="📄 Playlist", value=retval, inline=False)
+            embed.add_field(name="📄 Playlist", value=retval)
         else:
-            embed.add_field(name="🎵 Now playing", value="- " + self.song_title, inline=False)
-            embed.add_field(name="📄 Playlist", value=retval, inline=False)
+            embed.add_field(name="📄 Playlist", value=retval)
         
-        footer = f"Page: {page} of {pages}"
+        if self.loop == 1:
+            loop_on = "current song"
+        elif self.loop == 2:
+            loop_on = "on playlist"
+        else:
+            loop_on = "turned off"
+        footer = f"Page: {page} of {pages}, Loop: {loop_on}"
         embed.set_footer(text=footer)
 
         await ctx.send(embed = embed)
