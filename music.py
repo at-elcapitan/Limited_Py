@@ -1,4 +1,4 @@
-# AT PROJECT Limited 2022 - 2023; ATLB-v1.5.2_3
+# AT PROJECT Limited 2022 - 2023; ATLB-v1.5.2_4
 import math
 import discord
 import json
@@ -139,11 +139,7 @@ class music_cog(commands.Cog):
             page = int(page)
 
         if page > pages or page < 0: 
-            await ctx.send(embed=errorEmbedCustom("801.9", "Incorrect Page", "Requested page is not exist."))
-            return
-
-        if len(self.music_queue) == 0:
-            await ctx.send(embed=eventEmbed(name= "📄 Empty", text = "No music in playlist"))
+            await ctx.send(embed=errorEmbedCustom("801.9", "Incorrect Page", "Requested page is not exist or playlist is empty."))
             return
 
         if page == 1:
