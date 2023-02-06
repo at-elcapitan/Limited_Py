@@ -1,4 +1,4 @@
-# AT PROJECT Limited 2022 - 2023; ATLB-v1.5.6
+# AT PROJECT Limited 2022 - 2023; ATLB-v1.5.7
 import math
 import discord
 import json
@@ -153,7 +153,8 @@ class music_cog(commands.Cog):
                 break
 
             if len(self.music_queue[i][0]['title']) > 65:
-                title = self.music_queue[i][0]['title'][:-6] + "..."
+                z = len(self.music_queue[i][0]['title']) - 65
+                title = self.music_queue[i][0]['title'][:-z] + "..."
             else:
                 title = self.music_queue[i][0]['title']
 
@@ -345,13 +346,15 @@ class music_cog(commands.Cog):
                     stp = 10 * page - 1
 
                 for i in range(srt, stp):
+                    if i > len(lst) - 1:
+                        break
+
                     if len(lst[i][0]) > 65:
-                        title = lst[i][0][:-6] + "..."
+                        z = len(lst[i][0]) - 65
+                        title = lst[i][0][:-z] + "..."
                     else:
                         title = lst[i][0]
 
-                    if i > len(lst) - 1:
-                        break
                     retval += f"{i + 1}. " + title + "\n"
                 
                 embed.add_field(name="📄 User list", value=retval)
