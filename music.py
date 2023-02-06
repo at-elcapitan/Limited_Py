@@ -1,4 +1,4 @@
-# AT PROJECT Limited 2022 - 2023; ATLB-v1.5.5
+# AT PROJECT Limited 2022 - 2023; ATLB-v1.5.6
 import math
 import discord
 import json
@@ -151,10 +151,16 @@ class music_cog(commands.Cog):
         for i in range(srt, stp):
             if i > len(self.music_queue) - 1:
                 break
+
+            if len(self.music_queue[i][0]['title']) > 65:
+                title = self.music_queue[i][0]['title'][:-6] + "..."
+            else:
+                title = self.music_queue[i][0]['title']
+
             if self.song_title == self.music_queue[i][0]['title']:
-                retval += "**  • " + self.music_queue[i][0]['title'] + "**\n"
+                retval += "**  • " + title + "**\n"
                 continue
-            retval += f"{i + 1}. " + self.music_queue[i][0]['title'] + "\n"
+            retval += f"{i + 1}. " + title + "\n"
             
         embed.add_field(name="📄 Playlist", value=retval)
         
@@ -339,9 +345,14 @@ class music_cog(commands.Cog):
                     stp = 10 * page - 1
 
                 for i in range(srt, stp):
+                    if len(lst[i][0]) > 65:
+                        title = lst[i][0][:-6] + "..."
+                    else:
+                        title = lst[i][0]
+
                     if i > len(lst) - 1:
                         break
-                    retval += f"{i + 1}. " + lst[i][0] + "\n"
+                    retval += f"{i + 1}. " + title + "\n"
                 
                 embed.add_field(name="📄 User list", value=retval)
                 footer = f"Page: {page} of {pages}"
