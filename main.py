@@ -1,5 +1,5 @@
 # by ElCapitan, PROJECT Limited 2022
-print("AT PROJECT Limited, 2022 - 2023; ATLB-v1.5.9", end="\n\n")
+print("AT PROJECT Limited, 2022 - 2023; ATLB-v1.5.9_2", end="\n\n")
 try:
     print("\tImporting libraries...")
     print("\t\tImporting 'discord'")
@@ -15,7 +15,7 @@ try:
     from dotenv import load_dotenv
     print("\t\tImporting 'music.py'")
     from music import music_cog
-    print("\t\tImporting 'JSON'")
+    print("\t\tImporting 'datetime'")
     from datetime import datetime
     print("\r[ \x1b[32;1mOK\x1b[39;0m ] Libraries imported.")
 except Exception as exception:
