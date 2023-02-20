@@ -1,5 +1,5 @@
 # by ElCapitan, PROJECT Limited 2022
-print("AT PROJECT Limited, 2022 - 2023; ATLB-v1.6.1_3")
+print("AT PROJECT Limited, 2022 - 2023; ATLB-v1.6.2")
 try:
     print("\tImporting libraries...")
     print("\t\tImporting 'discord'")
@@ -50,7 +50,7 @@ client = discord.Client(intents=discord.Intents.all())
 @bot.event
 async def on_ready():
     if music:
-        await bot.add_cog(music_cog(bot))
+        await bot.add_cog(music_cog(bot, time))
         print("\r[ \x1b[32;1mOK\x1b[39;0m ] Music COG imported.")
     else:
         print(f"\r[ \x1b[33;1mWARN\x1b[39;0m ] Music module disabled.")
