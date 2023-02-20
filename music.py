@@ -1,10 +1,10 @@
-# AT PROJECT Limited 2022 - 2023; ATLB-v1.5.7
+# AT PROJECT Limited 2022 - 2023; ATLB-v1.5.8
 import math
 import discord
 import json
 from discord.ext import commands
 from embeds import errorEmbedCustom, eventEmbed
-from youtube_dl import YoutubeDL
+from yt_dlp import YoutubeDL
 
 class music_cog(commands.Cog):
     def __init__(self, bot):
@@ -66,8 +66,8 @@ class music_cog(commands.Cog):
                 info = ydl.extract_info("ytsearch:%s" % item, download=False)['entries'][0]
             except Exception:
                 return False
-
-        return {'source': info['formats'][0]['url'], 'title': info['title']}
+        
+        return {'source': info['url'], 'title': info['title']}
 
 
     def play_next(self, ctx):
