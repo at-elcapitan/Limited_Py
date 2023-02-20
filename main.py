@@ -1,15 +1,35 @@
 # by ElCapitan, PROJECT Limited 2022
-print("AT PROJECT Limited, 2022 - 2023; ATLB-v1.5.8")
-import discord
-import os
-import embeds
-from discord.ext import commands
-from dotenv import load_dotenv
-from music import music_cog
+print("AT PROJECT Limited, 2022 - 2023; ATLB-v1.5.9", end="\n\n")
+try:
+    print("\tImporting libraries...")
+    print("\t\tImporting 'discord'")
+    import discord
+    from discord.ext import commands
+    print("\t\tImporting 'os'")
+    import os
+    print("\t\tImporting 'logging'")
+    import logging
+    print("\t\tImporting 'embeds.py'")
+    import embeds
+    print("\t\tImporting 'dotenv'")
+    from dotenv import load_dotenv
+    print("\t\tImporting 'music.py'")
+    from music import music_cog
+    print("\t\tImporting 'JSON'")
+    from datetime import datetime
+    print("\r[ \x1b[32;1mOK\x1b[39;0m ] Libraries imported.")
+except Exception as exception:
+    print("\r[ \x1b[31;1mERR\x1b[39;0m ] Importing libraries...")
+    print(exception)
+
+
 
 load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
 
+time = datetime.now().strftime("%d-%m-%Y_%H-%M-%S")
+handler = logging.FileHandler(filename=f'logs\{time}.log', encoding='utf-8', mode='w')
+print(f"\r[ \x1b[32;1mOK\x1b[39;0m ] Loging started at file '{time}.log'")
 bot = commands.Bot(command_prefix = "sc.", intents=discord.Intents.all())
 bot.remove_command('help')
 
@@ -18,6 +38,7 @@ client = discord.Client(intents=discord.Intents.all())
 
 @bot.event
 async def on_ready():
+    print("\r[ \x1b[32;1mOK\x1b[39;0m ] Bot started.")
     await bot.add_cog(music_cog(bot))
     await bot.change_presence(status=discord.Status.online, activity=discord.Game("Link, start.."))
 
@@ -119,4 +140,9 @@ async def openchat(ctx):
     else:
         await ctx.send(embed=embeds.errorEmbed())
 
-bot.run(TOKEN)
+try:
+    bot.run(TOKEN, log_handler=handler)
+except Exception as exeption:
+    print("\r[ \x1b[31;1mERR\x1b[39;49m ] Starting bot...")
+    print(exception)
+    quit(1)
