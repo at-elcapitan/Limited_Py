@@ -1,4 +1,4 @@
-# AT PROJECT Limited 2022 - 2023; ATLB-v1.6.2_5
+# AT PROJECT Limited 2022 - 2023; ATLB-v1.6.2_6
 import math
 import discord
 import json
@@ -337,6 +337,11 @@ class music_cog(commands.Cog):
             if int(num) != 0:
                 item = list[int(num) - 1][1]
                 song = self.search_yt(item)
+
+                if not song:
+                    await ctx.send(embed=errorEmbedCustom(854, "Import error", f"Unknown error occurred while importing track **{list[int(num) - 1][0]}**"))
+                    return
+
                 if self.song_source == "":
                     self.song_source = [song['source'], voice_channel]
                     self.song_title = song['title']
@@ -350,7 +355,7 @@ class music_cog(commands.Cog):
                 song = self.search_yt(item)
 
                 if not song:
-                    await ctx.send(embed=errorEmbedCustom(854, "Import error", f"Unknown error occurred while importing track {item}"))
+                    await ctx.send(embed=errorEmbedCustom(854, "Import error", f"Unknown error occurred while importing track **{list[int(num) - 1][0]}**"))
                     continue
 
                 if self.song_source == "":
