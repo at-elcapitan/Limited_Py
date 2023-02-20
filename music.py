@@ -1,4 +1,4 @@
-# AT PROJECT Limited 2022 - 2023; ATLB-v1.6.2
+# AT PROJECT Limited 2022 - 2023; ATLB-v1.6.2_3
 import math
 import discord
 import json
@@ -347,7 +347,7 @@ class music_cog(commands.Cog):
                 return
 
             for item in list:
-                item = item[1][1][12]
+                item = item[1]
                 song = self.search_yt(item)
 
                 if not song:
