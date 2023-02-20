@@ -1,5 +1,5 @@
 # by ElCapitan, PROJECT Limited 2022
-print("AT PROJECT Limited, 2022 - 2023; ATLB-v1.5.9_2", end="\n\n")
+print("AT PROJECT Limited, 2022 - 2023; ATLB-v1.5.9_3", end="\n\n")
 try:
     print("\tImporting libraries...")
     print("\t\tImporting 'discord'")
@@ -143,6 +143,6 @@ async def openchat(ctx):
 try:
     bot.run(TOKEN, log_handler=handler)
 except Exception as exeption:
-    print("\r[ \x1b[31;1mERR\x1b[39;49m ] Starting bot...")
-    print(exception)
+    print("\r[ \x1b[31;1mERR\x1b[39;0m ] Starting bot...")
+    print(f"\t\x1b[39;1m{exeption}\x1b[39;0m")
     quit(1)
