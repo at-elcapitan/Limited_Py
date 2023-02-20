@@ -1,4 +1,4 @@
-# AT PROJECT Limited 2022 - 2023; ATLB-v1.6.2_4
+# AT PROJECT Limited 2022 - 2023; ATLB-v1.6.2_5
 import math
 import discord
 import json
@@ -169,7 +169,6 @@ class music_cog(commands.Cog):
 
             for i in range(srt, stp):
                 if i > len(self.music_queue) - 1:
-                    print("a")
                     break
                 if len(self.music_queue[i][0]['title']) > 65:
                     z = len(self.music_queue[i][0]['title']) - 65
