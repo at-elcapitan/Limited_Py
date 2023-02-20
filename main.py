@@ -1,5 +1,5 @@
 # by ElCapitan, PROJECT Limited 2022
-print("AT PROJECT Limited, 2022 - 2023; ATLB-v1.6.1_2")
+print("AT PROJECT Limited, 2022 - 2023; ATLB-v1.6.1_3")
 try:
     print("\tImporting libraries...")
     print("\t\tImporting 'discord'")
@@ -38,7 +38,7 @@ time = datetime.now().strftime("%d-%m-%Y_%H-%M-%S")
 
 if logs:
     handler = logging.FileHandler(filename=f'logs\{time}.log', encoding='utf-8', mode='w')
-    print(f"\r[ \x1b[32;1mOK\x1b[39;0m ] Loging started to file '{time}.log'")
+    print(f"\r[ \x1b[32;1mOK\x1b[39;0m ] Loging started to file '{time}.log'.")
 else:
     print(f"\r[ \x1b[33;1mWARN\x1b[39;0m ] Log system disabled.")
 bot = commands.Bot(command_prefix = "sc.", intents=discord.Intents.all())
