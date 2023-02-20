@@ -1,4 +1,4 @@
-# AT PROJECT Limited 2022 - 2023; ATLB-v1.5.9_3
+# AT PROJECT Limited 2022 - 2023; ATLB-v1.6.0
 import discord
 
 def default():
@@ -94,4 +94,12 @@ def eventEmbed(title = None, text = None, name = ""):
 
     embed.add_field(name=name, value=text, inline=False)
 
+    return embed
+
+def unknownError():
+    embed = discord.Embed(title="System Alert: Code 899", color=0xFF0000)
+
+    embed.add_field(name="Unknown error!",
+                    value="Unknown error ocurred. Please, contact administrator.", inline=False)
+    
     return embed
