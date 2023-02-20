@@ -1,4 +1,4 @@
-# AT PROJECT Limited 2022 - 2023; ATLB-v1.6.0
+# AT PROJECT Limited 2022 - 2023; ATLB-v1.6.1
 import discord
 
 def default():

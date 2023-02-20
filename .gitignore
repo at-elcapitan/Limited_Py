@@ -1,5 +1,5 @@
-.gitignore
 .env
 cookies.txt
 lists.json
 logs
+config.json
