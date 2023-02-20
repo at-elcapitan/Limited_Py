@@ -1,4 +1,4 @@
-# AT PROJECT Limited 2022 - 2023; ATLB-v1.6.1
+# AT PROJECT Limited 2022 - 2023; ATLB-v1.6.1_2
 import math
 import discord
 import json
@@ -18,7 +18,7 @@ class music_cog(commands.Cog):
         self.loop = 0
 
         self.music_queue = []
-        self.YDL_OPTIONS = {'format': 'bestaudio/best', 'noplaylist':'True', 'cookiefile': 'cookies.txt'}
+        self.YDL_OPTIONS = {'format': 'bestaudio/best', 'noplaylist':'True', 'cookiefile': 'cookies.txt', 'quiet' : True}
         self.FFMPEG_OPTIONS = {'before_options': '-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5', 'options': '-vn'}
         self.vc = None
 
@@ -65,19 +65,24 @@ class music_cog(commands.Cog):
             try:
                 info = ydl.extract_info("ytsearch:%s" % item, download=False)['entries'][0]
             except Exception:
+
                 return False
         
         return {'source': info['url'], 'title': info['title']}
 
 
     def play_next(self, ctx):
-        self.is_playing = True
+        try:
+            self.is_playing = True
 
-        m_url = self.song_source[0]
+            m_url = self.song_source[0]
 
-        if not self.loop == 1:
-            self.bot.dispatch("display_song", self, ctx)
-        self.vc.play(discord.FFmpegPCMAudio(m_url, **self.FFMPEG_OPTIONS), after=lambda e: self.change_song(ctx))
+            if not self.loop == 1:
+                self.bot.dispatch("display_song", self, ctx)
+            self.vc.play(discord.FFmpegPCMAudio(m_url, **self.FFMPEG_OPTIONS), after=lambda e: self.change_song(ctx))
+        except Exception as exc:
+            print("\r[ \x1b[31;1mERR\x1b[39;0m ] Error occurred while executing command.")
+            print(f"\t\x1b[39;1m{exc}\x1b[39;0m")
 
 
     async def play_music(self, ctx):
