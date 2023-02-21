@@ -1,27 +1,27 @@
 # by ElCapitan, PROJECT Limited 2022
-print("AT PROJECT Limited, 2022 - 2023; ATLB-v1.6.2_6")
+print("AT PROJECT Limited, 2022 - 2023; ATLB-v1.6.2_8")
 try:
     print("\tImporting libraries...")
-    print("\t\tImporting 'discord'")
     import discord
     from discord.ext import commands
-    print("\t\tImporting 'os'")
+    print("[ \x1b[32;1mOK\x1b[39;0m ]  Imported 'discord'")
     import os
-    print("\t\tImporting 'logging'")
+    print("[ \x1b[32;1mOK\x1b[39;0m ]  Imported 'os'")
     import logging
-    print("\t\tImporting 'embeds.py'")
+    print("[ \x1b[32;1mOK\x1b[39;0m ]  Imported 'logging'")
     import embeds
-    print("\t\tImporting 'dotenv'")
+    print("[ \x1b[32;1mOK\x1b[39;0m ]  Imported 'embeds.py'")
     from dotenv import load_dotenv
-    print("\t\tImporting 'music.py'")
+    print("[ \x1b[32;1mOK\x1b[39;0m ]  Imported 'dotenv'")
     from music import music_cog
-    print("\t\tImporting 'datetime'")
+    print("[ \x1b[32;1mOK\x1b[39;0m ]  Imported 'music.py'")
     from datetime import datetime
-    print("\t\tImporting 'JSON'")
+    print("[ \x1b[32;1mOK\x1b[39;0m ]  Imported 'datetime'")
     import json
-    print("\r[ \x1b[32;1mOK\x1b[39;0m ] Libraries imported.")
+    print("[ \x1b[32;1mOK\x1b[39;0m ]  Imported 'JSON'")
+    print("\tLibraries imported.")
 except Exception as exception:
-    print("\r[ \x1b[31;1mERR\x1b[39;0m ] Importing libraries...")
+    print("\r[ \x1b[31;1mERR\x1b[39;0m ]  Importing libraries...")
     print(f"\t\x1b[39;1m{exception}\x1b[39;0m")
     quit(1)
 
@@ -38,9 +38,9 @@ time = datetime.now().strftime("%d-%m-%Y_%H-%M-%S")
 
 if logs:
     handler = logging.FileHandler(filename=f'logs\{time}.log', encoding='utf-8', mode='w')
-    print(f"\r[ \x1b[32;1mOK\x1b[39;0m ] Loging started to file '{time}.log'.")
+    print(f"\r[ \x1b[32;1mOK\x1b[39;0m ]  Loging started to file '{time}.log'.")
 else:
-    print(f"\r[ \x1b[33;1mWARN\x1b[39;0m ] Log system disabled.")
+    print(f"\r[ \x1b[33;1mWARN\x1b[39;0m ]  Log system disabled.")
 bot = commands.Bot(command_prefix = "sc.", intents=discord.Intents.all())
 bot.remove_command('help')
 
@@ -51,11 +51,11 @@ client = discord.Client(intents=discord.Intents.all())
 async def on_ready():
     if music:
         await bot.add_cog(music_cog(bot, time))
-        print("\r[ \x1b[32;1mOK\x1b[39;0m ] Music COG imported.")
+        print("\r[ \x1b[32;1mOK\x1b[39;0m ]  Music COG imported.")
     else:
-        print(f"\r[ \x1b[33;1mWARN\x1b[39;0m ] Music module disabled.")
+        print(f"\r[ \x1b[33;1mWARN\x1b[39;0m ]  Music module disabled.")
     await bot.change_presence(status=discord.Status.online, activity=discord.Game("Link, start.."))
-    print("\r[ \x1b[32;1mOK\x1b[39;0m ] Bot started.")
+    print("\r[ \x1b[32;1mOK\x1b[39;0m ]  Bot started.")
 
 
 @bot.event
@@ -122,7 +122,7 @@ async def ban(ctx, user: discord.User = None, reason=None, deleteMassageDays = 0
         else:
             await ctx.send(embed=embeds.errorEmbed())
     except Exception as exc:
-        print("\r[ \x1b[31;1mERR\x1b[39;0m ] Error occurred while executing command.")
+        print("\r[ \x1b[31;1mERR\x1b[39;0m ]  Error occurred while executing command.")
         print(f"\t\x1b[39;1m{exc}\x1b[39;0m")
         await ctx.send(embed=embeds.unknownError())
 
@@ -138,7 +138,7 @@ async def unban(ctx, user: discord.User = None):
         else:
             await ctx.send(embed=embeds.errorEmbed())
     except Exception as exc:
-        print("\r[ \x1b[31;1mERR\x1b[39;0m ] Error occurred while executing command.")
+        print("\r[ \x1b[31;1mERR\x1b[39;0m ]  Error occurred while executing command.")
         print(f"\t\x1b[39;1m{exc}\x1b[39;0m")
         await ctx.send(embed=embeds.unknownError())
 
@@ -156,13 +156,13 @@ async def clear(ctx, number=None):
             try:
                 await ctx.channel.delete_messages(mgs)
             except Exception as exc:
-                print("\r[ \x1b[31;1mERR\x1b[39;0m ] Error occurred while executing command.")
+                print("\r[ \x1b[31;1mERR\x1b[39;0m ]  Error occurred while executing command.")
                 print(f"\t\x1b[39;1m{exc}\x1b[39;0m")
                 await ctx.send(embed=embeds.errorEmbedCustom(855, "Messages can`t be deleted!", "You are trying to delete messages, that was sended more than 2 week ago!"))
         else:
             await ctx.send(embed=embeds.errorEmbed())
     except Exception as exc:
-        print("\r[ \x1b[31;1mERR\x1b[39;0m ] Error occurred while executing command.")
+        print("\r[ \x1b[31;1mERR\x1b[39;0m ]  Error occurred while executing command.")
         print(f"\t\x1b[39;1m{exc}\x1b[39;0m")
         await ctx.send(embed=embeds.unknownError())
 
@@ -176,7 +176,7 @@ async def closechat(ctx):
         else:
             await ctx.send(embed=embeds.errorEmbed())
     except Exception as exc:
-        print("\r[ \x1b[31;1mERR\x1b[39;0m ] Error occurred while executing command.")
+        print("\r[ \x1b[31;1mERR\x1b[39;0m ]  Error occurred while executing command.")
         print(f"\t\x1b[39;1m{exc}\x1b[39;0m")
         await ctx.send(embed=embeds.unknownError())
 
@@ -190,7 +190,7 @@ async def openchat(ctx):
         else:
             await ctx.send(embed=embeds.errorEmbed())
     except Exception as exc:
-        print("\r[ \x1b[31;1mERR\x1b[39;0m ] Error occurred while executing command.")
+        print("\r[ \x1b[31;1mERR\x1b[39;0m ]  Error occurred while executing command.")
         print(f"\t\x1b[39;1m{exc}\x1b[39;0m")
         await ctx.send(embed=embeds.unknownError())
 
@@ -200,6 +200,6 @@ try:
     else:
         bot.run(TOKEN)
 except Exception as exeption:
-    print("\r[ \x1b[31;1mERR\x1b[39;0m ] Starting bot...")
+    print("\r[ \x1b[31;1mERR\x1b[39;0m ]  Starting bot...")
     print(f"\t\x1b[39;1m{exeption}\x1b[39;0m")
     quit(1)

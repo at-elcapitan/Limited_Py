@@ -1,4 +1,4 @@
-# AT PROJECT Limited 2022 - 2023; ATLB-v1.6.2_6
+# AT PROJECT Limited 2022 - 2023; ATLB-v1.6.2_8
 import math
 import discord
 import json
@@ -87,7 +87,7 @@ class music_cog(commands.Cog):
                 self.bot.dispatch("display_song", self, ctx)
             self.vc.play(discord.FFmpegPCMAudio(m_url, **self.FFMPEG_OPTIONS), after=lambda e: self.change_song(ctx))
         except Exception as exc:
-            print("\r[ \x1b[31;1mERR\x1b[39;0m ] Error occurred while executing command.")
+            print("\r[ \x1b[31;1mERR\x1b[39;0m ]  Error occurred while executing command.")
             print(f"\t\x1b[39;1m{exc}\x1b[39;0m")
             self.logger.warning(traceback.format_exc())
 
@@ -139,7 +139,7 @@ class music_cog(commands.Cog):
                         await ctx.send(embed=eventEmbed(name="✅ Success!", text= f'Song added to the queue \n **{song["title"]}**'))
                         self.music_queue.append([song, voice_channel])
         except Exception as exc:
-            print("\r[ \x1b[31;1mERR\x1b[39;0m ] Error occurred while executing command.")
+            print("\r[ \x1b[31;1mERR\x1b[39;0m ]  Error occurred while executing command.")
             print(f"\t\x1b[39;1m{exc}\x1b[39;0m")
             self.logger.warning(traceback.format_exc())
             await ctx.send(embed=unknownError())
@@ -194,7 +194,7 @@ class music_cog(commands.Cog):
 
             await ctx.send(embed = embed)
         except Exception as exc:
-            print("\r[ \x1b[31;1mERR\x1b[39;0m ] Error occurred while executing command.")
+            print("\r[ \x1b[31;1mERR\x1b[39;0m ]  Error occurred while executing command.")
             print(f"\t\x1b[39;1m{exc}\x1b[39;0m")
             self.logger.warning(traceback.format_exc())
             await ctx.send(embed=unknownError())
@@ -212,7 +212,7 @@ class music_cog(commands.Cog):
                 self.is_playing = True
                 self.vc.resume()
         except Exception as exc:
-            print("\r[ \x1b[31;1mERR\x1b[39;0m ] Error occurred while executing command.")
+            print("\r[ \x1b[31;1mERR\x1b[39;0m ]  Error occurred while executing command.")
             print(f"\t\x1b[39;1m{exc}\x1b[39;0m")
             self.logger.warning(traceback.format_exc())
             await ctx.send(embed=unknownError())
@@ -230,7 +230,7 @@ class music_cog(commands.Cog):
                 self.song_position = len(self.music_queue) - 2
                 self.bot.dispatch("change_song", self, ctx)
         except Exception as exc:
-            print("\r[ \x1b[31;1mERR\x1b[39;0m ] Error occurred while executing command.")
+            print("\r[ \x1b[31;1mERR\x1b[39;0m ]  Error occurred while executing command.")
             print(f"\t\x1b[39;1m{exc}\x1b[39;0m")
             self.logger.warning(traceback.format_exc())
             await ctx.send(embed=unknownError())
@@ -256,7 +256,7 @@ class music_cog(commands.Cog):
                     self.vc.stop()
                     self.bot.dispatch("change_song", self, ctx)
         except Exception as exc:
-            print("\r[ \x1b[31;1mERR\x1b[39;0m ] Error occurred while executing command.")
+            print("\r[ \x1b[31;1mERR\x1b[39;0m ]  Error occurred while executing command.")
             print(f"\t\x1b[39;1m{exc}\x1b[39;0m")
             self.logger.warning(traceback.format_exc())
             await ctx.send(embed=unknownError())
@@ -269,7 +269,7 @@ class music_cog(commands.Cog):
             self.is_paused = False
             await self.vc.disconnect()
         except Exception as exc:
-            print("\r[ \x1b[31;1mERR\x1b[39;0m ] Error occurred while executing command.")
+            print("\r[ \x1b[31;1mERR\x1b[39;0m ]  Error occurred while executing command.")
             print(f"\t\x1b[39;1m{exc}\x1b[39;0m")
             self.logger.warning(traceback.format_exc())
             await ctx.send(embed=unknownError())
@@ -289,7 +289,7 @@ class music_cog(commands.Cog):
                 self.music_queue.pop(int(num) - 1)
                 await ctx.send(embed=eventEmbed(name="✅ Success!", text="Song **" + title + "** succesfully cleared!"))
         except Exception as exc:
-            print("\r[ \x1b[31;1mERR\x1b[39;0m ] Error occurred while executing command.")
+            print("\r[ \x1b[31;1mERR\x1b[39;0m ]  Error occurred while executing command.")
             print(f"\t\x1b[39;1m{exc}\x1b[39;0m")
             self.logger.warning(traceback.format_exc())
             await ctx.send(embed=unknownError())
@@ -309,7 +309,7 @@ class music_cog(commands.Cog):
                     self.loop = 0
                     await ctx.send(embed=eventEmbed(name="✅ Success!", text="Loop turned off."))
         except Exception as exc:
-            print("\r[ \x1b[31;1mERR\x1b[39;0m ] Error occurred while executing command.")
+            print("\r[ \x1b[31;1mERR\x1b[39;0m ]  Error occurred while executing command.")
             print(f"\t\x1b[39;1m{exc}\x1b[39;0m")
             self.logger.warning(traceback.format_exc())
             await ctx.send(embed=unknownError())
@@ -351,11 +351,10 @@ class music_cog(commands.Cog):
                 return
 
             for item in list:
-                item = item[1]
-                song = self.search_yt(item)
+                song = self.search_yt(item[1])
 
                 if not song:
-                    await ctx.send(embed=errorEmbedCustom(854, "Import error", f"Unknown error occurred while importing track **{list[int(num) - 1][0]}**"))
+                    await ctx.send(embed=errorEmbedCustom(854, "Import error", f"Unknown error occurred while importing track **{item[0]}**"))
                     continue
 
                 if self.song_source == "":
@@ -371,7 +370,7 @@ class music_cog(commands.Cog):
             
             await ctx.send(embed=eventEmbed(name="✅ Success!", text= f'Track list succesfully imported!'))
         except Exception as exc:
-            print("\r[ \x1b[31;1mERR\x1b[39;0m ] Error occurred while executing command.")
+            print("\r[ \x1b[31;1mERR\x1b[39;0m ]  Error occurred while executing command.")
             print(f"\t\x1b[39;1m{exc}\x1b[39;0m")
             self.logger.warning(traceback.format_exc())
             await ctx.send(embed=unknownError())
@@ -396,7 +395,7 @@ class music_cog(commands.Cog):
                 json.dump(data, f, indent=4, ensure_ascii=False)
                 f.truncate()
         except Exception as exc:
-            print("\r[ \x1b[31;1mERR\x1b[39;0m ] Error occurred while executing command.")
+            print("\r[ \x1b[31;1mERR\x1b[39;0m ]  Error occurred while executing command.")
             print(f"\t\x1b[39;1m{exc}\x1b[39;0m")
             self.logger.warning(traceback.format_exc())
             await ctx.send(embed=unknownError())
@@ -446,7 +445,7 @@ class music_cog(commands.Cog):
 
                 else: await ctx.send(embed=errorEmbedCustom("804", "Uknown list", "Error: you don`t have saved list!"))
         except Exception as exc:
-            print("\r[ \x1b[31;1mERR\x1b[39;0m ] Error occurred while executing command.")
+            print("\r[ \x1b[31;1mERR\x1b[39;0m ]  Error occurred while executing command.")
             print(f"\t\x1b[39;1m{exc}\x1b[39;0m")
             self.logger.warning(traceback.format_exc())
             await ctx.send(embed=unknownError())
@@ -471,7 +470,7 @@ class music_cog(commands.Cog):
                 json.dump(data, f, indent=4, ensure_ascii=False)
                 f.truncate()
         except Exception as exc:
-            print("\r[ \x1b[31;1mERR\x1b[39;0m ] Error occurred while executing command.")
+            print("\r[ \x1b[31;1mERR\x1b[39;0m ]  Error occurred while executing command.")
             print(f"\t\x1b[39;1m{exc}\x1b[39;0m")
             self.logger.warning(traceback.format_exc())
             await ctx.send(embed=unknownError())
@@ -494,7 +493,7 @@ class music_cog(commands.Cog):
                 f.truncate()
                 await ctx.send(embed=eventEmbed(name="✅ Success!", text="Your list have been succesfully initialized!"))
         except Exception as exc:
-            print("\r[ \x1b[31;1mERR\x1b[39;0m ] Error occurred while executing command.")
+            print("\r[ \x1b[31;1mERR\x1b[39;0m ]  Error occurred while executing command.")
             print(f"\t\x1b[39;1m{exc}\x1b[39;0m")
             self.logger.warning(traceback.format_exc())
             await ctx.send(embed=unknownError())
