@@ -1,4 +1,4 @@
-# AT PROJECT Limited 2022 - 2023; ATLB-v1.6.2_8
+# AT PROJECT Limited 2022 - 2023; ATLB-v1.6.3
 import discord
 
 def default():
@@ -102,4 +102,8 @@ def unknownError():
     embed.add_field(name="Unknown error!",
                     value="Unknown error ocurred. Please, contact administrator.", inline=False)
     
+    return embed
+
+def disconnected_embed():
+    embed = discord.Embed(title="Timed out", description="Disconnected from the voice channel due to inactivity.", color=0xFF0000)
     return embed

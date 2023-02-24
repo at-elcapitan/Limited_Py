@@ -1,4 +1,4 @@
-# AT PROJECT Limited 2022 - 2023; ATLB-v1.6.2_8
+# AT PROJECT Limited 2022 - 2023; ATLB-v1.6.3
 import math
 import discord
 import json
@@ -6,7 +6,7 @@ import asyncio
 import logging
 import traceback
 from discord.ext import commands
-from embeds import errorEmbedCustom, eventEmbed, unknownError
+from embeds import errorEmbedCustom, eventEmbed, unknownError, disconnected_embed
 from yt_dlp import YoutubeDL
 
 class music_cog(commands.Cog):
@@ -23,6 +23,8 @@ class music_cog(commands.Cog):
         self.song_title = ""
         self.song_position = 0
         self.loop = 0
+        self.delay_time = 10
+        self.command_channel = ""
 
         self.music_queue = []
         self.YDL_OPTIONS = {'format': 'bestaudio/best', 'noplaylist':'True', 'cookiefile': 'cookies.txt', 'quiet' : True}
@@ -40,6 +42,28 @@ class music_cog(commands.Cog):
         self.song_source = ""
         self.song_title = ""
         self.song_position = 0
+        self.command_channel = ""
+    
+    @commands.Cog.listener()
+    async def on_voice_state_update(self, member, before, after):
+        if not member.id == self.bot.user.id:
+            return
+        elif before.channel is None:
+            voice = after.channel.guild.voice_client
+            time = 0
+
+            while True:
+                await asyncio.sleep(1)
+                time = time + 1
+                if voice.is_playing() and not voice.is_paused():
+                    time = 0
+                if time == self.delay_time:
+                    await voice.disconnect()
+                    print(self.command_channel)
+                    await self.command_channel.send(embed = disconnected_embed())
+                if not voice.is_connected():
+                    break
+
 
     def change_song(self, ctx):
         if len(self.music_queue) > 0:
@@ -134,6 +158,7 @@ class music_cog(commands.Cog):
                         self.music_queue.append([song, voice_channel])
                         self.song_source = [song['source'], voice_channel]
                         self.song_title = song['title']
+                        self.command_channel = ctx.channel
                         await self.play_music(ctx)
                     else:
                         await ctx.send(embed=eventEmbed(name="✅ Success!", text= f'Song added to the queue \n **{song["title"]}**'))
@@ -345,9 +370,11 @@ class music_cog(commands.Cog):
                 if self.song_source == "":
                     self.song_source = [song['source'], voice_channel]
                     self.song_title = song['title']
+                    self.command_channel = ctx.channel
                 self.music_queue.append([song, voice_channel])
                 if not self.is_playing:
                     await self.play_music(ctx)
+                    await ctx.send(embed=eventEmbed(name="✅ Success!", text= f'Song added to the queue \n **{song["title"]}**'))
                 return
 
             for item in list:
