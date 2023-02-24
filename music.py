@@ -1,4 +1,4 @@
-# AT PROJECT Limited 2022 - 2023; ATLB-v1.6.4
+# AT PROJECT Limited 2022 - 2023; ATLB-v1.6.4_2
 import math
 import discord
 import json
@@ -23,7 +23,7 @@ class music_cog(commands.Cog):
         self.song_title = ""
         self.song_position = 0
         self.loop = 0
-        self.delay_time = 300
+        self.delay_time = 5
         self.auto_disconnect = True
         self.command_channel = ""
 
@@ -43,7 +43,6 @@ class music_cog(commands.Cog):
         self.song_source = ""
         self.song_title = ""
         self.song_position = 0
-        self.command_channel = ""
     
     @commands.Cog.listener()
     async def on_voice_state_update(self, member, before, after):
@@ -58,13 +57,11 @@ class music_cog(commands.Cog):
                 time = time + 1
                 if voice.is_playing() and not voice.is_paused():
                     time = 0
+                elif not self.auto_disconnect:
+                    time = 0
                 elif time == self.delay_time:
-                    if self.auto_disconnect:
-                        await voice.disconnect()
-                        print(self.command_channel)
-                        await self.command_channel.send(embed = disconnected_embed())
-                    else:
-                        time = 0
+                    await voice.disconnect()
+                    await self.command_channel.send(embed = disconnected_embed())
                 elif not voice.is_connected():
                     break
 
