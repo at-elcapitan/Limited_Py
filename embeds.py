@@ -1,4 +1,4 @@
-# AT PROJECT Limited 2022 - 2023; ATLB-v1.6.3
+# AT PROJECT Limited 2022 - 2023; ATLB-v1.6.4
 import discord
 
 def default():
@@ -7,7 +7,7 @@ def default():
     embed.add_field(name="Global COMMANDS", value="`inspect`", inline=False)
     embed.add_field(name="Work with chat", value="`clear`, `closechat`, `openchat`", inline=False)
     embed.add_field(name="Work with user", value="`ban`, `unban`", inline=False)
-    embed.add_field(name="Music", value="`*play [p]`, `*pause [pa]`, `*skip [s]`, `*queue [q]`, `clearqueue [cq]`, `*disconnect [d]`, `loop [lp]`")
+    embed.add_field(name="Music", value="`*play [p]`, `*pause [pa]`, `*skip [s]`, `*queue [q]`, `clearqueue [cq]`, `*disconnect [d]`, `loop [lp]`, `24/7`")
     embed.add_field(name="User list [Music]", value="`*playlist [pll]`, `addtolist [atl]`, `*printlist [ptl]`, `clearlist [cll]`, `initlist [inl]`")
 
     embed.set_footer(text="To get more information about COMMAND, type sc.inpect <commandName> \n * - command have no description")

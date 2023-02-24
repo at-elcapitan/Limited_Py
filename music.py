@@ -1,4 +1,4 @@
-# AT PROJECT Limited 2022 - 2023; ATLB-v1.6.3
+# AT PROJECT Limited 2022 - 2023; ATLB-v1.6.4
 import math
 import discord
 import json
@@ -23,7 +23,8 @@ class music_cog(commands.Cog):
         self.song_title = ""
         self.song_position = 0
         self.loop = 0
-        self.delay_time = 10
+        self.delay_time = 300
+        self.auto_disconnect = True
         self.command_channel = ""
 
         self.music_queue = []
@@ -57,11 +58,14 @@ class music_cog(commands.Cog):
                 time = time + 1
                 if voice.is_playing() and not voice.is_paused():
                     time = 0
-                if time == self.delay_time:
-                    await voice.disconnect()
-                    print(self.command_channel)
-                    await self.command_channel.send(embed = disconnected_embed())
-                if not voice.is_connected():
+                elif time == self.delay_time:
+                    if self.auto_disconnect:
+                        await voice.disconnect()
+                        print(self.command_channel)
+                        await self.command_channel.send(embed = disconnected_embed())
+                    else:
+                        time = 0
+                elif not voice.is_connected():
                     break
 
 
@@ -208,13 +212,19 @@ class music_cog(commands.Cog):
                 
             embed.add_field(name="📄 Playlist", value=retval)
             
-            if self.loop == 1:
-                loop_on = "current song"
-            elif self.loop == 2:
-                loop_on = "on playlist"
+            match self.loop:
+                case 1:
+                    loop_on = "current song"
+                case 2:
+                    loop_on = "on playlist"
+                case 0:
+                    loop_on = "turned off"
+
+            if self.auto_disconnect:
+                auto_discon = "disabled"
             else:
-                loop_on = "turned off"
-            footer = f"Page: {page} of {pages}, Loop: {loop_on}"
+                auto_discon = "enabled"
+            footer = f"Page: {page} of {pages}\nLoop: {loop_on}\n24/7: {auto_discon}"
             embed.set_footer(text=footer)
 
             await ctx.send(embed = embed)
@@ -333,6 +343,24 @@ class music_cog(commands.Cog):
                 case 2:
                     self.loop = 0
                     await ctx.send(embed=eventEmbed(name="✅ Success!", text="Loop turned off."))
+        except Exception as exc:
+            print("\r[ \x1b[31;1mERR\x1b[39;0m ]  Error occurred while executing command.")
+            print(f"\t\x1b[39;1m{exc}\x1b[39;0m")
+            self.logger.warning(traceback.format_exc())
+            await ctx.send(embed=unknownError())
+
+
+    @commands.command(name="24/7")
+    async def auto_disconnect(self, ctx):
+        try:
+            if self.auto_disconnect:
+                self.auto_disconnect = False
+                embed = discord.Embed(title="✅ Mode changed", description="24/7 mode **enabled**", color=0xa31eff)
+                await ctx.send(embed=embed)
+            else:
+                self.auto_disconnect = True
+                embed = discord.Embed(title="✅ Mode changed", description="24/7 mode **disabled**", color=0xa31eff)
+                await ctx.send(embed=embed)
         except Exception as exc:
             print("\r[ \x1b[31;1mERR\x1b[39;0m ]  Error occurred while executing command.")
             print(f"\t\x1b[39;1m{exc}\x1b[39;0m")
