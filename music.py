@@ -1,4 +1,4 @@
-# AT PROJECT Limited 2022 - 2023; ATLB-v1.6.4_2
+# AT PROJECT Limited 2022 - 2023; ATLB-v1.6.5
 import math
 import discord
 import json
@@ -23,7 +23,7 @@ class music_cog(commands.Cog):
         self.song_title = ""
         self.song_position = 0
         self.loop = 0
-        self.delay_time = 5
+        self.delay_time = 300
         self.auto_disconnect = True
         self.command_channel = ""
 
@@ -328,18 +328,29 @@ class music_cog(commands.Cog):
         
         
     @commands.command(name='loop', aliases=["lp"])
-    async def loop(self, ctx):
+    async def loop(self, ctx, mode = "9"):
         try:
-            match self.loop:
-                case 0:
-                    self.loop += 1
-                    await ctx.send(embed=eventEmbed(name="✅ Success!", text="Loop turned on current song."))
-                case 1:
-                    self.loop += 1
-                    await ctx.send(embed=eventEmbed(name="✅ Success!", text="Loop turned on playlist."))
-                case 2:
+            match mode:
+                case "curr":
+                    self.loop = 1
+                    await ctx.send(embed=eventEmbed(name="🔵 Mode changed", text="Loop turned on current song."))
+                case "list":
+                    self.loop = 2
+                    await ctx.send(embed=eventEmbed(name="🔵 Mode changed", text="Loop turned on playlist."))
+                case "off":
                     self.loop = 0
-                    await ctx.send(embed=eventEmbed(name="✅ Success!", text="Loop turned off."))
+                    await ctx.send(embed=eventEmbed(name="🔵 Mode changed", text="Loop turned off."))
+                case "9":
+                    match self.loop:
+                        case 0:
+                            self.loop += 1
+                            await ctx.send(embed=eventEmbed(name="🔵 Mode changed", text="Loop turned on current song."))
+                        case 1:
+                            self.loop += 1
+                            await ctx.send(embed=eventEmbed(name="🔵 Mode changed", text="Loop turned on playlist."))
+                        case 2:
+                            self.loop = 0
+                            await ctx.send(embed=eventEmbed(name="🔵 Mode changed", text="Loop turned off."))
         except Exception as exc:
             print("\r[ \x1b[31;1mERR\x1b[39;0m ]  Error occurred while executing command.")
             print(f"\t\x1b[39;1m{exc}\x1b[39;0m")

@@ -1,4 +1,4 @@
-# AT PROJECT Limited 2022 - 2023; ATLB-v1.6.4_2
+# AT PROJECT Limited 2022 - 2023; ATLB-v1.6.5
 import discord
 
 def default():
@@ -7,10 +7,10 @@ def default():
     embed.add_field(name="Global COMMANDS", value="`inspect`", inline=False)
     embed.add_field(name="Work with chat", value="`clear`, `closechat`, `openchat`", inline=False)
     embed.add_field(name="Work with user", value="`ban`, `unban`", inline=False)
-    embed.add_field(name="Music", value="`*play [p]`, `*pause [pa]`, `*skip [s]`, `*queue [q]`, `clearqueue [cq]`, `*disconnect [d]`, `loop [lp]`, `24/7`")
-    embed.add_field(name="User list [Music]", value="`*playlist [pll]`, `addtolist [atl]`, `*printlist [ptl]`, `clearlist [cll]`, `initlist [inl]`")
+    embed.add_field(name="Music", value="`*play [p]`, `*pause [pa]`, `*next [n, s]` `*previous [prev]`, `list [q, lst]`, `clearqueue [cq]`, `*disconnect [d]`, `loop [lp]`, `*24/7`")
+    embed.add_field(name="User list [Music]", value="`playlist [pll]`, `addtolist [atl]`, `printlist [ptl]`, `clearlist [cll]`, `initlist [inl]`")
 
-    embed.set_footer(text="To get more information about COMMAND, type sc.inpect <commandName> \n * - command have no description")
+    embed.set_footer(text="To get more information about COMMAND, type sc.inpect <fullCommandName> \n * - command have no description")
 
     return embed
 
@@ -30,9 +30,9 @@ def unban():
     return embed
 
 def clearchat():
-    embed = discord.Embed(title="CLEARCHAT command", color=0xa31eff)
+    embed = discord.Embed(title="CLEAR command", color=0xa31eff)
 
-    embed.add_field(name="sc.clearchat <value>", value="Work-with-chat command, using to clear chat. It's possible to delete up to 100 messages at a time `[From Chat-moderator]`")
+    embed.add_field(name="sc.clear <value>", value="Work-with-chat command, using to clear chat. It's possible to delete up to 100 messages at a time `[From Chat-moderator]`")
 
     return embed
 
@@ -53,14 +53,56 @@ def closechat():
 def loop():
     embed = discord.Embed(title="LOOP command/Music", color=0xa31eff)
 
-    embed.add_field(name="sc.loop | Short: lp", value="Music package command. Have 3 modes: \n - Turned off [0] \n - Loop queue [1] \n - Loop song [2]")
+    embed.add_field(name="sc.loop <mode | Def: Change Mode [9]>\nAliases: `lp`\n", value="Loop modes: \n - Turned off [off] \n - Loop song [curr]\n - Loop queue [list]")
 
     return embed
 
 def clearqueue():
-    embed = discord.Embed(title="CLEARQUEUE command/Music", color=0xa31eff)
+    embed = discord.Embed(title="CLEAR command/Music", color=0xa31eff)
 
-    embed.add_field(name="sc.cleaqueue <position | Def: ALL> | Short: q", value="Music package command. Used to clear part or all queue")
+    embed.add_field(name="sc.clearqueue <position | Def: ALL> \nAliases: `cq`", value="Music package command. Used to clear part or all queue")
+
+    return embed
+
+def queue():
+    embed = discord.Embed(title="LIST command/Music", color=0xa31eff)
+
+    embed.add_field(name="sc.list <page | Def: POSITION> \nAliases: `q`, `lst`", value="Music package command. Displaying songs queue.")
+
+    return embed
+
+def playlist():
+    embed = discord.Embed(title="PLAYLIST command/Music", color=0xa31eff)
+
+    embed.add_field(name="sc.playlist <songPosition | Def: ALL> \nAliases: `pll`", value="Music package command. Playing one or all songs from saved playlist.")
+
+    return embed
+
+def addtolist():
+    embed = discord.Embed(title="ADDTOLIST command/Music", color=0xa31eff)
+
+    embed.add_field(name="sc.addtolist <song> \nAliases: `atl`", value="Music package command. Adding a song to user list.")
+
+    return embed
+
+def printlist():
+    embed = discord.Embed(title="PRINTLIST command/Music", color=0xa31eff)
+
+    embed.add_field(name="sc.printlist <page> \nAliases: `ptl`", value="Music package command. Displaying user list of songs.")
+
+    return embed
+
+def clearlist():
+    embed = discord.Embed(title="CLEARLIST command/Music", color=0xa31eff)
+
+    embed.add_field(name="sc.clearlist <position | Def: ALL> \nAliases: `cll`", value="Music package command. Removing item(-s) from list.")
+
+    return embed
+
+def initlist():
+    embed = discord.Embed(title="INITLIST command/Music", color=0xa31eff)
+
+    embed.add_field(name="sc.initlist \nAliases: `inl`", value="Music package command. Initialazing user list.")
 
     return embed
 

@@ -1,5 +1,5 @@
 # by ElCapitan, PROJECT Limited 2022
-print("AT PROJECT Limited, 2022 - 2023; ATLB-v1.6.4_2")
+print("AT PROJECT Limited, 2022 - 2023; ATLB-v1.6.5")
 try:
     print("\tImporting libraries...")
     import discord
@@ -90,7 +90,7 @@ async def inspect(ctx, command=None):
             await ctx.send(embed=embeds.ban())
         case "unban":
             await ctx.send(embed=embeds.unban())
-        case "clearchat":
+        case "clear":
             await ctx.send(embed=embeds.clearchat())
         case "closechat":
             await ctx.send(embed=embeds.closechat())
@@ -100,6 +100,18 @@ async def inspect(ctx, command=None):
             await ctx.send(embed=embeds.clearqueue())
         case "loop":
             await ctx.send(embed=embeds.loop())
+        case "list":
+            await ctx.send(embed=embeds.queue())
+        case "playlist":
+            await ctx.send(embed=embeds.playlist())
+        case "addtolist":
+            await ctx.send(embed=embeds.addtolist())
+        case "printlist":
+            await ctx.send(embed=embeds.printlist())
+        case "clearlist":
+            await ctx.send(embed=embeds.clearlist())
+        case "initlist":
+            await ctx.send(embed=embeds.initlist())
         case _:
             await ctx.send(embed=embeds.default())
 
