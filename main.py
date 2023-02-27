@@ -1,5 +1,5 @@
 # by ElCapitan, PROJECT Limited 2022
-print("AT PROJECT Limited, 2022 - 2023; ATLB-v1.6.5")
+print("AT PROJECT Limited, 2022 - 2023; ATLB-v1.7")
 try:
     print("\tImporting libraries...")
     import discord
@@ -7,6 +7,8 @@ try:
     print("[ \x1b[32;1mOK\x1b[39;0m ]  Imported 'discord'")
     import os
     print("[ \x1b[32;1mOK\x1b[39;0m ]  Imported 'os'")
+    import wavelink
+    print("[ \x1b[32;1mOK\x1b[39;0m ]  Imported 'wavelink'")
     import logging
     print("[ \x1b[32;1mOK\x1b[39;0m ]  Imported 'logging'")
     import embeds
@@ -28,6 +30,7 @@ except Exception as exception:
 
 load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
+PASSWD = os.getenv('PASSWD')
 
 with open("config.json", "r") as f:
     data = json.load(f)
@@ -56,6 +59,16 @@ async def on_ready():
         print(f"\r[ \x1b[33;1mWARN\x1b[39;0m ]  Music module disabled.")
     await bot.change_presence(status=discord.Status.online, activity=discord.Game("Link, start.."))
     print("\r[ \x1b[32;1mOK\x1b[39;0m ]  Bot started.")
+
+    await wavelink.NodePool.create_node(bot=bot,
+                                    host='localhost',
+                                    port=2333,
+                                    password=PASSWD)
+
+
+@bot.event
+async def on_wavelink_node_ready(node: wavelink.Node):
+    print(f"\r[ \x1b[32;1mOK\x1b[39;0m ]  Node \x1b[39;1m{node}\x1b[39;0m ready.")
 
 
 @bot.event

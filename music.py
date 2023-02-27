@@ -1,13 +1,13 @@
-# AT PROJECT Limited 2022 - 2023; ATLB-v1.6.5
+# AT PROJECT Limited 2022 - 2023; ATLB-v1.7
 import math
 import discord
 import json
 import asyncio
 import logging
+import wavelink
 import traceback
 from discord.ext import commands
 from embeds import errorEmbedCustom, eventEmbed, unknownError, disconnected_embed
-from yt_dlp import YoutubeDL
 
 class music_cog(commands.Cog):
     def __init__(self, bot, time):
@@ -34,8 +34,11 @@ class music_cog(commands.Cog):
 
     
         @bot.event
-        async def on_display_song(self, ctx):
-            await ctx.send(embed=eventEmbed(name="🎵   Now playing", text= f'**{self.song_title}**'))
+        async def on_display_song(self, ctx, m_url, printa = True):
+            if printa:
+                await ctx.send(embed=eventEmbed(name="🎵   Now playing", text= f'**{self.song_title}**'))
+            await self.vc.play(m_url)
+            
 
     def set_none_song(self):
         self.music_queue = []
@@ -73,15 +76,15 @@ class music_cog(commands.Cog):
                 return
             if self.loop == 0:
                 self.song_position += 1
-                self.song_source[0] = self.music_queue[self.song_position][0]['source']
-                self.song_title = self.music_queue[self.song_position][0]['title']
+                self.song_source[0] = self.music_queue[self.song_position][0]
+                self.song_title = self.music_queue[self.song_position][0].title
             elif self.loop == 2:
                 if self.song_position == len(self.music_queue) - 1:
                     self.song_position = 0
                 else:
                     self.song_position += 1
-                self.song_source[0] = self.music_queue[self.song_position][0]['source']
-                self.song_title = self.music_queue[self.song_position][0]['title']
+                self.song_source[0] = self.music_queue[self.song_position][0]
+                self.song_title = self.music_queue[self.song_position][0].title
             self.play_next(ctx)
         else:
             if self.loop == 1:
@@ -92,16 +95,6 @@ class music_cog(commands.Cog):
                 self.set_none_song()
 
 
-    def search_yt(self, item):
-        try:
-            with YoutubeDL(self.YDL_OPTIONS) as ydl:
-                info = ydl.extract_info("ytsearch:%s" % item, download=False)['entries'][0]
-        except:
-            return False
-        
-        return {'source': info['url'], 'title': info['title']}
-
-
     def play_next(self, ctx):
         try:
             self.is_playing = True
@@ -109,8 +102,8 @@ class music_cog(commands.Cog):
             m_url = self.song_source[0]
 
             if not self.loop == 1:
-                self.bot.dispatch("display_song", self, ctx)
-            self.vc.play(discord.FFmpegPCMAudio(m_url, **self.FFMPEG_OPTIONS), after=lambda e: self.change_song(ctx))
+                self.bot.dispatch("display_song", self, ctx, m_url, False)
+            self.bot.dispatch("display_song", self, ctx, m_url)
         except Exception as exc:
             print("\r[ \x1b[31;1mERR\x1b[39;0m ]  Error occurred while executing command.")
             print(f"\t\x1b[39;1m{exc}\x1b[39;0m")
@@ -123,17 +116,15 @@ class music_cog(commands.Cog):
         m_url = self.song_source[0]
 
         if self.vc == None or not self.vc.is_connected():
-            self.vc = await self.song_source[1].connect()
+            self.vc: wavelink.Player = await self.song_source[1].connect(cls=wavelink.Player)
 
-            #in case we fail to connect
             if self.vc == None:
                 await ctx.send(embed=errorEmbedCustom("872", "Connect error", "Could not connect to the voice channel"))
                 return
         else:
             await self.vc.move_to(self.song_source[1])
 
-        self.bot.dispatch("display_song", self, ctx)
-        self.vc.play(discord.FFmpegPCMAudio(m_url, **self.FFMPEG_OPTIONS), after=lambda e: self.change_song(ctx))
+        self.bot.dispatch("display_song", self, ctx, m_url)
 
 
     @commands.command(name="play", aliases=["p"])
@@ -142,27 +133,25 @@ class music_cog(commands.Cog):
             query = " ".join(args)
 
             voice_channel = ctx.author.voice.channel
-            if voice_channel is None:
-                await ctx.send(embed=eventEmbed("Connected", "Connected to a voice channel!"))
-            elif self.is_paused:
-                self.vc.resume()
+            if self.is_paused:
+                await self.vc.resume()
                 self.is_playing = True
                 self.is_paused = False
                 return
             else:
-                song = self.search_yt(query)
+                song = await wavelink.YouTubeTrack.search(query=query, return_first=True)
 
                 if type(song) == type(True):
                     await ctx.send(embed=errorEmbedCustom("801", "URL Incorrect", "Could not play the song. Incorrect format, try another keyword. This could be due to playlist or a livestream format."))
                 else:
                     if not self.is_playing:
                         self.music_queue.append([song, voice_channel])
-                        self.song_source = [song['source'], voice_channel]
-                        self.song_title = song['title']
+                        self.song_source = [song, voice_channel]
+                        self.song_title = song.title
                         self.command_channel = ctx.channel
                         await self.play_music(ctx)
                     else:
-                        await ctx.send(embed=eventEmbed(name="✅ Success!", text= f'Song added to the queue \n **{song["title"]}**'))
+                        await ctx.send(embed=eventEmbed(name="✅ Success!", text= f'Song added to the queue \n **{song.title}**'))
                         self.music_queue.append([song, voice_channel])
         except Exception as exc:
             print("\r[ \x1b[31;1mERR\x1b[39;0m ]  Error occurred while executing command.")
@@ -196,13 +185,13 @@ class music_cog(commands.Cog):
             for i in range(srt, stp):
                 if i > len(self.music_queue) - 1:
                     break
-                if len(self.music_queue[i][0]['title']) > 65:
-                    z = len(self.music_queue[i][0]['title']) - 65
-                    title = self.music_queue[i][0]['title'][:-z] + "..."
+                if len(self.music_queue[i][0].title) > 65:
+                    z = len(self.music_queue[i][0].title) - 65
+                    title = self.music_queue[i][0].title[:-z] + "..."
                 else:
-                    title = self.music_queue[i][0]['title']
+                    title = self.music_queue[i][0].title
 
-                if self.song_title == self.music_queue[i][0]['title']:
+                if self.song_title == self.music_queue[i][0].title:
                     retval += "**  • " + title + "**\n"
                     continue
                 retval += f"{i + 1}. " + title + "\n"
@@ -238,11 +227,11 @@ class music_cog(commands.Cog):
             if self.is_playing:
                 self.is_playing = False
                 self.is_paused = True
-                self.vc.pause()
+                await self.vc.pause()
             elif self.is_paused:
                 self.is_paused = False
                 self.is_playing = True
-                self.vc.resume()
+                await self.vc.resume()
         except Exception as exc:
             print("\r[ \x1b[31;1mERR\x1b[39;0m ]  Error occurred while executing command.")
             print(f"\t\x1b[39;1m{exc}\x1b[39;0m")
@@ -254,13 +243,13 @@ class music_cog(commands.Cog):
     async def prev_song(self, ctx):
         try:
             if self.song_position != 0:
-                self.vc.stop()
+                await self.vc.stop()
                 self.song_position -= 2
-                self.bot.dispatch("change_song", self, ctx)
+                self.change_song(ctx)
             else:
-                self.vc.stop()
+                await self.vc.stop()
                 self.song_position = len(self.music_queue) - 2
-                self.bot.dispatch("change_song", self, ctx)
+                self.change_song(ctx)
         except Exception as exc:
             print("\r[ \x1b[31;1mERR\x1b[39;0m ]  Error occurred while executing command.")
             print(f"\t\x1b[39;1m{exc}\x1b[39;0m")
@@ -271,10 +260,10 @@ class music_cog(commands.Cog):
     @commands.command(name="next", aliases=["n", "s"])
     async def next(self, ctx):
         try:
-            if self.vc != None and self.vc:
+            if self.vc != None:
                 if self.loop == 2:
                     if len(self.music_queue) == 0:
-                        self.vc.stop()
+                        await self.vc.stop()
                         self.loop = 0
                         self.is_playing = False
                         self.song_source = ""
@@ -282,11 +271,11 @@ class music_cog(commands.Cog):
                         self.song_position = 0
                     if self.song_position == len(self.music_queue):
                         self.song_position = 0
-                    self.vc.stop()
-                    self.bot.dispatch("change_song", self, ctx)
+                    await self.vc.stop()
+                    self.change_song(ctx)
                 else:
-                    self.vc.stop()
-                    self.bot.dispatch("change_song", self, ctx)
+                    await self.vc.stop()
+                    self.change_song(ctx)
         except Exception as exc:
             print("\r[ \x1b[31;1mERR\x1b[39;0m ]  Error occurred while executing command.")
             print(f"\t\x1b[39;1m{exc}\x1b[39;0m")
@@ -312,12 +301,12 @@ class music_cog(commands.Cog):
         try:
             if num == None:
                 if self.vc != None and self.is_playing:
-                    self.vc.stop()
+                    await self.vc.stop()
                 self.set_none_song()
                 self.loop = 0
                 await ctx.send(embed=eventEmbed(name="✅ Success!", text="Queue cleared"))
             else:
-                title = self.music_queue[int(num) - 1][0]['title']
+                title = self.music_queue[int(num) - 1][0].title
                 self.music_queue.pop(int(num) - 1)
                 await ctx.send(embed=eventEmbed(name="✅ Success!", text="Song **" + title + "** succesfully cleared!"))
         except Exception as exc:
@@ -397,39 +386,38 @@ class music_cog(commands.Cog):
 
             if int(num) != 0:
                 item = list[int(num) - 1][1]
-                song = self.search_yt(item)
+                song = await wavelink.YouTubeTrack.search(query=item, return_first=True)
 
                 if not song:
                     await ctx.send(embed=errorEmbedCustom(854, "Import error", f"Unknown error occurred while importing track **{list[int(num) - 1][0]}**"))
                     return
 
                 if self.song_source == "":
-                    self.song_source = [song['source'], voice_channel]
-                    self.song_title = song['title']
+                    self.song_source = [song, voice_channel]
+                    self.song_title = song.title
                     self.command_channel = ctx.channel
                 self.music_queue.append([song, voice_channel])
                 if not self.is_playing:
                     await self.play_music(ctx)
-                    await ctx.send(embed=eventEmbed(name="✅ Success!", text= f'Song added to the queue \n **{song["title"]}**'))
+                await ctx.send(embed=eventEmbed(name="✅ Success!", text= f'Song added to the queue \n **{song.title}**'))
                 return
 
             for item in list:
-                song = self.search_yt(item[1])
+                song = await wavelink.YouTubeTrack.search(query=item[1], return_first=True)
 
                 if not song:
                     await ctx.send(embed=errorEmbedCustom(854, "Import error", f"Unknown error occurred while importing track **{item[0]}**"))
                     continue
 
                 if self.song_source == "":
-                    self.song_source = [song['source'], voice_channel]
-                    self.song_title = song['title']
+                    self.song_source = [song, voice_channel]
+                    self.song_title = song.title
                     if not self.is_playing:
                         self.music_queue.append([song, voice_channel])
                         await self.play_music(ctx)
                     await ctx.send(embed=eventEmbed(name="🔵 Processing...", text="List import process started, please wait..."))
                 else:
                     self.music_queue.append([song, voice_channel])
-                    await asyncio.sleep(0.05)
             
             await ctx.send(embed=eventEmbed(name="✅ Success!", text= f'Track list succesfully imported!'))
         except Exception as exc:
@@ -443,16 +431,16 @@ class music_cog(commands.Cog):
     async def load_save(self, ctx, *args): 
         try:
             query = " ".join(args)
-            song = self.search_yt(query)
+            song = await wavelink.YouTubeTrack.search(query=query, return_first=True)
 
-            await ctx.send(embed=eventEmbed(name="✅ Success!", text= f'Song added to the list \n **{song["title"]}**'))
+            await ctx.send(embed=eventEmbed(name="✅ Success!", text= f'Song added to the list \n **{song.title}**'))
 
             with open('lists.json', 'r+', encoding="utf-8") as f:
                 data = json.load(f)
                 id = str(ctx.author.id)
 
                 if id in data:
-                    data[id].append([song['title'], query])
+                    data[id].append([song.title, query])
                 else: await ctx.send(embed=errorEmbedCustom("804", "Uknown list", "Error: you don`t have saved list!"))
                 f.seek(0)
                 json.dump(data, f, indent=4, ensure_ascii=False)
