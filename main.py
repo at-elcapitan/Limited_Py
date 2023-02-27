@@ -1,5 +1,5 @@
 # by ElCapitan, PROJECT Limited 2022
-print("AT PROJECT Limited, 2022 - 2023; ATLB-v1.7")
+print("AT PROJECT Limited, 2022 - 2023; ATLB-v1.7.1")
 try:
     print("\tImporting libraries...")
     import discord
@@ -70,6 +70,14 @@ async def on_ready():
 async def on_wavelink_node_ready(node: wavelink.Node):
     print(f"\r[ \x1b[32;1mOK\x1b[39;0m ]  Node \x1b[39;1m{node}\x1b[39;0m ready.")
 
+@bot.event
+async def on_wavelink_track_end(player: wavelink.Player, track: wavelink.Track):
+    print(track)
+
+
+@bot.event
+async def on_voice():
+        print('reason')
 
 @bot.event
 async def on_member_join(member):

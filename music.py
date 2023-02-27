@@ -1,4 +1,4 @@
-# AT PROJECT Limited 2022 - 2023; ATLB-v1.7
+# AT PROJECT Limited 2022 - 2023; ATLB-v1.7.1
 import math
 import discord
 import json
@@ -28,17 +28,18 @@ class music_cog(commands.Cog):
         self.command_channel = ""
 
         self.music_queue = []
-        self.YDL_OPTIONS = {'format': 'bestaudio/best', 'noplaylist':'True', 'cookiefile': 'cookies.txt', 'quiet' : True}
-        self.FFMPEG_OPTIONS = {'before_options': '-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5', 'options': '-vn'}
         self.vc = None
 
-    
         @bot.event
         async def on_display_song(self, ctx, m_url, printa = True):
             if printa:
                 await ctx.send(embed=eventEmbed(name="🎵   Now playing", text= f'**{self.song_title}**'))
             await self.vc.play(m_url)
             
+    @commands.Cog.listener()
+    async def on_wavelink_track_end(self, player: wavelink.Player, track: wavelink.Track, reason):
+        ctx = player.ctx
+        self.change_song(ctx)
 
     def set_none_song(self):
         self.music_queue = []
@@ -153,6 +154,7 @@ class music_cog(commands.Cog):
                     else:
                         await ctx.send(embed=eventEmbed(name="✅ Success!", text= f'Song added to the queue \n **{song.title}**'))
                         self.music_queue.append([song, voice_channel])
+                    self.vc.ctx = ctx
         except Exception as exc:
             print("\r[ \x1b[31;1mERR\x1b[39;0m ]  Error occurred while executing command.")
             print(f"\t\x1b[39;1m{exc}\x1b[39;0m")
@@ -300,7 +302,7 @@ class music_cog(commands.Cog):
     async def clear(self, ctx, num = None):
         try:
             if num == None:
-                if self.vc != None and self.is_playing:
+                if self.vc != None and self.vc.is_playing():
                     await self.vc.stop()
                 self.set_none_song()
                 self.loop = 0
