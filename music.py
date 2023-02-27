@@ -1,4 +1,4 @@
-# AT PROJECT Limited 2022 - 2023; ATLB-v1.7.2
+# AT PROJECT Limited 2022 - 2023; ATLB-v1.7.3
 import math
 import discord
 import json
@@ -32,7 +32,7 @@ class music_cog(commands.Cog):
 
         @bot.event
         async def on_display_song(self, ctx, m_url, printa = True):
-            if printa:
+            if printa and self.loop != 1:
                 await ctx.send(embed=eventEmbed(name="🎵   Now playing", text= f'**{self.song_title}**'))
             await self.vc.play(m_url)
             
