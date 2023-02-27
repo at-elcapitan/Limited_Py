@@ -1,4 +1,4 @@
-# AT PROJECT Limited 2022 - 2023; ATLB-v1.7.1
+# AT PROJECT Limited 2022 - 2023; ATLB-v1.7.2
 import math
 import discord
 import json
@@ -139,22 +139,25 @@ class music_cog(commands.Cog):
                 self.is_playing = True
                 self.is_paused = False
                 return
-            else:
-                song = await wavelink.YouTubeTrack.search(query=query, return_first=True)
+            
+            if query == '':
+                await ctx.send(embed=errorEmbedCustom(844, "Empty", "Empty request cannot be processed."))
+                return
+            song = await wavelink.YouTubeTrack.search(query=query, return_first=True)
 
-                if type(song) == type(True):
-                    await ctx.send(embed=errorEmbedCustom("801", "URL Incorrect", "Could not play the song. Incorrect format, try another keyword. This could be due to playlist or a livestream format."))
+            if type(song) == type(True):
+                await ctx.send(embed=errorEmbedCustom("801", "URL Incorrect", "Could not play the song. Incorrect format, try another keyword. This could be due to playlist or a livestream format."))
+            else:
+                if not self.is_playing:
+                    self.music_queue.append([song, voice_channel])
+                    self.song_source = [song, voice_channel]
+                    self.song_title = song.title
+                    self.command_channel = ctx.channel
+                    await self.play_music(ctx)
                 else:
-                    if not self.is_playing:
-                        self.music_queue.append([song, voice_channel])
-                        self.song_source = [song, voice_channel]
-                        self.song_title = song.title
-                        self.command_channel = ctx.channel
-                        await self.play_music(ctx)
-                    else:
-                        await ctx.send(embed=eventEmbed(name="✅ Success!", text= f'Song added to the queue \n **{song.title}**'))
-                        self.music_queue.append([song, voice_channel])
-                    self.vc.ctx = ctx
+                    await ctx.send(embed=eventEmbed(name="✅ Success!", text= f'Song added to the queue \n **{song.title}**'))
+                    self.music_queue.append([song, voice_channel])
+                self.vc.ctx = ctx
         except Exception as exc:
             print("\r[ \x1b[31;1mERR\x1b[39;0m ]  Error occurred while executing command.")
             print(f"\t\x1b[39;1m{exc}\x1b[39;0m")
@@ -551,3 +554,52 @@ class music_cog(commands.Cog):
             self.logger.warning(traceback.format_exc())
             await ctx.send(embed=unknownError())
     
+    
+    # Time Machine
+    @commands.command(name="restart", aliases=['rt'])
+    async def from_beginning(self, ctx):
+        if self.vc.is_playing:
+            await self.vc.seek(position=0)
+            await ctx.send(embed=eventEmbed(name="✅ Moved", text="Song seeked to beginning."))
+
+
+    @commands.command(name="seek", aliases=['sk'])
+    async def music_seek(self, ctx, num: float):
+        try:
+            if self.vc.is_playing:
+                pos = (self.vc.position + num) * 1000
+                await self.vc.seek(position=pos)
+                
+                if num > 60:
+                    m = int(num // 60)
+                    s = int(num %  60)
+
+                    if s > 9:
+                        txt = f'{m}m {s}s'
+                    else:
+                        txt = f'{m}m 0{s}s'
+                else:
+                    txt = f'{int(num)}s'
+                await ctx.send(embed=eventEmbed(name="✅ Seek complete", text=f"Track **{self.song_title}** seeked for `{txt}`"))
+        except Exception as exc:
+            print("\r[ \x1b[31;1mERR\x1b[39;0m ]  Error occurred while executing command.")
+            print(f"\t\x1b[39;1m{exc}\x1b[39;0m")
+            self.logger.warning(traceback.format_exc())
+            await ctx.send(embed=unknownError())
+
+
+    @commands.command(name="volume", aliases=['vl'])
+    async def volume(self, ctx, num: int):
+        try:
+            if num > 150 or num <= 0:
+                await ctx.send(embed=errorEmbedCustom(831, "Not correct value", f"Can\`t set volume to `{num}%`"))
+                return
+            
+            if self.vc.is_playing:
+                await self.vc.set_volume(num)
+                await ctx.send(embed=eventEmbed(name="✅ Volume changed", text=f"Volume set to `{num}%`"))
+        except Exception as exc:
+            print("\r[ \x1b[31;1mERR\x1b[39;0m ]  Error occurred while executing command.")
+            print(f"\t\x1b[39;1m{exc}\x1b[39;0m")
+            self.logger.warning(traceback.format_exc())
+            await ctx.send(embed=unknownError())
