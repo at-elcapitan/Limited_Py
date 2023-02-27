@@ -1,4 +1,4 @@
-# AT PROJECT Limited 2022 - 2023; ATLB-v1.7.3
+# AT PROJECT Limited 2022 - 2023; ATLB-v1.7.4
 import math
 import discord
 import json
@@ -38,6 +38,7 @@ class music_cog(commands.Cog):
             
     @commands.Cog.listener()
     async def on_wavelink_track_end(self, player: wavelink.Player, track: wavelink.Track, reason):
+        print('a')
         ctx = player.ctx
         self.change_song(ctx)
 
@@ -125,6 +126,7 @@ class music_cog(commands.Cog):
         else:
             await self.vc.move_to(self.song_source[1])
 
+        self.vc.ctx = ctx
         self.bot.dispatch("display_song", self, ctx, m_url)
 
 
@@ -157,7 +159,6 @@ class music_cog(commands.Cog):
                 else:
                     await ctx.send(embed=eventEmbed(name="✅ Success!", text= f'Song added to the queue \n **{song.title}**'))
                     self.music_queue.append([song, voice_channel])
-                self.vc.ctx = ctx
         except Exception as exc:
             print("\r[ \x1b[31;1mERR\x1b[39;0m ]  Error occurred while executing command.")
             print(f"\t\x1b[39;1m{exc}\x1b[39;0m")
