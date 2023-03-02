@@ -1,5 +1,5 @@
 # by ElCapitan, PROJECT Limited 2022
-print("AT PROJECT Limited, 2022 - 2023; ATLB-v1.7.4")
+print("AT PROJECT Limited, 2022 - 2023; ATLB-v1.7.5")
 try:
     print("\tImporting libraries...")
     import discord
@@ -41,19 +41,24 @@ time = datetime.now().strftime("%d-%m-%Y_%H-%M-%S")
 
 if logs:
     handler = logging.FileHandler(filename=f'logs\{time}.log', encoding='utf-8', mode='w')
+    handler.setFormatter(logging.Formatter('%(asctime)s:%(levelname)s:%(name)s: %(message)s'))
+    logger = logging.getLogger('discord')
+    logger.setLevel(logging.DEBUG)
+    logger.addHandler(handler)
     print(f"\r[ \x1b[32;1mOK\x1b[39;0m ]  Loging started to file '{time}.log'.")
 else:
     print(f"\r[ \x1b[33;1mWARN\x1b[39;0m ]  Log system disabled.")
 bot = commands.Bot(command_prefix = "sc.", intents=discord.Intents.all())
-bot.remove_command('help')
 
-client = discord.Client(intents=discord.Intents.all())
+@bot.slash_command(name="first_slash", guild_ids=[827541410080489473])
+async def first_slash(ctx): 
+    await ctx.respond("You executed the slash command!")
 
 
 @bot.event
 async def on_ready():
     if music:
-        await bot.add_cog(music_cog(bot, time))
+        bot.add_cog(music_cog(bot, time))
         print("\r[ \x1b[32;1mOK\x1b[39;0m ]  Music COG imported.")
     else:
         print(f"\r[ \x1b[33;1mWARN\x1b[39;0m ]  Music module disabled.")
@@ -228,10 +233,7 @@ async def openchat(ctx):
         await ctx.send(embed=embeds.unknownError())
 
 try:
-    if logs:
-        bot.run(TOKEN, log_handler=handler)
-    else:
-        bot.run(TOKEN)
+    bot.run(TOKEN)
 except Exception as exeption:
     print("\r[ \x1b[31;1mERR\x1b[39;0m ]  Starting bot...")
     print(f"\t\x1b[39;1m{exeption}\x1b[39;0m")

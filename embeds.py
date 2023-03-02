@@ -1,4 +1,4 @@
-# AT PROJECT Limited 2022 - 2023; ATLB-v1.7.4
+# AT PROJECT Limited 2022 - 2023; ATLB-v1.7.5
 import discord
 
 def default():
@@ -112,7 +112,7 @@ def errorEmbed():
     embed = discord.Embed(title="System Alert: Code 871", color=0xFF0000)
 
     embed.add_field(name="Access Denied!",
-                    value="Your your authority is not enough to use this command.", inline=False)
+                    value="Your authority is not enough to use this command.", inline=False)
     
     return embed
 

@@ -1,4 +1,4 @@
-# AT PROJECT Limited 2022 - 2023; ATLB-v1.7.4
+# AT PROJECT Limited 2022 - 2023; ATLB-v1.7.5
 import math
 import discord
 import json
@@ -7,7 +7,7 @@ import logging
 import wavelink
 import traceback
 from discord.ext import commands
-from embeds import errorEmbedCustom, eventEmbed, unknownError, disconnected_embed
+from embeds import errorEmbedCustom, eventEmbed, unknownError, disconnected_embed, errorEmbed
 
 class music_cog(commands.Cog):
     def __init__(self, bot, time):
@@ -27,6 +27,10 @@ class music_cog(commands.Cog):
         self.auto_disconnect = True
         self.command_channel = ""
 
+        self.ac24 = True
+        self.acseek = True
+        self.acvolume = "def"
+
         self.music_queue = []
         self.vc = None
 
@@ -37,10 +41,13 @@ class music_cog(commands.Cog):
             await self.vc.play(m_url)
             
     @commands.Cog.listener()
-    async def on_wavelink_track_end(self, player: wavelink.Player, track: wavelink.Track, reason):
-        print('a')
-        ctx = player.ctx
-        self.change_song(ctx)
+    async def on_wavelink_track_end(self, player: wavelink.Player, track: wavelink.Track, reason: str):
+        try:
+            if reason == 'FINISHED':
+                ctx = player.ctx
+                self.change_song(ctx)
+        except Exception as e:
+            print(e)
 
     def set_none_song(self):
         self.music_queue = []
@@ -66,6 +73,7 @@ class music_cog(commands.Cog):
                     time = 0
                 elif time == self.delay_time:
                     await voice.disconnect()
+                    self.set_none_song()
                     await self.command_channel.send(embed = disconnected_embed())
                 elif not voice.is_connected():
                     break
@@ -313,6 +321,9 @@ class music_cog(commands.Cog):
                 await ctx.send(embed=eventEmbed(name="✅ Success!", text="Queue cleared"))
             else:
                 title = self.music_queue[int(num) - 1][0].title
+                if title == self.song_title:
+                    self.vc.stop()
+                    self.change_song(ctx)
                 self.music_queue.pop(int(num) - 1)
                 await ctx.send(embed=eventEmbed(name="✅ Success!", text="Song **" + title + "** succesfully cleared!"))
         except Exception as exc:
@@ -356,6 +367,12 @@ class music_cog(commands.Cog):
     @commands.command(name="24/7")
     async def auto_disconnect(self, ctx):
         try:
+            if not self.ac24 and ctx.author.guild_permissions.administrator:
+                pass
+            elif not self.ac24:
+                await ctx.send(embed = errorEmbedCustom(894, "Locked", "Administrator disabled some music commands."))
+                return
+            
             if self.auto_disconnect:
                 self.auto_disconnect = False
                 embed = discord.Embed(title="✅ Mode changed", description="24/7 mode **enabled**", color=0xa31eff)
@@ -567,6 +584,16 @@ class music_cog(commands.Cog):
     @commands.command(name="seek", aliases=['sk'])
     async def music_seek(self, ctx, num: float):
         try:
+            if self.vc == None:
+                await ctx.send(embed=errorEmbedCustom("872", "Change error", "Not connected to voice channel."))
+                return
+            
+            if not self.acseek and ctx.author.guild_permissions.administrator:
+                pass
+            elif not self.ac24:
+                await ctx.send(embed = errorEmbedCustom(894, "Locked", "Administrator disabled some music commands."))
+                return
+            
             if self.vc.is_playing:
                 pos = (self.vc.position + num) * 1000
                 await self.vc.seek(position=pos)
@@ -592,7 +619,22 @@ class music_cog(commands.Cog):
     @commands.command(name="volume", aliases=['vl'])
     async def volume(self, ctx, num: int):
         try:
-            if num > 150 or num <= 0:
+            if self.vc == None:
+                await ctx.send(embed=errorEmbedCustom("872", "Change error", "Not connected to voice channel."))
+                return
+
+            if self.acseek == "lock" and ctx.author.guild_permissions.administrator:
+                pass
+            elif not self.ac24:
+                await ctx.send(embed = errorEmbedCustom(894, "Locked", "Administrator disabled some music commands."))
+                return
+            
+            if self.acseek == "def":
+                value = 150
+            else:
+                value = 1000
+
+            if num > value or num <= 0:
                 await ctx.send(embed=errorEmbedCustom(831, "Not correct value", f"Can\`t set volume to `{num}%`"))
                 return
             
@@ -604,3 +646,55 @@ class music_cog(commands.Cog):
             print(f"\t\x1b[39;1m{exc}\x1b[39;0m")
             self.logger.warning(traceback.format_exc())
             await ctx.send(embed=unknownError())
+
+    @commands.command(name="lock")
+    async def lock_admin(self, ctx, cmd = None):
+        if ctx.author.guild_permissions.administrator:
+            match cmd:
+                case "all":
+                    self.ac24 = False
+                    self.acseek = False
+                    self.acvolume = "lock"
+                    await ctx.send(embed=eventEmbed("Command Locked", "Target: ALL", "All music commands locked for users."))
+                case "24/7":
+                    self.ac24 = False
+                    await ctx.send(embed=eventEmbed("Command Locked", "Target: 24/7", "24/7 command disabled."))
+                case "seek":
+                    self.acseek = False
+                    await ctx.send(embed=eventEmbed("Command Locked", "Target: SEEK", "Seek command disabled."))
+                case "volume":
+                    self.acvolume = "lock"
+                    await ctx.send(embed=eventEmbed("Command Locked", "Target: VOLUME", "Volume command disabled."))
+                case "volumemax":
+                    self.acvolume = "def"
+                    await ctx.send(embed=eventEmbed("Command Changed", "Target: VOLUME", "Volume atr `max` disabled."))
+                case _:
+                    await ctx.send(embed=eventEmbed("Error", "Locked: Nonde", "Lock target was not passed."))
+        else:
+            await ctx.send(embed=errorEmbed)
+
+    @commands.command(name="unlock")
+    async def unlock_admin(self, ctx, cmd = None):
+        if ctx.author.guild_permissions.administrator:
+            match cmd:
+                case "all":
+                    self.ac24 = True
+                    self.acseek = True
+                    self.acvolume = "def"
+                    await ctx.send(embed=eventEmbed("Command Unlocked", "Target: ALL", "All music commands unlocked for users."))
+                case "24/7":
+                    self.ac24 = True
+                    await ctx.send(embed=eventEmbed("Command Unlocked", "Target: 24/7", "24/7 command enabled."))
+                case "seek":
+                    self.acseek = True
+                    await ctx.send(embed=eventEmbed("Command Unlocked", "Target: SEEK", "Seek command enabled."))
+                case "volume":
+                    self.acvolume = "def"
+                    await ctx.send(embed=eventEmbed("Command Unlocked", "Target: VOLUME", "Volume command enabled."))
+                case "volumemax":
+                    self.acvolume = "max"
+                    await ctx.send(embed=eventEmbed("Command Unlocked", "Target: VOLUME", "Volume command enabled, atr `max`."))
+                case _:
+                    await ctx.send(embed=eventEmbed("Error", "Locked: Nonde", "Lock target was not passed."))
+        else:
+            await ctx.send(embed=errorEmbed)
