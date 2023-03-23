@@ -1,4 +1,4 @@
-# AT PROJECT Limited 2022 - 2023; ATLB-v1.7.7
+# AT PROJECT Limited 2022 - 2023; ATLB-v1.7.7_2
 import math
 import discord
 import json
@@ -454,7 +454,7 @@ class music_cog(commands.Cog):
     async def load_save(self, ctx, *args): 
         try:
             query = " ".join(args)
-            song = await wavelink.YouTubeTrack.search(query=query, return_first=True)
+            song = await wavelink.YouTubeTrack.search(query, return_first=True)
 
             await ctx.send(embed=eventEmbed(name="✅ Success!", text= f'Song added to the list \n **{song.title}**'))
 
