@@ -1,4 +1,4 @@
-# AT PROJECT Limited 2022 - 2023; ATLB-v1.7.5
+# AT PROJECT Limited 2022 - 2023; ATLB-v1.7.7
 import math
 import discord
 import json
@@ -14,7 +14,7 @@ class music_cog(commands.Cog):
         self.bot = bot
 
         self.logger = logging.getLogger("music_cog")
-        handler = logging.FileHandler(filename=f'logs\{time}.log', encoding='utf-8', mode='a')
+        handler = logging.FileHandler(filename=f'logs/{time}.log', encoding='utf-8', mode='a')
         self.logger.addHandler(handler)
 
         self.is_playing = False
@@ -41,7 +41,7 @@ class music_cog(commands.Cog):
             await self.vc.play(m_url)
             
     @commands.Cog.listener()
-    async def on_wavelink_track_end(self, player: wavelink.Player, track: wavelink.Track, reason: str):
+    async def on_wavelink_track_end(self, player: wavelink.Player, track: wavelink.GenericTrack, reason: str):
         try:
             if reason == 'FINISHED':
                 ctx = player.ctx
@@ -75,7 +75,7 @@ class music_cog(commands.Cog):
                     await voice.disconnect()
                     self.set_none_song()
                     await self.command_channel.send(embed = disconnected_embed())
-                elif not voice.is_connected():
+                elif self.vc.is_playing():
                     break
 
 
@@ -153,7 +153,7 @@ class music_cog(commands.Cog):
             if query == '':
                 await ctx.send(embed=errorEmbedCustom(844, "Empty", "Empty request cannot be processed."))
                 return
-            song = await wavelink.YouTubeTrack.search(query=query, return_first=True)
+            song = await wavelink.YouTubeTrack.search(query, return_first=True)
 
             if type(song) == type(True):
                 await ctx.send(embed=errorEmbedCustom("801", "URL Incorrect", "Could not play the song. Incorrect format, try another keyword. This could be due to playlist or a livestream format."))
@@ -409,7 +409,7 @@ class music_cog(commands.Cog):
 
             if int(num) != 0:
                 item = list[int(num) - 1][1]
-                song = await wavelink.YouTubeTrack.search(query=item, return_first=True)
+                song = await wavelink.YouTubeTrack.search(item, return_first=True)
 
                 if not song:
                     await ctx.send(embed=errorEmbedCustom(854, "Import error", f"Unknown error occurred while importing track **{list[int(num) - 1][0]}**"))
@@ -426,7 +426,7 @@ class music_cog(commands.Cog):
                 return
 
             for item in list:
-                song = await wavelink.YouTubeTrack.search(query=item[1], return_first=True)
+                song = await wavelink.YouTubeTrack.search(item[1], return_first=True)
 
                 if not song:
                     await ctx.send(embed=errorEmbedCustom(854, "Import error", f"Unknown error occurred while importing track **{item[0]}**"))
@@ -590,7 +590,7 @@ class music_cog(commands.Cog):
             
             if not self.acseek and ctx.author.guild_permissions.administrator:
                 pass
-            elif not self.ac24:
+            elif not self.acseek:
                 await ctx.send(embed = errorEmbedCustom(894, "Locked", "Administrator disabled some music commands."))
                 return
             
@@ -623,24 +623,39 @@ class music_cog(commands.Cog):
                 await ctx.send(embed=errorEmbedCustom("872", "Change error", "Not connected to voice channel."))
                 return
 
-            if self.acseek == "lock" and ctx.author.guild_permissions.administrator:
+            if self.acvolume == "lock" and ctx.author.guild_permissions.administrator:
                 pass
-            elif not self.ac24:
+            elif self.acvolume == "lock": 
                 await ctx.send(embed = errorEmbedCustom(894, "Locked", "Administrator disabled some music commands."))
                 return
             
-            if self.acseek == "def":
-                value = 150
+            if self.acvolume == "def":
+                val = 150
             else:
-                value = 1000
-
-            if num > value or num <= 0:
+                val = 1000
+                
+            if num > val or num <= 0:
                 await ctx.send(embed=errorEmbedCustom(831, "Not correct value", f"Can\`t set volume to `{num}%`"))
                 return
             
             if self.vc.is_playing:
                 await self.vc.set_volume(num)
                 await ctx.send(embed=eventEmbed(name="✅ Volume changed", text=f"Volume set to `{num}%`"))
+        except Exception as exc:
+            print("\r[ \x1b[31;1mERR\x1b[39;0m ]  Error occurred while executing command.")
+            print(f"\t\x1b[39;1m{exc}\x1b[39;0m")
+            self.logger.warning(traceback.format_exc())
+            await ctx.send(embed=unknownError())
+
+    @commands.command(name="beginning", aliases=['bg'])
+    async def play_fb(self, ctx):
+        try:
+            if self.vc == None:
+                await ctx.send(embed=errorEmbedCustom("872", "Change error", "Not connected to voice channel."))
+                return
+            
+            await self.vc.seek(position=0)
+            await ctx.send(embed=eventEmbed(name="✅ Complete", text=f"Track **{self.song_title}** started from the beginning"))
         except Exception as exc:
             print("\r[ \x1b[31;1mERR\x1b[39;0m ]  Error occurred while executing command.")
             print(f"\t\x1b[39;1m{exc}\x1b[39;0m")

@@ -1,5 +1,5 @@
 # by ElCapitan, PROJECT Limited 2022
-print("AT PROJECT Limited, 2022 - 2023; ATLB-v1.7.5")
+print("AT PROJECT Limited, 2022 - 2023; ATLB-v1.7.7")
 try:
     print("\tImporting libraries...")
     import discord
@@ -40,7 +40,7 @@ with open("config.json", "r") as f:
 time = datetime.now().strftime("%d-%m-%Y_%H-%M-%S")
 
 if logs:
-    handler = logging.FileHandler(filename=f'logs\{time}.log', encoding='utf-8', mode='w')
+    handler = logging.FileHandler(filename=f'logs/{time}.log', encoding='utf-8', mode='w')
     handler.setFormatter(logging.Formatter('%(asctime)s:%(levelname)s:%(name)s: %(message)s'))
     logger = logging.getLogger('discord')
     logger.setLevel(logging.DEBUG)
@@ -50,34 +50,28 @@ else:
     print(f"\r[ \x1b[33;1mWARN\x1b[39;0m ]  Log system disabled.")
 bot = commands.Bot(command_prefix = "sc.", intents=discord.Intents.all())
 
-@bot.slash_command(name="first_slash", guild_ids=[827541410080489473])
+'''@bot.slash_command(name="first_slash", guild_ids=[1081273222739275816])
 async def first_slash(ctx): 
-    await ctx.respond("You executed the slash command!")
+    await ctx.respond("You executed the slash command!")'''
 
 
 @bot.event
 async def on_ready():
     if music:
-        bot.add_cog(music_cog(bot, time))
+        await bot.add_cog(music_cog(bot, time))
         print("\r[ \x1b[32;1mOK\x1b[39;0m ]  Music COG imported.")
     else:
         print(f"\r[ \x1b[33;1mWARN\x1b[39;0m ]  Music module disabled.")
     await bot.change_presence(status=discord.Status.online, activity=discord.Game("Link, start.."))
     print("\r[ \x1b[32;1mOK\x1b[39;0m ]  Bot started.")
-
-    await wavelink.NodePool.create_node(bot=bot,
-                                    host='localhost',
-                                    port=2333,
-                                    password=PASSWD)
+    
+    node: wavelink.Node = wavelink.Node(uri='http://localhost:2333', password=PASSWD)
+    await wavelink.NodePool.connect(client=bot, nodes=[node])
 
 
 @bot.event
 async def on_wavelink_node_ready(node: wavelink.Node):
-    print(f"\r[ \x1b[32;1mOK\x1b[39;0m ]  Node \x1b[39;1m{node}\x1b[39;0m ready.")
-
-@bot.event
-async def on_wavelink_track_end(player: wavelink.Player, track: wavelink.Track):
-    print(track)
+    print(f"\r[ \x1b[32;1mOK\x1b[39;0m ]  Node \x1b[39;1mID: {node.id}\x1b[39;0m ready.")
 
 
 @bot.event
@@ -233,7 +227,10 @@ async def openchat(ctx):
         await ctx.send(embed=embeds.unknownError())
 
 try:
-    bot.run(TOKEN)
+    if logs:
+        bot.run(TOKEN, log_handler=handler)
+    else:
+        bot.run(TOKEN)
 except Exception as exeption:
     print("\r[ \x1b[31;1mERR\x1b[39;0m ]  Starting bot...")
     print(f"\t\x1b[39;1m{exeption}\x1b[39;0m")
