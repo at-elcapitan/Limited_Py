@@ -1,4 +1,4 @@
-# AT PROJECT Limited 2022 - 2023; ATLB-v1.7.7_2
+# AT PROJECT Limited 2022 - 2023; ATLB-v1.7.8
 import math
 import discord
 import json
@@ -14,7 +14,7 @@ class music_cog(commands.Cog):
         self.bot = bot
 
         self.logger = logging.getLogger("music_cog")
-        handler = logging.FileHandler(filename=f'logs/{time}.log', encoding='utf-8', mode='a')
+        handler = logging.FileHandler(filename=f'logs\{time}.log', encoding='utf-8', mode='a')
         self.logger.addHandler(handler)
 
         self.is_playing = False
@@ -41,7 +41,9 @@ class music_cog(commands.Cog):
             await self.vc.play(m_url)
             
     @commands.Cog.listener()
-    async def on_wavelink_track_end(self, player: wavelink.Player, track: wavelink.GenericTrack, reason: str):
+    async def on_wavelink_track_end(self, payload: wavelink.TrackEventPayload):
+        player = payload.player
+        reason = payload.reason
         try:
             if reason == 'FINISHED':
                 ctx = player.ctx
@@ -75,7 +77,7 @@ class music_cog(commands.Cog):
                     await voice.disconnect()
                     self.set_none_song()
                     await self.command_channel.send(embed = disconnected_embed())
-                elif self.vc.is_playing():
+                elif self.vc == None:
                     break
 
 
@@ -104,7 +106,7 @@ class music_cog(commands.Cog):
             else:
                 self.set_none_song()
 
-
+    
     def play_next(self, ctx):
         try:
             self.is_playing = True
@@ -125,7 +127,7 @@ class music_cog(commands.Cog):
 
         m_url = self.song_source[0]
 
-        if self.vc == None or not self.vc.is_connected():
+        if self.vc == None:
             self.vc: wavelink.Player = await self.song_source[1].connect(cls=wavelink.Player)
 
             if self.vc == None:
@@ -595,7 +597,7 @@ class music_cog(commands.Cog):
                 return
             
             if self.vc.is_playing:
-                pos = (self.vc.position + num) * 1000
+                pos = self.vc.position + (num * 1000)
                 await self.vc.seek(position=pos)
                 
                 if num > 60:

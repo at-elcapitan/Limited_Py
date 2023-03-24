@@ -1,5 +1,5 @@
 # by ElCapitan, PROJECT Limited 2022
-print("AT PROJECT Limited, 2022 - 2023; ATLB-v1.7.7_2")
+print("AT PROJECT Limited, 2022 - 2023; ATLB-v1.7.8")
 try:
     print("\tImporting libraries...")
     import discord
@@ -40,7 +40,7 @@ with open("config.json", "r") as f:
 time = datetime.now().strftime("%d-%m-%Y_%H-%M-%S")
 
 if logs:
-    handler = logging.FileHandler(filename=f'logs/{time}.log', encoding='utf-8', mode='w')
+    handler = logging.FileHandler(filename=f'logs\{time}.log', encoding='utf-8', mode='w')
     handler.setFormatter(logging.Formatter('%(asctime)s:%(levelname)s:%(name)s: %(message)s'))
     logger = logging.getLogger('discord')
     logger.setLevel(logging.DEBUG)
