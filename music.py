@@ -1,4 +1,4 @@
-# AT PROJECT Limited 2022 - 2023; ATLB-v1.7.8
+# AT PROJECT Limited 2022 - 2023; ATLB-v1.7.9_tsuberg
 import math
 import discord
 import json
@@ -69,7 +69,7 @@ class music_cog(commands.Cog):
             while True:
                 await asyncio.sleep(1)
                 time = time + 1
-                if voice.is_playing() and not voice.is_paused():
+                if voice != None and voice.is_playing() and not voice.is_paused():
                     time = 0
                 elif not self.auto_disconnect:
                     time = 0
