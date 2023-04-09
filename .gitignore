@@ -6,3 +6,4 @@ config.json
 lvlnk
 application.yml
 start.bat
+__pycache__
