@@ -1,5 +1,5 @@
 # by ElCapitan, PROJECT Limited 2022
-print("AT PROJECT Limited, 2022 - 2023; ATLB-v1.7.8_tsuberg\nHappy birthday, Alice Tsuberg!")
+print("AT PROJECT Limited, 2022 - 2023; ATLB-v1.7.8_tsuberg_2\nHappy birthday, Alice Tsuberg!")
 try:
     print("\tImporting libraries...")
     import discord
@@ -62,7 +62,7 @@ async def on_ready():
         print("\r[ \x1b[32;1mOK\x1b[39;0m ]  Music COG imported.")
     else:
         print(f"\r[ \x1b[33;1mWARN\x1b[39;0m ]  Music module disabled.")
-    await bot.change_presence(status=discord.Status.online, activity=discord.Game("Link, start.."))
+    await bot.change_presence(status=discord.Status.online, activity=discord.Game("Happy birthday, Alice Tsuberg!"))
     print("\r[ \x1b[32;1mOK\x1b[39;0m ]  Bot started.")
     
     node: wavelink.Node = wavelink.Node(uri='http://localhost:2333', password=PASSWD)
