@@ -1,4 +1,4 @@
-# AT PROJECT Limited 2022 - 2023; ATLB-v1.7.11
+# AT PROJECT Limited 2022 - 2023; ATLB-v1.7.11_2
 import math
 import discord
 import json
@@ -39,9 +39,10 @@ class music_cog(commands.Cog):
 
         @bot.event
         async def on_display_song(self, ctx, m_url, printa = True):
+            await self.vc.play(m_url)
+
             if printa and self.loop != 1:
                 await self.song_stats(ctx)
-            await self.vc.play(m_url)
             
     @commands.Cog.listener()
     async def on_wavelink_track_end(self, payload: wavelink.TrackEventPayload):

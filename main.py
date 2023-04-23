@@ -1,5 +1,5 @@
 # by ElCapitan, PROJECT Limited 2022
-print("AT PROJECT Limited, 2022 - 2023; ATLB-v1.7.11")
+print("AT PROJECT Limited, 2022 - 2023; ATLB-v1.7.11_2")
 try:
     print("\tImporting libraries...")
     import discord
