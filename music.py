@@ -1,4 +1,4 @@
-# AT PROJECT Limited 2022 - 2023; ATLB-v1.7.10
+# AT PROJECT Limited 2022 - 2023; ATLB-v1.7.10_2
 import math
 import discord
 import json
@@ -93,6 +93,7 @@ class music_cog(commands.Cog):
             if self.loop == 0:
                 self.song_position += 1
                 self.song_source[0] = self.music_queue[self.song_position][0]
+                self.song_source[2] = self.music_queue[self.song_position][2]
                 self.song_title = self.music_queue[self.song_position][0].title
             elif self.loop == 2:
                 if self.song_position == len(self.music_queue) - 1:
@@ -100,6 +101,7 @@ class music_cog(commands.Cog):
                 else:
                     self.song_position += 1
                 self.song_source[0] = self.music_queue[self.song_position][0]
+                self.song_source[2] = self.music_queue[self.song_position][2]
                 self.song_title = self.music_queue[self.song_position][0].title
             self.play_next(ctx)
         else:
