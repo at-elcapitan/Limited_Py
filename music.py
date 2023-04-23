@@ -1,8 +1,9 @@
-# AT PROJECT Limited 2022 - 2023; ATLB-v1.7.9_tsuberg
+# AT PROJECT Limited 2022 - 2023; ATLB-v1.7.10
 import math
 import discord
 import json
 import asyncio
+import datetime
 import logging
 import wavelink
 import traceback
@@ -10,12 +11,14 @@ from discord.ext import commands
 from embeds import errorEmbedCustom, eventEmbed, unknownError, disconnected_embed, errorEmbed
 
 class music_cog(commands.Cog):
-    def __init__(self, bot, time):
+    def __init__(self, bot, time, logs):
         self.bot = bot
+        self.is_logging = logs
 
-        self.logger = logging.getLogger("music_cog")
-        handler = logging.FileHandler(filename=f'logs\{time}.log', encoding='utf-8', mode='a')
-        self.logger.addHandler(handler)
+        if self.is_logging:
+            self.logger = logging.getLogger("music_cog")
+            handler = logging.FileHandler(filename=f'logs\{time}.log', encoding='utf-8', mode='a')
+            self.logger.addHandler(handler)
 
         self.is_playing = False
         self.is_paused = False
@@ -76,6 +79,7 @@ class music_cog(commands.Cog):
                 elif time == self.delay_time:
                     await voice.disconnect()
                     self.set_none_song()
+                    self.vc = None
                     await self.command_channel.send(embed = disconnected_embed())
                 elif self.vc == None:
                     break
@@ -119,7 +123,10 @@ class music_cog(commands.Cog):
         except Exception as exc:
             print("\r[ \x1b[31;1mERR\x1b[39;0m ]  Error occurred while executing command.")
             print(f"\t\x1b[39;1m{exc}\x1b[39;0m")
-            self.logger.warning(traceback.format_exc())
+            if self.is_logging:
+                self.logger.warning(traceback.format_exc())
+            else:
+                print(traceback.format_exc())
 
 
     async def play_music(self, ctx):
@@ -150,29 +157,31 @@ class music_cog(commands.Cog):
                 await self.vc.resume()
                 self.is_playing = True
                 self.is_paused = False
-                return
             
             if query == '':
                 await ctx.send(embed=errorEmbedCustom(844, "Empty", "Empty request cannot be processed."))
                 return
             song = await wavelink.YouTubeTrack.search(query, return_first=True)
-
+            
             if type(song) == type(True):
                 await ctx.send(embed=errorEmbedCustom("801", "URL Incorrect", "Could not play the song. Incorrect format, try another keyword. This could be due to playlist or a livestream format."))
             else:
                 if not self.is_playing:
                     self.music_queue.append([song, voice_channel])
-                    self.song_source = [song, voice_channel]
+                    self.song_source = [song, voice_channel, ctx.author]
                     self.song_title = song.title
                     self.command_channel = ctx.channel
                     await self.play_music(ctx)
                 else:
                     await ctx.send(embed=eventEmbed(name="✅ Success!", text= f'Song added to the queue \n **{song.title}**'))
-                    self.music_queue.append([song, voice_channel])
+                    self.music_queue.append([song, voice_channel, ctx.author])
         except Exception as exc:
             print("\r[ \x1b[31;1mERR\x1b[39;0m ]  Error occurred while executing command.")
             print(f"\t\x1b[39;1m{exc}\x1b[39;0m")
-            self.logger.warning(traceback.format_exc())
+            if self.is_logging:
+                self.logger.warning(traceback.format_exc())
+            else:
+                print(traceback.format_exc())
             await ctx.send(embed=unknownError())
     
 
@@ -233,7 +242,10 @@ class music_cog(commands.Cog):
         except Exception as exc:
             print("\r[ \x1b[31;1mERR\x1b[39;0m ]  Error occurred while executing command.")
             print(f"\t\x1b[39;1m{exc}\x1b[39;0m")
-            self.logger.warning(traceback.format_exc())
+            if self.is_logging:
+                self.logger.warning(traceback.format_exc())
+            else:
+                print(traceback.format_exc())
             await ctx.send(embed=unknownError())
 
 
@@ -251,7 +263,10 @@ class music_cog(commands.Cog):
         except Exception as exc:
             print("\r[ \x1b[31;1mERR\x1b[39;0m ]  Error occurred while executing command.")
             print(f"\t\x1b[39;1m{exc}\x1b[39;0m")
-            self.logger.warning(traceback.format_exc())
+            if self.is_logging:
+                self.logger.warning(traceback.format_exc())
+            else:
+                print(traceback.format_exc())
             await ctx.send(embed=unknownError())
     
 
@@ -269,7 +284,10 @@ class music_cog(commands.Cog):
         except Exception as exc:
             print("\r[ \x1b[31;1mERR\x1b[39;0m ]  Error occurred while executing command.")
             print(f"\t\x1b[39;1m{exc}\x1b[39;0m")
-            self.logger.warning(traceback.format_exc())
+            if self.is_logging:
+                self.logger.warning(traceback.format_exc())
+            else:
+                print(traceback.format_exc())
             await ctx.send(embed=unknownError())
 
 
@@ -295,7 +313,10 @@ class music_cog(commands.Cog):
         except Exception as exc:
             print("\r[ \x1b[31;1mERR\x1b[39;0m ]  Error occurred while executing command.")
             print(f"\t\x1b[39;1m{exc}\x1b[39;0m")
-            self.logger.warning(traceback.format_exc())
+            if self.is_logging:
+                self.logger.warning(traceback.format_exc())
+            else:
+                print(traceback.format_exc())
             await ctx.send(embed=unknownError())
 
     
@@ -308,7 +329,10 @@ class music_cog(commands.Cog):
         except Exception as exc:
             print("\r[ \x1b[31;1mERR\x1b[39;0m ]  Error occurred while executing command.")
             print(f"\t\x1b[39;1m{exc}\x1b[39;0m")
-            self.logger.warning(traceback.format_exc())
+            if self.is_logging:
+                self.logger.warning(traceback.format_exc())
+            else:
+                print(traceback.format_exc())
             await ctx.send(embed=unknownError())
 
 
@@ -331,7 +355,10 @@ class music_cog(commands.Cog):
         except Exception as exc:
             print("\r[ \x1b[31;1mERR\x1b[39;0m ]  Error occurred while executing command.")
             print(f"\t\x1b[39;1m{exc}\x1b[39;0m")
-            self.logger.warning(traceback.format_exc())
+            if self.is_logging:
+                self.logger.warning(traceback.format_exc())
+            else:
+                print(traceback.format_exc())
             await ctx.send(embed=unknownError())
         
         
@@ -362,7 +389,10 @@ class music_cog(commands.Cog):
         except Exception as exc:
             print("\r[ \x1b[31;1mERR\x1b[39;0m ]  Error occurred while executing command.")
             print(f"\t\x1b[39;1m{exc}\x1b[39;0m")
-            self.logger.warning(traceback.format_exc())
+            if self.is_logging:
+                self.logger.warning(traceback.format_exc())
+            else:
+                print(traceback.format_exc())
             await ctx.send(embed=unknownError())
 
 
@@ -386,7 +416,10 @@ class music_cog(commands.Cog):
         except Exception as exc:
             print("\r[ \x1b[31;1mERR\x1b[39;0m ]  Error occurred while executing command.")
             print(f"\t\x1b[39;1m{exc}\x1b[39;0m")
-            self.logger.warning(traceback.format_exc())
+            if self.is_logging:
+                self.logger.warning(traceback.format_exc())
+            else:
+                print(traceback.format_exc())
             await ctx.send(embed=unknownError())
 
 
@@ -418,10 +451,10 @@ class music_cog(commands.Cog):
                     return
 
                 if self.song_source == "":
-                    self.song_source = [song, voice_channel]
+                    self.song_source = [song, voice_channel, ctx.author]
                     self.song_title = song.title
                     self.command_channel = ctx.channel
-                self.music_queue.append([song, voice_channel])
+                self.music_queue.append([song, voice_channel, ctx.author])
                 if not self.is_playing:
                     await self.play_music(ctx)
                 await ctx.send(embed=eventEmbed(name="✅ Success!", text= f'Song added to the queue \n **{song.title}**'))
@@ -448,7 +481,10 @@ class music_cog(commands.Cog):
         except Exception as exc:
             print("\r[ \x1b[31;1mERR\x1b[39;0m ]  Error occurred while executing command.")
             print(f"\t\x1b[39;1m{exc}\x1b[39;0m")
-            self.logger.warning(traceback.format_exc())
+            if self.is_logging:
+                self.logger.warning(traceback.format_exc())
+            else:
+                print(traceback.format_exc())
             await ctx.send(embed=unknownError())
 
 
@@ -473,7 +509,10 @@ class music_cog(commands.Cog):
         except Exception as exc:
             print("\r[ \x1b[31;1mERR\x1b[39;0m ]  Error occurred while executing command.")
             print(f"\t\x1b[39;1m{exc}\x1b[39;0m")
-            self.logger.warning(traceback.format_exc())
+            if self.is_logging:
+                self.logger.warning(traceback.format_exc())
+            else:
+                print(traceback.format_exc())
             await ctx.send(embed=unknownError())
 
 
@@ -523,7 +562,10 @@ class music_cog(commands.Cog):
         except Exception as exc:
             print("\r[ \x1b[31;1mERR\x1b[39;0m ]  Error occurred while executing command.")
             print(f"\t\x1b[39;1m{exc}\x1b[39;0m")
-            self.logger.warning(traceback.format_exc())
+            if self.is_logging:
+                self.logger.warning(traceback.format_exc())
+            else:
+                print(traceback.format_exc())
             await ctx.send(embed=unknownError())
 
     @commands.command(name="clearlist", aliases=['cll'])
@@ -548,7 +590,10 @@ class music_cog(commands.Cog):
         except Exception as exc:
             print("\r[ \x1b[31;1mERR\x1b[39;0m ]  Error occurred while executing command.")
             print(f"\t\x1b[39;1m{exc}\x1b[39;0m")
-            self.logger.warning(traceback.format_exc())
+            if self.is_logging:
+                self.logger.warning(traceback.format_exc())
+            else:
+                print(traceback.format_exc())
             await ctx.send(embed=unknownError())
 
     @commands.command(name="initlist", aliases=['inl'])
@@ -571,7 +616,10 @@ class music_cog(commands.Cog):
         except Exception as exc:
             print("\r[ \x1b[31;1mERR\x1b[39;0m ]  Error occurred while executing command.")
             print(f"\t\x1b[39;1m{exc}\x1b[39;0m")
-            self.logger.warning(traceback.format_exc())
+            if self.is_logging:
+                self.logger.warning(traceback.format_exc())
+            else:
+                print(traceback.format_exc())
             await ctx.send(embed=unknownError())
     
     
@@ -614,7 +662,10 @@ class music_cog(commands.Cog):
         except Exception as exc:
             print("\r[ \x1b[31;1mERR\x1b[39;0m ]  Error occurred while executing command.")
             print(f"\t\x1b[39;1m{exc}\x1b[39;0m")
-            self.logger.warning(traceback.format_exc())
+            if self.is_logging:
+                self.logger.warning(traceback.format_exc())
+            else:
+                print(traceback.format_exc())
             await ctx.send(embed=unknownError())
 
 
@@ -646,7 +697,10 @@ class music_cog(commands.Cog):
         except Exception as exc:
             print("\r[ \x1b[31;1mERR\x1b[39;0m ]  Error occurred while executing command.")
             print(f"\t\x1b[39;1m{exc}\x1b[39;0m")
-            self.logger.warning(traceback.format_exc())
+            if self.is_logging:
+                self.logger.warning(traceback.format_exc())
+            else:
+                print(traceback.format_exc())
             await ctx.send(embed=unknownError())
 
     @commands.command(name="beginning", aliases=['bg'])
@@ -661,8 +715,52 @@ class music_cog(commands.Cog):
         except Exception as exc:
             print("\r[ \x1b[31;1mERR\x1b[39;0m ]  Error occurred while executing command.")
             print(f"\t\x1b[39;1m{exc}\x1b[39;0m")
-            self.logger.warning(traceback.format_exc())
+            if self.is_logging:
+                self.logger.warning(traceback.format_exc())
+            else:
+                print(traceback.format_exc())
             await ctx.send(embed=unknownError())
+    
+
+    @commands.command(name="aboutsong", aliases=['song'])
+    async def song_stats(self, ctx):
+        if not self.is_playing:
+            await ctx.send(embed=errorEmbedCustom(830, "Song info can`t be generated", "Maybe you are not playing nothing..."))
+            return
+        
+        timeline = "[────────────────────────────────────────]"
+        position_formatted = datetime.datetime.fromtimestamp(self.vc.position / 1000).strftime("%M:%S")
+        song_len_formatted = datetime.datetime.fromtimestamp(self.song_source[0].length / 1000).strftime("%M:%S")
+
+        position = math.floor((self.vc.position / 1000) / (self.song_source[0].length / 1000 / 40))
+        
+        form_tl = ""
+
+        for i in range(len(timeline)):
+            if i == position + 1:
+                form_tl = form_tl + '●'
+            else:
+                form_tl = form_tl + timeline[i]
+        
+        embed = discord.Embed(title=f"{self.song_title}", description=f"{position_formatted}  {form_tl}  {song_len_formatted}\n\n> URL: [youtube.com]({self.song_source[0].uri})\n> Ordered by: `{self.song_source[2]}`", color=0xa31eff)        
+
+        match self.loop:
+            case 1:
+                loop_on = "current song"
+            case 2:
+                loop_on = "on playlist"
+            case 0:
+                loop_on = "turned off"
+
+        if self.auto_disconnect:
+            auto_discon = "disabled"
+        else:
+            auto_discon = "enabled"
+        footer = f"Loop: {loop_on}\n24/7: {auto_discon}"
+        embed.set_footer(text=footer)
+        
+        await ctx.send(embed=embed)
+
 
     @commands.command(name="lock")
     async def lock_admin(self, ctx, cmd = None):

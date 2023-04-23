@@ -1,5 +1,5 @@
 # by ElCapitan, PROJECT Limited 2022
-print("AT PROJECT Limited, 2022 - 2023; ATLB-v1.7.9_tsuberg\nHappy birthday, Alice Tsuberg!")
+print("AT PROJECT Limited, 2022 - 2023; ATLB-1.7.10")
 try:
     print("\tImporting libraries...")
     import discord
@@ -50,19 +50,14 @@ else:
     print(f"\r[ \x1b[33;1mWARN\x1b[39;0m ]  Log system disabled.")
 bot = commands.Bot(command_prefix = "sc.", intents=discord.Intents.all())
 
-'''@bot.slash_command(name="first_slash", guild_ids=[1081273222739275816])
-async def first_slash(ctx): 
-    await ctx.respond("You executed the slash command!")'''
-
-
 @bot.event
 async def on_ready():
     if music:
-        await bot.add_cog(music_cog(bot, time))
+        await bot.add_cog(music_cog(bot, time, logs))
         print("\r[ \x1b[32;1mOK\x1b[39;0m ]  Music COG imported.")
     else:
         print(f"\r[ \x1b[33;1mWARN\x1b[39;0m ]  Music module disabled.")
-    await bot.change_presence(status=discord.Status.online, activity=discord.Game("Happy birthday, Alice Tsuberg!"))
+    await bot.change_presence(status=discord.Status.online, activity=discord.Game("Link, start.."))
     print("\r[ \x1b[32;1mOK\x1b[39;0m ]  Bot started.")
     
     node: wavelink.Node = wavelink.Node(uri='http://localhost:2333', password=PASSWD)
