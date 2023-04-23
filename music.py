@@ -1,4 +1,4 @@
-# AT PROJECT Limited 2022 - 2023; ATLB-v1.7.10_2
+# AT PROJECT Limited 2022 - 2023; ATLB-v1.7.11
 import math
 import discord
 import json
@@ -40,7 +40,7 @@ class music_cog(commands.Cog):
         @bot.event
         async def on_display_song(self, ctx, m_url, printa = True):
             if printa and self.loop != 1:
-                await ctx.send(embed=eventEmbed(name="🎵   Now playing", text= f'**{self.song_title}**'))
+                await self.song_stats(ctx)
             await self.vc.play(m_url)
             
     @commands.Cog.listener()
@@ -325,8 +325,7 @@ class music_cog(commands.Cog):
     @commands.command(name="disconnect", aliases=["d"])
     async def dc(self, ctx):
         try:
-            self.is_playing = False
-            self.is_paused = False
+            self.set_none_song()
             await self.vc.disconnect()
         except Exception as exc:
             print("\r[ \x1b[31;1mERR\x1b[39;0m ]  Error occurred while executing command.")
