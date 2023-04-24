@@ -1,4 +1,4 @@
-# AT PROJECT Limited 2022 - 2023; ATLB-v1.7.11_2
+# AT PROJECT Limited 2022 - 2023; ATLB-v1.7.11_3
 import math
 import discord
 import json
@@ -40,9 +40,9 @@ class music_cog(commands.Cog):
         @bot.event
         async def on_display_song(self, ctx, m_url, printa = True):
             await self.vc.play(m_url)
-
+            
             if printa and self.loop != 1:
-                await self.song_stats(ctx)
+                await self.song_stats(ctx, True)
             
     @commands.Cog.listener()
     async def on_wavelink_track_end(self, payload: wavelink.TrackEventPayload):
@@ -725,13 +725,17 @@ class music_cog(commands.Cog):
     
 
     @commands.command(name="aboutsong", aliases=['song'])
-    async def song_stats(self, ctx):
+    async def song_stats(self, ctx, new = False):
         if not self.is_playing:
             await ctx.send(embed=errorEmbedCustom(830, "Song info can`t be generated", "Maybe you are not playing nothing..."))
             return
         
         timeline = "[────────────────────────────────────────]"
-        position_formatted = datetime.datetime.fromtimestamp(self.vc.position / 1000).strftime("%M:%S")
+        if new:
+            position_formatted = "00:00"
+        else:
+            position_formatted = datetime.datetime.fromtimestamp(self.vc.position / 1000).strftime("%M:%S")
+
         song_len_formatted = datetime.datetime.fromtimestamp(self.song_source[0].length / 1000).strftime("%M:%S")
 
         position = math.floor((self.vc.position / 1000) / (self.song_source[0].length / 1000 / 40))
