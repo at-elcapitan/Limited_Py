@@ -1,4 +1,4 @@
-# AT PROJECT Limited 2022 - 2023; ATLB-v1.7.11_3
+# AT PROJECT Limited 2022 - 2023; ATLB-v1.7.11_4
 import math
 import discord
 import json
@@ -626,13 +626,6 @@ class music_cog(commands.Cog):
     
     
     # Time Machine
-    @commands.command(name="restart", aliases=['rt'])
-    async def from_beginning(self, ctx):
-        if self.vc.is_playing:
-            await self.vc.seek(position=0)
-            await ctx.send(embed=eventEmbed(name="✅ Moved", text="Song seeked to beginning."))
-
-
     @commands.command(name="seek", aliases=['sk'])
     async def music_seek(self, ctx, num: float):
         try:
@@ -727,18 +720,20 @@ class music_cog(commands.Cog):
     @commands.command(name="aboutsong", aliases=['song'])
     async def song_stats(self, ctx, new = False):
         if not self.is_playing:
-            await ctx.send(embed=errorEmbedCustom(830, "Song info can`t be generated", "Maybe you are not playing nothing..."))
+            await ctx.send(embed=errorEmbedCustom(830, "Song info can`t be generated", "Maybe you do not playing anything"))
             return
         
         timeline = "[────────────────────────────────────────]"
         if new:
-            position_formatted = "00:00"
+            ps = 0
         else:
-            position_formatted = datetime.datetime.fromtimestamp(self.vc.position / 1000).strftime("%M:%S")
+            ps = self.vc.position
+
+        position_formatted = datetime.datetime.fromtimestamp(ps / 1000).strftime("%M:%S")
 
         song_len_formatted = datetime.datetime.fromtimestamp(self.song_source[0].length / 1000).strftime("%M:%S")
 
-        position = math.floor((self.vc.position / 1000) / (self.song_source[0].length / 1000 / 40))
+        position = math.floor((ps / 1000) / (self.song_source[0].length / 1000 / 40))
         
         form_tl = ""
 
