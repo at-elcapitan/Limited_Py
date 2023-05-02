@@ -1,4 +1,4 @@
-# AT PROJECT Limited 2022 - 2023; ATLB-v1.7.11_4
+# AT PROJECT Limited 2022 - 2023; ATLB-v1.7.11_5
 import math
 import discord
 import json
@@ -470,14 +470,14 @@ class music_cog(commands.Cog):
                     continue
 
                 if self.song_source == "":
-                    self.song_source = [song, voice_channel]
+                    self.song_source = [song, voice_channel, ctx.author]
                     self.song_title = song.title
                     if not self.is_playing:
-                        self.music_queue.append([song, voice_channel])
+                        self.music_queue.append([song, voice_channel, ctx.author])
                         await self.play_music(ctx)
                     await ctx.send(embed=eventEmbed(name="🔵 Processing...", text="List import process started, please wait..."))
                 else:
-                    self.music_queue.append([song, voice_channel])
+                    self.music_queue.append([song, voice_channel, ctx.author])
             
             await ctx.send(embed=eventEmbed(name="✅ Success!", text= f'Track list succesfully imported!'))
         except Exception as exc:
