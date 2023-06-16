@@ -1,5 +1,5 @@
 # by ElCapitan, PROJECT Limited 2022
-print("AT PROJECT Limited, 2022 - 2023; ATLB-v1.7.11_5")
+print("AT PROJECT Limited, 2022 - 2023; ATLB-v1.7.11.6")
 try:
     print("\tImporting libraries...")
     import discord
@@ -59,9 +59,10 @@ async def on_ready():
         print(f"\r[ \x1b[33;1mWARN\x1b[39;0m ]  Music module disabled.")
     await bot.change_presence(status=discord.Status.online, activity=discord.Game("Link, start.."))
     print("\r[ \x1b[32;1mOK\x1b[39;0m ]  Bot started.")
-    
-    node: wavelink.Node = wavelink.Node(uri='http://localhost:2333', password=PASSWD)
-    await wavelink.NodePool.connect(client=bot, nodes=[node])
+
+    if music:
+        node: wavelink.Node = wavelink.Node(uri='http://localhost:2333', password=PASSWD)
+        await wavelink.NodePool.connect(client=bot, nodes=[node])
 
 
 @bot.event

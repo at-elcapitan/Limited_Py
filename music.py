@@ -1,4 +1,4 @@
-# AT PROJECT Limited 2022 - 2023; ATLB-v1.7.11_5
+# AT PROJECT Limited 2022 - 2023; ATLB-v1.7.11.6
 import math
 import discord
 import json
@@ -164,7 +164,8 @@ class music_cog(commands.Cog):
             if query == '':
                 await ctx.send(embed=errorEmbedCustom(844, "Empty", "Empty request cannot be processed."))
                 return
-            song = await wavelink.YouTubeTrack.search(query, return_first=True)
+            song = await wavelink.YouTubeTrack.search(query)
+            song = song[0]
             
             if type(song) == type(True):
                 await ctx.send(embed=errorEmbedCustom("801", "URL Incorrect", "Could not play the song. Incorrect format, try another keyword. This could be due to playlist or a livestream format."))
@@ -446,7 +447,8 @@ class music_cog(commands.Cog):
 
             if int(num) != 0:
                 item = list[int(num) - 1][1]
-                song = await wavelink.YouTubeTrack.search(item, return_first=True)
+                song = await wavelink.YouTubeTrack.search(item)
+                song = song[0]
 
                 if not song:
                     await ctx.send(embed=errorEmbedCustom(854, "Import error", f"Unknown error occurred while importing track **{list[int(num) - 1][0]}**"))
@@ -463,7 +465,8 @@ class music_cog(commands.Cog):
                 return
 
             for item in list:
-                song = await wavelink.YouTubeTrack.search(item[1], return_first=True)
+                song = await wavelink.YouTubeTrack.search(item[1])
+                song = song[0]
 
                 if not song:
                     await ctx.send(embed=errorEmbedCustom(854, "Import error", f"Unknown error occurred while importing track **{item[0]}**"))
@@ -494,7 +497,8 @@ class music_cog(commands.Cog):
     async def load_save(self, ctx, *args): 
         try:
             query = " ".join(args)
-            song = await wavelink.YouTubeTrack.search(query, return_first=True)
+            song = await wavelink.YouTubeTrack.search(query)
+            song = song[0]
 
             await ctx.send(embed=eventEmbed(name="✅ Success!", text= f'Song added to the list \n **{song.title}**'))
 
