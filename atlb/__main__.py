@@ -1,6 +1,6 @@
 print("AT PROJECT Limited, 2022 - 2023; ATLB-v1.7.12")
 print("Product licensed by CC BY-NC-ND-4, file `LICENSE`")
-print("The license applies to all project files")
+print("The license applies to all project files and previous versions (commits)")
 try:
     print("\tImporting libraries...")
     import os
