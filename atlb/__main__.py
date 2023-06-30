@@ -1,38 +1,72 @@
-# by ElCapitan, PROJECT Limited 2022
-print("AT PROJECT Limited, 2022 - 2023; ATLB-v1.7.11.6")
+print("AT PROJECT Limited, 2022 - 2023; ATLB-v1.7.12")
+print("Product licensed by CC BY-NC-ND-4, file `LICENSE`")
+print("The license applies to all project files")
 try:
     print("\tImporting libraries...")
+    import os
+    import json
+    import logging
+    from datetime import datetime
+    
     import discord
     from discord.ext import commands
     print("[ \x1b[32;1mOK\x1b[39;0m ]  Imported 'discord'")
-    import os
-    print("[ \x1b[32;1mOK\x1b[39;0m ]  Imported 'os'")
     import wavelink
     print("[ \x1b[32;1mOK\x1b[39;0m ]  Imported 'wavelink'")
-    import logging
-    print("[ \x1b[32;1mOK\x1b[39;0m ]  Imported 'logging'")
-    import embeds
-    print("[ \x1b[32;1mOK\x1b[39;0m ]  Imported 'embeds.py'")
     from dotenv import load_dotenv
     print("[ \x1b[32;1mOK\x1b[39;0m ]  Imported 'dotenv'")
+    import embeds
+    print("[ \x1b[32;1mOK\x1b[39;0m ]  Imported 'embeds.py'")
     from music import music_cog
     print("[ \x1b[32;1mOK\x1b[39;0m ]  Imported 'music.py'")
-    from datetime import datetime
-    print("[ \x1b[32;1mOK\x1b[39;0m ]  Imported 'datetime'")
-    import json
-    print("[ \x1b[32;1mOK\x1b[39;0m ]  Imported 'JSON'")
+    from exceptions import FileError
+    print("[ \x1b[32;1mOK\x1b[39;0m ]  Imported 'exceptions.py'")
     print("\tLibraries imported.")
 except Exception as exception:
     print("\r[ \x1b[31;1mERR\x1b[39;0m ]  Importing libraries...")
-    print(f"\t\x1b[39;1m{exception}\x1b[39;0m")
-    quit(1)
+    raise exception
 
+# Some checks
+
+print('\tChecking files...')
+if not os.path.isfile('files/config.json'):
+    print('Config file not found, creating...')
+    def_config = { "logging" : False, "music" : True }
+    with open('files/config.json', 'w') as f:
+        f.seek(0)
+        json.dump(def_config, f, indent=4, ensure_ascii=False)
+        f.truncate()
+print("[ \x1b[32;1mOK\x1b[39;0m ]  Checked `config.json`")
+
+if not os.path.isfile('files/lists.json'):
+    print('Lists file not found, creating...')
+    def_config = {}
+    with open('files/lists.json', 'w') as f:
+        f.seek(0)
+        json.dump(def_config, f, indent=4, ensure_ascii=False)
+        f.truncate()
+print("[ \x1b[32;1mOK\x1b[39;0m ]  Checked `lists.json`")
+
+if not os.path.exists('logs'):
+    print("\t `logs` dir not found, creating...")
+    os.mkdir('logs')
+print("[ \x1b[32;1mOK\x1b[39;0m ]  Checked `logs/`")
+
+if not os.path.isfile('.env'):
+    raise(FileError('.env', 'notfound'))
+print("[ \x1b[32;1mOK\x1b[39;0m ]  Checked `.env`")
+
+# Env and config loading
 
 load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
 PASSWD = os.getenv('PASSWD')
 
-with open("config.json", "r") as f:
+if TOKEN is None or PASSWD is None:
+    print("\r[ \x1b[31;1mERR\x1b[39;0m ]  Loading config...")
+    raise(FileError('.env', 'corrupt'))
+
+with open("files/config.json", "r") as f:
     data = json.load(f)
     logs = data["logging"]
     music = data["music"]
@@ -50,11 +84,15 @@ else:
     print(f"\r[ \x1b[33;1mWARN\x1b[39;0m ]  Log system disabled.")
 bot = commands.Bot(command_prefix = "sc.", intents=discord.Intents.all())
 
+
 @bot.event
 async def on_ready():
     if music:
-        await bot.add_cog(music_cog(bot, time, logs))
-        print("\r[ \x1b[32;1mOK\x1b[39;0m ]  Music COG imported.")
+        try:
+            await bot.add_cog(music_cog(bot, time, logs))
+            print("\r[ \x1b[32;1mOK\x1b[39;0m ]  Music COG imported.")
+        except:
+            pass
     else:
         print(f"\r[ \x1b[33;1mWARN\x1b[39;0m ]  Music module disabled.")
     await bot.change_presence(status=discord.Status.online, activity=discord.Game("Link, start.."))
@@ -227,7 +265,6 @@ try:
         bot.run(TOKEN, log_handler=handler)
     else:
         bot.run(TOKEN)
-except Exception as exeption:
+except Exception as exception:
     print("\r[ \x1b[31;1mERR\x1b[39;0m ]  Starting bot...")
-    print(f"\t\x1b[39;1m{exeption}\x1b[39;0m")
-    quit(1)
+    raise(exception)

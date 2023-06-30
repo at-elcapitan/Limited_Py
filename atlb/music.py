@@ -1,4 +1,4 @@
-# AT PROJECT Limited 2022 - 2023; ATLB-v1.7.11.6
+# AT PROJECT Limited 2022 - 2023; ATLB-v1.7.12
 import math
 import discord
 import json
@@ -433,7 +433,7 @@ class music_cog(commands.Cog):
             id = str(ctx.author.id)
             voice_channel = ctx.author.voice.channel
 
-            with open('lists.json', 'r', encoding="utf-8") as f:
+            with open('files/lists.json', 'r', encoding="utf-8") as f:
                 list = json.load(f)
                 if id in list:
                     list = list[id]
@@ -502,7 +502,7 @@ class music_cog(commands.Cog):
 
             await ctx.send(embed=eventEmbed(name="✅ Success!", text= f'Song added to the list \n **{song.title}**'))
 
-            with open('lists.json', 'r+', encoding="utf-8") as f:
+            with open('files/lists.json', 'r+', encoding="utf-8") as f:
                 data = json.load(f)
                 id = str(ctx.author.id)
 
@@ -525,7 +525,7 @@ class music_cog(commands.Cog):
     @commands.command(name="printlist", aliases=['ptl'])
     async def load_print(self, ctx, page = 1):
         try:
-            with open('lists.json', 'r', encoding="utf-8") as f:
+            with open('files/lists.json', 'r', encoding="utf-8") as f:
                 data = json.load(f)
                 id = str(ctx.author.id)
 
@@ -577,7 +577,7 @@ class music_cog(commands.Cog):
     @commands.command(name="clearlist", aliases=['cll'])
     async def load_delete(self, ctx, num = None):
         try:
-            with open('lists.json', 'r+', encoding="utf-8") as f:
+            with open('files/lists.json', 'r+', encoding="utf-8") as f:
                 data = json.load(f)
                 id = str(ctx.author.id)
 
@@ -607,7 +607,7 @@ class music_cog(commands.Cog):
         try:
             id = str(ctx.author.id)
 
-            with open('lists.json', 'r+', encoding="utf-8") as f:
+            with open('files/lists.json', 'r+', encoding="utf-8") as f:
                 data = json.load(f)
                 
                 if id in data: 
