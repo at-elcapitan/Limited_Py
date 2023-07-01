@@ -1,4 +1,4 @@
-# AT PROJECT Limited 2022 - 2023; ATLB-v1.7.12
+# AT PROJECT Limited 2022 - 2023; ATLB-v1.7.12.1
 import math
 import discord
 import json
