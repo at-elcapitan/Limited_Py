@@ -1,4 +1,4 @@
-# AT PROJECT Limited 2022 - 2023; ATLB-v1.7.12.3
+# AT PROJECT Limited 2022 - 2023; ATLB-v1.7.13
 import discord
 
 def default():
@@ -103,6 +103,13 @@ def initlist():
     embed = discord.Embed(title="INITLIST command/Music", color=0xa31eff)
 
     embed.add_field(name="sc.initlist \nAliases: `inl`", value="Music package command. Initialazing user list.")
+
+    return embed
+
+def seek():
+    embed = discord.Embed(title="SEEK command/Music", color=0xa31eff)
+
+    embed.add_field(name="sc.seek <time (secs)> \nAliases: `sk`", value="Seeks track for n seconds.")
 
     return embed
 

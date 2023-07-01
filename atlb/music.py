@@ -1,4 +1,4 @@
-# AT PROJECT Limited 2022 - 2023; ATLB-v1.7.12.3
+# AT PROJECT Limited 2022 - 2023; ATLB-v1.7.13
 import math
 import discord
 import json
@@ -43,7 +43,7 @@ class music_cog(commands.Cog):
             
             if printa and self.loop != 1:
                 await self.song_stats(ctx, True)
-            
+ 
     @commands.Cog.listener()
     async def on_wavelink_track_end(self, payload: wavelink.TrackEventPayload):
         player = payload.player
@@ -52,8 +52,8 @@ class music_cog(commands.Cog):
             if reason == 'FINISHED':
                 ctx = player.ctx
                 self.change_song(ctx)
-        except Exception as e:
-            print(e)
+        except:
+            pass
 
     def set_none_song(self):
         self.music_queue = []
@@ -431,13 +431,13 @@ class music_cog(commands.Cog):
     @commands.command(name='playlist', aliases=['pll'])
     async def import_list(self, ctx, num = 0):
         try:
-            id = str(ctx.author.id)
+            uid = str(ctx.author.id)
             voice_channel = ctx.author.voice.channel
 
             with open('files/lists.json', 'r', encoding="utf-8") as f:
                 list = json.load(f)
-                if id in list:
-                    list = list[id]
+                if uid in list:
+                    list = list[uid]
                 else: 
                     await ctx.send(embed=errorEmbedCustom("804", "Uknown list", "Error: you don`t have saved list!"))
                     return
@@ -505,10 +505,10 @@ class music_cog(commands.Cog):
 
             with open('files/lists.json', 'r+', encoding="utf-8") as f:
                 data = json.load(f)
-                id = str(ctx.author.id)
+                uid = str(ctx.author.id)
 
-                if id in data:
-                    data[id].append([song.title, query])
+                if uid in data:
+                    data[uid].append([song.title, query])
                 else: await ctx.send(embed=errorEmbedCustom("804", "Uknown list", "Error: you don`t have saved list!"))
                 f.seek(0)
                 json.dump(data, f, indent=4, ensure_ascii=False)
@@ -528,10 +528,10 @@ class music_cog(commands.Cog):
         try:
             with open('files/lists.json', 'r', encoding="utf-8") as f:
                 data = json.load(f)
-                id = str(ctx.author.id)
+                uid = str(ctx.author.id)
 
-                if id in data:
-                    lst = data[id]
+                if uid in data:
+                    lst = data[uid]
                     retval = ""
                     embed = discord.Embed(color=0x915AF2)
 
@@ -580,16 +580,16 @@ class music_cog(commands.Cog):
         try:
             with open('files/lists.json', 'r+', encoding="utf-8") as f:
                 data = json.load(f)
-                id = str(ctx.author.id)
+                uid = str(ctx.author.id)
 
                 if num == None:
-                    data[id] = []
+                    data[uid] = []
                     await ctx.send(embed=eventEmbed(name="✅ Success!", text="Your playlist was cleared!"))
                 else:
-                    if id in data:
-                        a = data[id][int(num) - 1][0]
+                    if uid in data:
+                        a = data[uid][int(num) - 1][0]
                         await ctx.send(embed=eventEmbed(name="✅ Success!", text="Song **" + a + "** succesfully cleared!"))
-                        data[id].pop(int(num) - 1)
+                        data[uid].pop(int(num) - 1)
                     else: await ctx.send(embed=errorEmbedCustom("804", "Uknown list", "Error: you don`t have saved list!"))
                 f.seek(0)
                 json.dump(data, f, indent=4, ensure_ascii=False)
@@ -606,16 +606,16 @@ class music_cog(commands.Cog):
     @commands.command(name="initlist", aliases=['inl'])
     async def init_list(self, ctx):
         try:
-            id = str(ctx.author.id)
+            uid = str(ctx.author.id)
 
             with open('files/lists.json', 'r+', encoding="utf-8") as f:
                 data = json.load(f)
                 
-                if id in data: 
+                if uid in data: 
                     await ctx.send(embed=errorEmbedCustom("805", "List exists!", "Error: you already have saved list!"))
                     return
                 else:
-                    data[id] = []
+                    data[uid] = []
                 f.seek(0)
                 json.dump(data, f, indent=4, ensure_ascii=False)
                 f.truncate()
@@ -766,56 +766,3 @@ class music_cog(commands.Cog):
         embed.set_footer(text=footer)
         
         await ctx.send(embed=embed)
-
-
-    @commands.command(name="lock")
-    async def lock_admin(self, ctx, cmd = None):
-        if ctx.author.guild_permissions.administrator:
-            match cmd:
-                case "all":
-                    self.ac24 = False
-                    self.acseek = False
-                    self.acvolume = "lock"
-                    await ctx.send(embed=eventEmbed("Command Locked", "Target: ALL", "All music commands locked for users."))
-                case "24/7":
-                    self.ac24 = False
-                    await ctx.send(embed=eventEmbed("Command Locked", "Target: 24/7", "24/7 command disabled."))
-                case "seek":
-                    self.acseek = False
-                    await ctx.send(embed=eventEmbed("Command Locked", "Target: SEEK", "Seek command disabled."))
-                case "volume":
-                    self.acvolume = "lock"
-                    await ctx.send(embed=eventEmbed("Command Locked", "Target: VOLUME", "Volume command disabled."))
-                case "volumemax":
-                    self.acvolume = "def"
-                    await ctx.send(embed=eventEmbed("Command Changed", "Target: VOLUME", "Volume atr `max` disabled."))
-                case _:
-                    await ctx.send(embed=eventEmbed("Error", "Locked: Nonde", "Lock target was not passed."))
-        else:
-            await ctx.send(embed=errorEmbed)
-
-    @commands.command(name="unlock")
-    async def unlock_admin(self, ctx, cmd = None):
-        if ctx.author.guild_permissions.administrator:
-            match cmd:
-                case "all":
-                    self.ac24 = True
-                    self.acseek = True
-                    self.acvolume = "def"
-                    await ctx.send(embed=eventEmbed("Command Unlocked", "Target: ALL", "All music commands unlocked for users."))
-                case "24/7":
-                    self.ac24 = True
-                    await ctx.send(embed=eventEmbed("Command Unlocked", "Target: 24/7", "24/7 command enabled."))
-                case "seek":
-                    self.acseek = True
-                    await ctx.send(embed=eventEmbed("Command Unlocked", "Target: SEEK", "Seek command enabled."))
-                case "volume":
-                    self.acvolume = "def"
-                    await ctx.send(embed=eventEmbed("Command Unlocked", "Target: VOLUME", "Volume command enabled."))
-                case "volumemax":
-                    self.acvolume = "max"
-                    await ctx.send(embed=eventEmbed("Command Unlocked", "Target: VOLUME", "Volume command enabled, atr `max`."))
-                case _:
-                    await ctx.send(embed=eventEmbed("Error", "Locked: Nonde", "Lock target was not passed."))
-        else:
-            await ctx.send(embed=errorEmbed)
