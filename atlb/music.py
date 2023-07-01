@@ -1,4 +1,4 @@
-# AT PROJECT Limited 2022 - 2023; ATLB-v1.7.12.1
+# AT PROJECT Limited 2022 - 2023; ATLB-v1.7.12.2
 import math
 import discord
 import json
@@ -58,6 +58,7 @@ class music_cog(commands.Cog):
     def set_none_song(self):
         self.music_queue = []
         self.is_playing = False
+        self.is_paused = False
         self.song_source = ""
         self.song_title = ""
         self.song_position = 0
