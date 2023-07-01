@@ -1,4 +1,4 @@
-print("AT PROJECT Limited, 2022 - 2023; ATLB-v1.7.12.2")
+print("AT PROJECT Limited, 2022 - 2023; ATLB-v1.7.12.3")
 print("Product licensed by CC BY-NC-ND-4, file `LICENSE`")
 print("The license applies to all project files and previous versions (commits)")
 try:
@@ -79,7 +79,7 @@ with open("files/config.json", "r") as f:
 time = datetime.now().strftime("%d-%m-%Y_%H-%M-%S")
 
 if logs:
-    handler = logging.FileHandler(filename=f'logs\{time}.log', encoding='utf-8', mode='w')
+    handler = logging.FileHandler(filename=f'logs/{time}.log', encoding='utf-8', mode='w')
     handler.setFormatter(logging.Formatter('%(asctime)s:%(levelname)s:%(name)s: %(message)s'))
     logger = logging.getLogger('discord')
     logger.setLevel(logging.DEBUG)

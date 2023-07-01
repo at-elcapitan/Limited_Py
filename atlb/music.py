@@ -1,4 +1,4 @@
-# AT PROJECT Limited 2022 - 2023; ATLB-v1.7.12.2
+# AT PROJECT Limited 2022 - 2023; ATLB-v1.7.12.3
 import math
 import discord
 import json
@@ -17,7 +17,7 @@ class music_cog(commands.Cog):
 
         if self.is_logging:
             self.logger = logging.getLogger("music_cog")
-            handler = logging.FileHandler(filename=f'logs\{time}.log', encoding='utf-8', mode='a')
+            handler = logging.FileHandler(filename=f'logs/{time}.log', encoding='utf-8', mode='a')
             self.logger.addHandler(handler)
 
         self.is_playing = False
