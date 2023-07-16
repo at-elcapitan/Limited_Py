@@ -6,3 +6,4 @@ application.yml
 __pycache__
 files
 .vscode
+venv
