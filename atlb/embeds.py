@@ -1,4 +1,4 @@
-# AT PROJECT Limited 2022 - 2023; ATLB-v1.7.13
+# AT PROJECT Limited 2022 - 2023; ATLB-v1.8
 import discord
 
 def default():
@@ -7,12 +7,13 @@ def default():
     embed.add_field(name="Global COMMANDS", value="`inspect`", inline=False)
     embed.add_field(name="Work with chat", value="`clear`, `closechat`, `openchat`", inline=False)
     embed.add_field(name="Work with user", value="`ban`, `unban`", inline=False)
-    embed.add_field(name="Music", value="`*play [p]`, `*pause [pa]`, `*next [n, s]` `*previous [prev]`, `list [q, lst]`, `clearqueue [cq]`, `*disconnect [d]`, `loop [lp]`, `*24/7`, `*aboutsong [song]`")
+    embed.add_field(name="Music", value="`*play [p]`, `*pause [pa]`, `*next [n, s]` `*previous [prev]`, `*list [q, lst]`, `clearqueue [cq]`, `*disconnect [d]`, `loop [lp]`, `*24/7`, `*aboutsong [song]`")
     embed.add_field(name="User list [Music]", value="`playlist [pll]`, `addtolist [atl]`, `printlist [ptl]`, `clearlist [cll]`, `initlist [inl]`")
 
     embed.set_footer(text="To get more information about COMMAND, type sc.inpect <fullCommandName> \n * - command have no description")
 
     return embed
+
 
 def ban():
     embed = discord.Embed(title="BAN command", description="", color=0xa31eff)
@@ -22,12 +23,14 @@ def ban():
 
     return embed
 
+
 def unban():
     embed = discord.Embed(title="UNBAN command", color=0xa31eff)
 
     embed.add_field(name="sc.unban <user>", value="Work-with-user command, using to unban user account. `[Admin-only]`")
 
     return embed
+
 
 def clearchat():
     embed = discord.Embed(title="CLEAR command", color=0xa31eff)
@@ -36,12 +39,14 @@ def clearchat():
 
     return embed
 
+
 def openchat():
     embed = discord.Embed(title="OPENCHAT command", color=0xa31eff)
 
     embed.add_field(name="sc.openchat", value="Work-with-chat command, using to open chat for DEFAULT role. `[From Chat-moderator]`")
 
     return embed
+
 
 def closechat():
     embed = discord.Embed(title="CLOSECHAT command", color=0xa31eff)
@@ -50,12 +55,14 @@ def closechat():
 
     return embed
 
+
 def loop():
     embed = discord.Embed(title="LOOP command/Music", color=0xa31eff)
 
     embed.add_field(name="sc.loop <mode | Def: Change Mode [9]>\nAliases: `lp`\n", value="Loop modes: \n - Turned off [off] \n - Loop song [curr]\n - Loop queue [list]")
 
     return embed
+
 
 def clearqueue():
     embed = discord.Embed(title="CLEAR command/Music", color=0xa31eff)
@@ -64,12 +71,6 @@ def clearqueue():
 
     return embed
 
-def queue():
-    embed = discord.Embed(title="LIST command/Music", color=0xa31eff)
-
-    embed.add_field(name="sc.list <page | Def: POSITION> \nAliases: `q`, `lst`", value="Music package command. Displaying songs queue.")
-
-    return embed
 
 def playlist():
     embed = discord.Embed(title="PLAYLIST command/Music", color=0xa31eff)
@@ -78,12 +79,14 @@ def playlist():
 
     return embed
 
+
 def addtolist():
     embed = discord.Embed(title="ADDTOLIST command/Music", color=0xa31eff)
 
     embed.add_field(name="sc.addtolist <song> \nAliases: `atl`", value="Music package command. Adding a song to user list.")
 
     return embed
+
 
 def printlist():
     embed = discord.Embed(title="PRINTLIST command/Music", color=0xa31eff)
@@ -92,12 +95,14 @@ def printlist():
 
     return embed
 
+
 def clearlist():
     embed = discord.Embed(title="CLEARLIST command/Music", color=0xa31eff)
 
     embed.add_field(name="sc.clearlist <position | Def: ALL> \nAliases: `cll`", value="Music package command. Removing item(-s) from list.")
 
     return embed
+
 
 def initlist():
     embed = discord.Embed(title="INITLIST command/Music", color=0xa31eff)
@@ -106,6 +111,7 @@ def initlist():
 
     return embed
 
+
 def seek():
     embed = discord.Embed(title="SEEK command/Music", color=0xa31eff)
 
@@ -113,8 +119,8 @@ def seek():
 
     return embed
 
-# Error embed
 
+# Error embed
 def errorEmbed():
     embed = discord.Embed(title="System Alert: Code 871", color=0xFF0000)
 
@@ -122,6 +128,7 @@ def errorEmbed():
                     value="Your authority is not enough to use this command.", inline=False)
     
     return embed
+
 
 def errorEmbed2():
     embed = discord.Embed(title="System Alert: Code 871", color=0xFF0000)
@@ -131,12 +138,14 @@ def errorEmbed2():
     
     return embed
 
+
 def errorEmbedCustom(errorNum, name, text):
     embed = discord.Embed(title=f"System Alert: Code {errorNum}", color=0xFF0000)
 
     embed.add_field(name=name, value=text, inline=False)
     
     return embed
+
 
 def eventEmbed(title = None, text = None, name = ""):
     embed = discord.Embed(title=title, color=0x915AF2)
@@ -145,6 +154,7 @@ def eventEmbed(title = None, text = None, name = ""):
 
     return embed
 
+
 def unknownError():
     embed = discord.Embed(title="System Alert: Code 899", color=0xFF0000)
 
@@ -152,6 +162,7 @@ def unknownError():
                     value="Unknown error ocurred. Please, contact administrator.", inline=False)
     
     return embed
+
 
 def disconnected_embed():
     embed = discord.Embed(title="Timed out", description="Disconnected from the voice channel due to inactivity.", color=0xFF0000)

@@ -1,13 +1,14 @@
-# AT PROJECT Limited 2022 - 2023; ATLB-v1.7.13
+# AT PROJECT Limited 2022 - 2023; ATLB-v1.8
 import math
 import json
 import asyncio
-import datetime
 import logging
+import datetime
 import traceback
 
 import discord
 import wavelink
+import messages
 from discord.ext import commands
 from embeds import errorEmbedCustom, eventEmbed, unknownError, disconnected_embed
 
@@ -30,11 +31,6 @@ class music_cog(commands.Cog):
         self.delay_time = 300
         self.auto_disconnect = True
         self.command_channel = ""
-
-        self.ac24 = True
-        self.acseek = True
-        self.acvolume = "def"
-
         self.music_queue = []
         self.vc = None
 
@@ -189,70 +185,6 @@ class music_cog(commands.Cog):
             else:
                 print(traceback.format_exc())
             await ctx.send(embed=unknownError())
-    
-
-    @commands.command(name="list", aliases=["q", "lst"])
-    async def queue(self, ctx, page = None):
-        try:
-            retval = ""
-            embed = discord.Embed(color=0x915AF2)
-
-            pages = math.ceil(len(self.music_queue) / 10 + 0.1)
-            if page == None:
-                page = math.ceil((self.song_position + 1) / 10 + 0.1)
-            else:
-                page = int(page)
-
-            if page > pages or page <= 0:
-                await ctx.send(embed=errorEmbedCustom("801.9", "Incorrect Page", "Requested page is not exist or playlist is empty."))
-                return
-
-            if page == 1:
-                srt, stp = 0, 10
-            else:
-                srt = 10 * (page - 1)
-                stp = 10 * page
-
-            for i in range(srt, stp):
-                if i > len(self.music_queue) - 1:
-                    break
-                if len(self.music_queue[i][0].title) > 65:
-                    z = len(self.music_queue[i][0].title) - 65
-                    title = self.music_queue[i][0].title[:-z] + "..."
-                else:
-                    title = self.music_queue[i][0].title
-
-                if self.song_title == self.music_queue[i][0].title:
-                    retval += "**  • " + title + "**\n"
-                    continue
-                retval += f"{i + 1}. " + title + "\n"
-                
-            embed.add_field(name="📄 Playlist", value=retval)
-            
-            match self.loop:
-                case 1:
-                    loop_on = "current song"
-                case 2:
-                    loop_on = "on playlist"
-                case 0:
-                    loop_on = "turned off"
-
-            if self.auto_disconnect:
-                auto_discon = "disabled"
-            else:
-                auto_discon = "enabled"
-            footer = f"Page: {page} of {pages}\nLoop: {loop_on}\n24/7: {auto_discon}"
-            embed.set_footer(text=footer)
-
-            await ctx.send(embed = embed)
-        except Exception as exc:
-            print("\r[ \x1b[31;1mERR\x1b[39;0m ]  Error occurred while executing command.")
-            print(f"\t\x1b[39;1m{exc}\x1b[39;0m")
-            if self.is_logging:
-                self.logger.warning(traceback.format_exc())
-            else:
-                print(traceback.format_exc())
-            await ctx.send(embed=unknownError())
 
 
     @commands.command(name="pause", aliases=["pa"])
@@ -368,7 +300,7 @@ class music_cog(commands.Cog):
         
         
     @commands.command(name='loop', aliases=["lp"])
-    async def loop(self, ctx, mode = "9"):
+    async def loop(self, ctx, mode):
         try:
             match mode:
                 case "curr":
@@ -380,17 +312,6 @@ class music_cog(commands.Cog):
                 case "off":
                     self.loop = 0
                     await ctx.send(embed=eventEmbed(name="🔵 Mode changed", text="Loop turned off."))
-                case "9":
-                    match self.loop:
-                        case 0:
-                            self.loop += 1
-                            await ctx.send(embed=eventEmbed(name="🔵 Mode changed", text="Loop turned on current song."))
-                        case 1:
-                            self.loop += 1
-                            await ctx.send(embed=eventEmbed(name="🔵 Mode changed", text="Loop turned on playlist."))
-                        case 2:
-                            self.loop = 0
-                            await ctx.send(embed=eventEmbed(name="🔵 Mode changed", text="Loop turned off."))
         except Exception as exc:
             print("\r[ \x1b[31;1mERR\x1b[39;0m ]  Error occurred while executing command.")
             print(f"\t\x1b[39;1m{exc}\x1b[39;0m")
@@ -767,3 +688,39 @@ class music_cog(commands.Cog):
         embed.set_footer(text=footer)
         
         await ctx.send(embed=embed)
+
+    
+    # nEXT Update
+    @commands.command(name="list", aliases=["q", "lst"])
+    async def test(self, ctx):
+        view = messages.ListControl(self.music_queue, self.song_title)
+
+        retval = ""
+        embed = discord.Embed(color=0x915AF2)
+
+        pages = math.ceil(len(self.music_queue) / 10 + 0.1)
+        srt, stp = 0, 10
+
+        for i in range(srt, stp):
+            if i > len(self.music_queue) - 1:
+                break
+            if len(self.music_queue[i][0].title) > 65:
+                z = len(self.music_queue[i][0].title) - 65
+                title = self.music_queue[i][0].title[:-z] + "..."
+            else:
+                title = self.music_queue[i][0].title
+
+            if self.song_title == self.music_queue[i][0].title:
+                retval += "**  • " + title + "**\n"
+                continue
+            retval += f"{i + 1}. " + title + "\n"
+            
+        embed.add_field(name="📄 Playlist", value=retval)
+        embed.set_footer(text=f"Page: {1} of {pages}")
+
+        await ctx.send(embed=embed, view=view)
+        await view.time_stop()
+
+        while True:
+            await view.wait()
+            await asyncio.sleep(1)

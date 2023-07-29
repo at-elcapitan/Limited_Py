@@ -1,4 +1,5 @@
-print("AT PROJECT Limited, 2022 - 2023; ATLB-v1.7.13")
+print("AT PROJECT Limited, 2022 - 2023; ATLB-v1.8")
+print("This is DEV nEXT, the next major update")
 print("Product licensed by CC BY-NC-ND-4, file `LICENSE`")
 print("The license applies to all project files and previous versions (commits)")
 try:
@@ -21,7 +22,6 @@ try:
     print("[ \x1b[32;1mOK\x1b[39;0m ]  Imported 'music.py'")
     from exceptions import FileError
     print("[ \x1b[32;1mOK\x1b[39;0m ]  Imported 'exceptions.py'")
-    print("\tLibraries imported.")
 except Exception as exception:
     print("\r[ \x1b[31;1mERR\x1b[39;0m ]  Importing libraries...")
     raise exception
