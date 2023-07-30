@@ -1,4 +1,4 @@
-# AT PROJECT Limited 2022 - 2023; ATLB_nEXT-1.7.13.1_dev2.0-0.2
+# AT PROJECT Limited 2022 - 2023; ATLB-v2.0
 import math
 import asyncio
 

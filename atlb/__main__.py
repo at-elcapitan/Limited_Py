@@ -1,5 +1,4 @@
-print("AT PROJECT Limited, 2022 - 2023; ATLB_nEXT-1.7.13.1_dev2.0-0.2")
-print("This is DEV nEXT, the next major update")
+print("AT PROJECT Limited, 2022 - 2023; ATLB-v2.0")
 print("Product licensed by CC BY-NC-ND-4, file `LICENSE`")
 print("The license applies to all project files and previous versions (commits)")
 try:
