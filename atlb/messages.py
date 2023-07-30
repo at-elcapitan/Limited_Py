@@ -61,7 +61,7 @@ class ListControl(ui.View):
         await interaction.response.edit_message(embed=embed)
 
 
-    @ui.button(label="Previous", style=ButtonStyle.primary)
+    @ui.button(label="⬅️ Previous", style=ButtonStyle.primary)
     async def prev_button(self, interaction: Interaction, button: ui.Button) -> None:
         if self.page != 1:
             self.page -= 1
@@ -70,7 +70,7 @@ class ListControl(ui.View):
             await self.__print_list(interaction, button)
 
 
-    @ui.button(label="Next", style=ButtonStyle.primary)
+    @ui.button(label="Next ➡️", style=ButtonStyle.primary)
     async def next_button(self, interaction: Interaction, button: ui.Button) -> None:
         if self.page != self.pages:
             self.page += 1
