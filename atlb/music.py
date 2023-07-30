@@ -1,4 +1,4 @@
-# AT PROJECT Limited 2022 - 2023; ATLB-v2.0
+# AT PROJECT Limited 2022 - 2023; ATLB-v2.1
 import math
 import json
 import asyncio
@@ -29,6 +29,7 @@ class music_cog(commands.Cog):
         self.song_title = ""
         self.song_position = 0
         self.song_changed = False
+        self.interloop = False
         self.loop = 0
         self.auto_disconnect = True
         self.command_channel = ""
@@ -41,7 +42,6 @@ class music_cog(commands.Cog):
 
             if f:
                 await self.song_stats(ctx)
-            
 
 
     def set_none_song(self):
@@ -49,7 +49,6 @@ class music_cog(commands.Cog):
         self.song_source = ""
         self.song_title = ""
         self.song_position = 0
-        self.vc = None
     
     
     @commands.Cog.listener()
@@ -69,9 +68,18 @@ class music_cog(commands.Cog):
             pass
 
     def change_song(self, ctx):
-        if self.song_position == len(self.music_queue) - 1 and self.loop == 0:
+        if self.song_position == len(self.music_queue) - 1 and self.loop != 1:
             self.set_none_song()
             return
+        
+        if self.loop == 1:
+            if self.song_position == len(self.music_queue) - 1:
+                self.song_position = 0
+            else:
+                self.song_position += 1
+            self.song_source[0] = self.music_queue[self.song_position][0]
+            self.song_source[2] = self.music_queue[self.song_position][2]
+            self.song_title = self.music_queue[self.song_position][0].title
         
         if self.loop == 0:
             self.song_position += 1
@@ -80,10 +88,6 @@ class music_cog(commands.Cog):
             self.song_title = self.music_queue[self.song_position][0].title
 
         if self.loop == 2:
-            if self.song_position == len(self.music_queue) - 1:
-                self.song_position = 0
-            else:
-                self.song_position += 1
             self.song_source[0] = self.music_queue[self.song_position][0]
             self.song_source[2] = self.music_queue[self.song_position][2]
             self.song_title = self.music_queue[self.song_position][0].title
@@ -108,7 +112,7 @@ class music_cog(commands.Cog):
     async def play_music(self, ctx):
         m_url = self.song_source[0]
 
-        if self.vc == None:
+        if self.vc is None:
             self.vc: wavelink.Player = await self.song_source[1].connect(cls=wavelink.Player)
 
         self.vc.ctx = ctx
@@ -143,135 +147,6 @@ class music_cog(commands.Cog):
                 else:
                     await ctx.send(embed=eventEmbed(name="✅ Success!", text= f'Song added to the queue \n **{song.title}**'))
                     self.music_queue.append([song, voice_channel, ctx.author])
-        except Exception as exc:
-            print("\r[ \x1b[31;1mERR\x1b[39;0m ]  Error occurred while executing command.")
-            print(f"\t\x1b[39;1m{exc}\x1b[39;0m")
-            if self.is_logging:
-                self.logger.warning(traceback.format_exc())
-            else:
-                print(traceback.format_exc())
-            await ctx.send(embed=unknownError())
-
-
-    @commands.command(name="pause", aliases=["pa"])
-    async def pause(self, ctx, *args):
-        try:
-            if self.vc.is_playing():
-                await self.vc.pause()
-            elif self.vc.is_paused():
-                await self.vc.resume()
-        except Exception as exc:
-            print("\r[ \x1b[31;1mERR\x1b[39;0m ]  Error occurred while executing command.")
-            print(f"\t\x1b[39;1m{exc}\x1b[39;0m")
-            if self.is_logging:
-                self.logger.warning(traceback.format_exc())
-            else:
-                print(traceback.format_exc())
-            await ctx.send(embed=unknownError())
-    
-
-    @commands.command(name="prev", aliases=['pr'])
-    async def prev_song(self, ctx):
-        try:
-            if self.song_position != 0:
-                await self.vc.stop()
-                self.song_position -= 2
-                self.change_song(ctx)
-            else:
-                await self.vc.stop()
-                self.song_position = len(self.music_queue) - 2
-                self.change_song(ctx)
-        except Exception as exc:
-            print("\r[ \x1b[31;1mERR\x1b[39;0m ]  Error occurred while executing command.")
-            print(f"\t\x1b[39;1m{exc}\x1b[39;0m")
-            if self.is_logging:
-                self.logger.warning(traceback.format_exc())
-            else:
-                print(traceback.format_exc())
-            await ctx.send(embed=unknownError())
-
-
-    @commands.command(name="next", aliases=["n", "s"])
-    async def next(self, ctx):
-        try:
-            if self.vc != None:
-                if self.loop == 2:
-                    if len(self.music_queue) == 0:
-                        await self.vc.stop()
-                        self.set_none_song()
-                    if self.song_position == len(self.music_queue):
-                        self.song_position = 0
-                    await self.vc.stop()
-                    self.change_song(ctx)
-                else:
-                    await self.vc.stop()
-                    self.change_song(ctx)
-        except Exception as exc:
-            print("\r[ \x1b[31;1mERR\x1b[39;0m ]  Error occurred while executing command.")
-            print(f"\t\x1b[39;1m{exc}\x1b[39;0m")
-            if self.is_logging:
-                self.logger.warning(traceback.format_exc())
-            else:
-                print(traceback.format_exc())
-            await ctx.send(embed=unknownError())
-
-    
-    @commands.command(name="disconnect", aliases=["d"])
-    async def dc(self, ctx):
-        try:
-            self.set_none_song()
-            await self.vc.disconnect()
-        except Exception as exc:
-            print("\r[ \x1b[31;1mERR\x1b[39;0m ]  Error occurred while executing command.")
-            print(f"\t\x1b[39;1m{exc}\x1b[39;0m")
-            if self.is_logging:
-                self.logger.warning(traceback.format_exc())
-            else:
-                print(traceback.format_exc())
-            await ctx.send(embed=unknownError())
-
-
-    @commands.command(name="clearqueue", aliases=["cq"])
-    async def clear(self, ctx, num = None):
-        try:
-            if num == None:
-                if self.vc != None and self.vc.is_playing():
-                    await self.vc.stop()
-                self.set_none_song()
-                self.loop = 0
-                await ctx.send(embed=eventEmbed(name="✅ Success!", text="Queue cleared"))
-            else:
-                title = self.music_queue[int(num) - 1][0].title
-                if title == self.song_title:
-                    self.vc.stop()
-                    self.change_song(ctx)
-                self.music_queue.pop(int(num) - 1)
-                await ctx.send(embed=eventEmbed(name="✅ Success!", text="Song **" + title + "** succesfully cleared!"))
-        except Exception as exc:
-            print("\r[ \x1b[31;1mERR\x1b[39;0m ]  Error occurred while executing command.")
-            print(f"\t\x1b[39;1m{exc}\x1b[39;0m")
-            if self.is_logging:
-                self.logger.warning(traceback.format_exc())
-            else:
-                print(traceback.format_exc())
-            await ctx.send(embed=unknownError())
-        
-        
-    @commands.command(name='loop', aliases=["lp"])
-    async def loop(self, ctx, mode):
-        try:
-            match mode:
-                case "curr":
-                    self.loop = 1
-                    await ctx.send(embed=eventEmbed(name="🔵 Mode changed", text="Loop turned on current song."))
-                case "list":
-                    self.loop = 2
-                    await ctx.send(embed=eventEmbed(name="🔵 Mode changed", text="Loop turned on playlist."))
-                case "off":
-                    self.loop = 0
-                    await ctx.send(embed=eventEmbed(name="🔵 Mode changed", text="Loop turned off."))
-
-            self.song_changed = True
         except Exception as exc:
             print("\r[ \x1b[31;1mERR\x1b[39;0m ]  Error occurred while executing command.")
             print(f"\t\x1b[39;1m{exc}\x1b[39;0m")
@@ -454,6 +329,7 @@ class music_cog(commands.Cog):
                 print(traceback.format_exc())
             await ctx.send(embed=unknownError())
 
+
     @commands.command(name="clearlist", aliases=['cll'])
     async def load_delete(self, ctx, num = None):
         try:
@@ -481,6 +357,7 @@ class music_cog(commands.Cog):
             else:
                 print(traceback.format_exc())
             await ctx.send(embed=unknownError())
+
 
     @commands.command(name="initlist", aliases=['inl'])
     async def init_list(self, ctx):
@@ -516,13 +393,8 @@ class music_cog(commands.Cog):
             if self.vc == None:
                 await ctx.send(embed=errorEmbedCustom("872", "Change error", "Not connected to voice channel."))
                 return
-            
-            if not self.acseek and ctx.author.guild_permissions.administrator:
-                pass
-            elif not self.acseek:
-                await ctx.send(embed = errorEmbedCustom(894, "Locked", "Administrator disabled some music commands."))
-                return
-            
+
+
             if self.vc.is_playing():
                 pos = self.vc.position + (num * 1000)
                 await self.vc.seek(position=pos)
@@ -546,35 +418,18 @@ class music_cog(commands.Cog):
             else:
                 print(traceback.format_exc())
             await ctx.send(embed=unknownError())
-
-    @commands.command(name="beginning", aliases=['bg'])
-    async def play_fb(self, ctx):
-        try:
-            if self.vc == None:
-                await ctx.send(embed=errorEmbedCustom("872", "Change error", "Not connected to voice channel."))
-                return
-            
-            await self.vc.seek(position=0)
-            await ctx.send(embed=eventEmbed(name="✅ Complete", text=f"Track **{self.song_title}** started from the beginning"))
-        except Exception as exc:
-            print("\r[ \x1b[31;1mERR\x1b[39;0m ]  Error occurred while executing command.")
-            print(f"\t\x1b[39;1m{exc}\x1b[39;0m")
-            if self.is_logging:
-                self.logger.warning(traceback.format_exc())
-            else:
-                print(traceback.format_exc())
-            await ctx.send(embed=unknownError())
     
 
+    # nEXT Update
     def gen_song_embed(self):
         song_len_formatted = datetime.datetime.fromtimestamp(self.song_source[0].length / 1000).strftime("%M:%S")
         
         embed = discord.Embed(title=f"{self.song_title}", description=f"Song length: {song_len_formatted}\n\n> URL: [youtube.com]({self.song_source[0].uri})\n> Ordered by: `{self.song_source[2]}`", color=0xa31eff)        
 
         match self.loop:
-            case 1:
-                loop_on = "current song"
             case 2:
+                loop_on = "current song"
+            case 1:
                 loop_on = "on playlist"
             case 0:
                 loop_on = "turned off"
@@ -583,20 +438,21 @@ class music_cog(commands.Cog):
             auto_discon = "disabled"
         else:
             auto_discon = "enabled"
+
         footer = f"Loop: {loop_on}\n24/7: {auto_discon}"
         embed.set_footer(text=footer)
         
         return embed
 
 
-    # nEXT Update
     async def song_stats(self, ctx: commands.Context):
+        self.interloop = True
         view = ui.View()
-        view = self.add_buttons(view, "⏸️ Pause")
+        view = self.add_buttons(view, "⏸️ Pause", ["🔁", ButtonStyle.gray])
 
         msg = await ctx.send(embed=self.gen_song_embed(), view=view)
 
-        while True:
+        while self.interloop:
             if self.song_changed:
                 try: await msg.edit(embed=self.gen_song_embed()) 
                 except: pass
@@ -605,20 +461,28 @@ class music_cog(commands.Cog):
             await asyncio.sleep(1)
 
     
-    def add_buttons(self, view, clab1: str) -> ui.View:
-        down = ui.Button(label="🔊 Down", style=ButtonStyle.primary, custom_id = "down", row=1)
+    def add_buttons(self, view, clab1: str, clab2: list) -> ui.View:
+        down = ui.Button(label="🔈 Down", style=ButtonStyle.primary, custom_id = "down", row=1)
+        previous = ui.Button(label="⏮️ Previous", style=ButtonStyle.primary, custom_id = "prev", row=1)
+        next = ui.Button(label="⏭️ Next", style=ButtonStyle.primary, custom_id = "next", row=1)
         up = ui.Button(label="🔊 Up", style=ButtonStyle.primary, custom_id = "up", row=1)
         pause = ui.Button(label=f"{clab1}", style=ButtonStyle.primary, custom_id = "pause", row=1)
         lst = ui.Button(label="📄 Queue", style=ButtonStyle.gray, custom_id = "queue", row=2)
+        loop = ui.Button(label=f"{clab2[0]} Loop", style=clab2[1], custom_id="loop", row=2)
+        beg = ui.Button(label="⏪ Restart", style=ButtonStyle.gray, custom_id="beg", row=2)
         stop = ui.Button(label="⏹️ Stop", style=ButtonStyle.gray, custom_id="stop", row=2)
-        cq = ui.Button(label="🧹 Clear Queue", style=ButtonStyle.gray, custom_id="clearq", row=2)
+        cq = ui.Button(label="🧹 Clear", style=ButtonStyle.gray, custom_id="clearq", row=2)
 
         view.add_item(down)
+        view.add_item(previous)
         view.add_item(pause)
+        view.add_item(next)
         view.add_item(up)
         view.add_item(lst)
-        view.add_item(stop)
         view.add_item(cq)
+        view.add_item(stop)
+        view.add_item(loop)
+        view.add_item(beg)
 
         return view
 
@@ -644,7 +508,14 @@ class music_cog(commands.Cog):
                     self.is_playing = True
 
                     view = ui.View()
-                    view = self.add_buttons(view, "▶️ Resume")
+
+                    match self.loop:
+                        case 0:
+                            view = self.add_buttons(view, "⏸️ Resume", ["🔁", ButtonStyle.gray])
+                        case 1:
+                            view = self.add_buttons(view, "⏸️ Resume", ["🔁", ButtonStyle.success])
+                        case 2:
+                            view = self.add_buttons(view, "⏸️ Resume", ["🔂", ButtonStyle.success])
 
                     await interaction.response.edit_message(embed=self.gen_song_embed(), view=view)
                     return
@@ -652,7 +523,13 @@ class music_cog(commands.Cog):
                 await self.vc.resume()
 
                 view = ui.View()
-                view = self.add_buttons(view, "⏸️ Pause")
+                match self.loop:
+                    case 0:
+                        view = self.add_buttons(view, "⏸️ Pause", ["🔁", ButtonStyle.gray])
+                    case 1:
+                        view = self.add_buttons(view, "⏸️ Pause", ["🔁", ButtonStyle.success])
+                    case 2:
+                        view = self.add_buttons(view, "⏸️ Pause", ["🔂", ButtonStyle.success])
 
                 await interaction.response.edit_message(embed=self.gen_song_embed(), view=view)
 
@@ -663,11 +540,71 @@ class music_cog(commands.Cog):
             await self.vc.stop()
             await self.vc.disconnect()
             self.set_none_song()
+            self.vc = None
+            self.interloop = False
             await interaction.response.defer()
 
         if button_id == "clearq":
             await self.vc.stop()
             self.set_none_song()
+            await interaction.response.defer()
+
+        if button_id == "loop":
+            if self.loop != 2:
+                self.loop += 1
+            else:
+                self.loop = 0
+            
+            view = ui.View()
+
+            match self.loop:
+                case 0:
+                    view = self.add_buttons(view, "⏸️ Pause", ["🔁", ButtonStyle.gray])
+                case 1:
+                    view = self.add_buttons(view, "⏸️ Pause", ["🔁", ButtonStyle.success])
+                case 2:
+                    view = self.add_buttons(view, "⏸️ Pause", ["🔂", ButtonStyle.success])
+
+            await interaction.response.edit_message(embed=self.gen_song_embed(), view=view)
+
+        if button_id == "beg":
+            await self.vc.seek(position=0)
+            await interaction.response.defer()
+
+        if button_id == "next":
+            if self.vc != None:
+                if self.loop == 1:
+                    if len(self.music_queue) == 0:
+                        await self.vc.stop()
+                        self.set_none_song()
+
+                    if self.song_position == len(self.music_queue):
+                        self.song_position = 0
+
+                    await self.vc.stop()
+                    self.change_song(self.vc.ctx)
+                    return
+                
+                await self.vc.stop()
+                if self.loop == 2:
+                    self.song_position += 1
+
+                self.change_song(self.vc.ctx)
+
+            await interaction.response.defer()
+
+        if button_id == "prev":
+            if self.song_position != 0:
+                await self.vc.stop()
+                if self.loop == 2: self.song_position -= 1
+                else: self.song_position -= 2
+                self.change_song(self.vc.ctx)
+            else:
+                await self.vc.stop()
+                if self.loop == 2: self.song_position = len(self.music_queue) - 1
+                else: self.song_position = len(self.music_queue) - 2
+                self.change_song(self.vc.ctx)
+
             await interaction.response.defer()
 
 

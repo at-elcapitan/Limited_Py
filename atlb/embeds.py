@@ -1,4 +1,4 @@
-# AT PROJECT Limited 2022 - 2023; ATLB-v1.8
+# AT PROJECT Limited 2022 - 2023; ATLB-v2.1
 import discord
 
 def default():
@@ -7,7 +7,7 @@ def default():
     embed.add_field(name="Global COMMANDS", value="`inspect`", inline=False)
     embed.add_field(name="Work with chat", value="`clear`, `closechat`, `openchat`", inline=False)
     embed.add_field(name="Work with user", value="`ban`, `unban`", inline=False)
-    embed.add_field(name="Music", value="`*play [p]`, `*pause [pa]`, `*next [n, s]` `*previous [prev]`, `*list [q, lst]`, `clearqueue [cq]`, `*disconnect [d]`, `loop [lp]`, `*24/7`, `*aboutsong [song]`")
+    embed.add_field(name="Music", value="`*play [p]`, ``*24/7`")
     embed.add_field(name="User list [Music]", value="`playlist [pll]`, `addtolist [atl]`, `printlist [ptl]`, `clearlist [cll]`, `initlist [inl]`")
 
     embed.set_footer(text="To get more information about COMMAND, type sc.inpect <fullCommandName> \n * - command have no description")
@@ -52,22 +52,6 @@ def closechat():
     embed = discord.Embed(title="CLOSECHAT command", color=0xa31eff)
 
     embed.add_field(name="sc.closechat", value="Work-with-chat command, using to close chat for DEFAULT role. `[From Chat-moderator]`")
-
-    return embed
-
-
-def loop():
-    embed = discord.Embed(title="LOOP command/Music", color=0xa31eff)
-
-    embed.add_field(name="sc.loop <mode | Def: Change Mode [9]>\nAliases: `lp`\n", value="Loop modes: \n - Turned off [off] \n - Loop song [curr]\n - Loop queue [list]")
-
-    return embed
-
-
-def clearqueue():
-    embed = discord.Embed(title="CLEAR command/Music", color=0xa31eff)
-
-    embed.add_field(name="sc.clearqueue <position | Def: ALL> \nAliases: `cq`", value="Music package command. Used to clear part or all queue")
 
     return embed
 

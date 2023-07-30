@@ -1,4 +1,4 @@
-print("AT PROJECT Limited, 2022 - 2023; ATLB-v2.0")
+print("AT PROJECT Limited, 2022 - 2023; ATLB-v2.1")
 print("Product licensed by CC BY-NC-ND-4, file `LICENSE`")
 print("The license applies to all project files and previous versions (commits)")
 try:
@@ -156,10 +156,6 @@ async def inspect(ctx, command=None):
             await ctx.send(embed=embeds.openchat())
         case "clearqueue":
             await ctx.send(embed=embeds.clearqueue())
-        case "loop":
-            await ctx.send(embed=embeds.loop())
-        case "list":
-            await ctx.send(embed=embeds.queue())
         case "playlist":
             await ctx.send(embed=embeds.playlist())
         case "addtolist":
