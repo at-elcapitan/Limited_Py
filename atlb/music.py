@@ -1,4 +1,4 @@
-# AT PROJECT Limited 2022 - 2023; ATLB-v2.1.2
+# AT PROJECT Limited 2022 - 2023; ATLB-v2.1.3
 import math
 import json
 import asyncio
@@ -49,6 +49,7 @@ class music_cog(commands.Cog):
         self.music_queue = []
         self.song_source = ""
         self.song_title = ""
+        self.loop = 0
         self.song_position = 0
     
     
@@ -68,9 +69,16 @@ class music_cog(commands.Cog):
         except:
             pass
 
+
+    @commands.Cog.listener()
+    async def on_set_none(self):
+        await self.msg.edit(embed=discord.Embed(title="Music is not playing", description=f"Song length: 00:00\n\n> URL: \n> Ordered by: ", color=0xa31eff))
+
+
     def change_song(self, ctx):
         if self.song_position == len(self.music_queue) - 1 and self.loop == 0:
             self.set_none_song()
+            self.bot.dispatch("set_none")
             return
         
         if self.loop == 1:
