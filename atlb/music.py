@@ -1,4 +1,4 @@
-# AT PROJECT Limited 2022 - 2023; ATLB-v2.1
+# AT PROJECT Limited 2022 - 2023; ATLB-v2.1.1
 import math
 import json
 import asyncio
@@ -68,7 +68,7 @@ class music_cog(commands.Cog):
             pass
 
     def change_song(self, ctx):
-        if self.song_position == len(self.music_queue) - 1 and self.loop != 1:
+        if self.song_position == len(self.music_queue) - 1 and self.loop == 0:
             self.set_none_song()
             return
         
