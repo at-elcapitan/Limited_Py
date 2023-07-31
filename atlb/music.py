@@ -1,4 +1,4 @@
-# AT PROJECT Limited 2022 - 2023; ATLB-v2.1.1
+# AT PROJECT Limited 2022 - 2023; ATLB-v2.1.2
 import math
 import json
 import asyncio
@@ -31,6 +31,7 @@ class music_cog(commands.Cog):
         self.song_changed = False
         self.interloop = False
         self.loop = 0
+        self.msg = None
         self.auto_disconnect = True
         self.command_channel = ""
         self.music_queue = []
@@ -40,7 +41,7 @@ class music_cog(commands.Cog):
         async def on_display_song(ctx, m_url, f = False):
             await self.vc.play(m_url)
 
-            if f:
+            if f and self.msg is None:
                 await self.song_stats(ctx)
 
 
@@ -144,8 +145,8 @@ class music_cog(commands.Cog):
                     self.song_title = song.title
                     self.command_channel = ctx.channel
                     await self.play_music(ctx)
+                    self.song_changed = True
                 else:
-                    await ctx.send(embed=eventEmbed(name="✅ Success!", text= f'Song added to the queue \n **{song.title}**'))
                     self.music_queue.append([song, voice_channel, ctx.author])
         except Exception as exc:
             print("\r[ \x1b[31;1mERR\x1b[39;0m ]  Error occurred while executing command.")
@@ -219,7 +220,7 @@ class music_cog(commands.Cog):
                 self.music_queue.append([song, voice_channel, ctx.author])
                 if self.vc is None or not self.vc.is_playing():
                     await self.play_music(ctx)
-                await ctx.send(embed=eventEmbed(name="✅ Success!", text= f'Song added to the queue \n **{song.title}**'))
+                    self.song_changed = True
                 return
 
             for item in list:
@@ -236,6 +237,7 @@ class music_cog(commands.Cog):
                     if self.vc is None or not self.vc.is_playing():
                         self.music_queue.append([song, voice_channel, ctx.author])
                         await self.play_music(ctx)
+                        self.song_changed = True
                 else:
                     self.music_queue.append([song, voice_channel, ctx.author])
         except Exception as exc:
@@ -450,15 +452,19 @@ class music_cog(commands.Cog):
         view = ui.View()
         view = self.add_buttons(view, "⏸️ Pause", ["🔁", ButtonStyle.gray])
 
-        msg = await ctx.send(embed=self.gen_song_embed(), view=view)
+        self.msg = await ctx.send(embed=self.gen_song_embed(), view=view)
+        
 
         while self.interloop:
             if self.song_changed:
-                try: await msg.edit(embed=self.gen_song_embed()) 
+                try: await self.msg.edit(embed=self.gen_song_embed()) 
                 except: pass
                 self.song_changed = False
 
             await asyncio.sleep(1)
+
+        await self.msg.delete()
+        self.msg = None
 
     
     def add_buttons(self, view, clab1: str, clab2: list) -> ui.View:
@@ -547,7 +553,8 @@ class music_cog(commands.Cog):
         if button_id == "clearq":
             await self.vc.stop()
             self.set_none_song()
-            await interaction.response.defer()
+            embed = discord.Embed(title="Music is not playing", description=f"Song length: 00:00\n\n> URL: \n> Ordered by: ", color=0xa31eff)        
+            await interaction.response.edit_message(embed=embed)
 
         if button_id == "loop":
             if self.loop != 2:
