@@ -1,4 +1,4 @@
-# AT PROJECT Limited 2022 - 2023; ATLB-v2.1.3.1
+# AT PROJECT Limited 2022 - 2023; ATLB-v2.1.3.2
 import math
 import json
 import asyncio
@@ -137,9 +137,6 @@ class music_cog(commands.Cog):
             if query == '':
                 await ctx.send(embed=errorEmbedCustom(844, "Empty", "Empty request cannot be processed."))
                 return
-
-            if not self.vc is None and self.vc.is_paused():
-                await self.vc.resume()
             
             song = await wavelink.YouTubeTrack.search(query)
             song = song[0]
