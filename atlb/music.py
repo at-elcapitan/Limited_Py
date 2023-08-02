@@ -1,4 +1,4 @@
-# AT PROJECT Limited 2022 - 2023; ATLB-v2.1.3
+# AT PROJECT Limited 2022 - 2023; ATLB-v2.1.3.1
 import math
 import json
 import asyncio
@@ -146,16 +146,18 @@ class music_cog(commands.Cog):
             
             if type(song) == type(True):
                 await ctx.send(embed=errorEmbedCustom("801", "URL Incorrect", "Could not play the song. Incorrect format, try another keyword. This could be due to playlist or a livestream format."))
-            else:
-                if self.vc is None or not self.vc.is_playing():
-                    self.music_queue.append([song, voice_channel, ctx.author])
-                    self.song_source = [song, voice_channel, ctx.author]
-                    self.song_title = song.title
-                    self.command_channel = ctx.channel
-                    await self.play_music(ctx)
-                    self.song_changed = True
-                else:
-                    self.music_queue.append([song, voice_channel, ctx.author])
+                return
+            
+            if self.vc is None or not self.vc.is_playing():
+                self.music_queue.append([song, voice_channel, ctx.author])
+                self.song_source = [song, voice_channel, ctx.author]
+                self.song_title = song.title
+                self.command_channel = ctx.channel
+                await self.play_music(ctx)
+                self.song_changed = True
+                return
+            
+            self.music_queue.append([song, voice_channel, ctx.author])
         except Exception as exc:
             print("\r[ \x1b[31;1mERR\x1b[39;0m ]  Error occurred while executing command.")
             print(f"\t\x1b[39;1m{exc}\x1b[39;0m")
