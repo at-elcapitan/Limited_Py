@@ -1,0 +1,3 @@
+# Limited_Py
+
+Just Python bot. Readme will be implemented later...
