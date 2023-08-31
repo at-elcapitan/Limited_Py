@@ -502,49 +502,51 @@ class music_cog(commands.Cog):
 
     @commands.Cog.listener()
     async def on_interaction(self, interaction: Interaction):
-        if interaction.data["component_type"] == 2:
-            button_id = interaction.data["custom_id"]
+        if interaction.data["component_type"] != 2:
+            return
+        
+        button_id = interaction.data["custom_id"]
 
-            if button_id == "down":
-                if not self.vc.volume == 0:
-                    await self.vc.set_volume(self.vc.volume - 10)
-                    await interaction.response.defer()
+        if button_id == "down":
+            if not self.vc.volume == 0:
+                await self.vc.set_volume(self.vc.volume - 10)
+                await interaction.response.defer()
 
-            if button_id == "up":
-                if not self.vc.volume == 150:
-                    await self.vc.set_volume(self.vc.volume + 10)
-                    await interaction.response.defer()
+        if button_id == "up":
+            if not self.vc.volume == 150:
+                await self.vc.set_volume(self.vc.volume + 10)
+                await interaction.response.defer()
 
-            if button_id == "pause":
-                if not self.vc.is_paused():
-                    await self.vc.pause()
-                    self.is_playing = True
-
-                    view = ui.View()
-
-                    match self.loop:
-                        case 0:
-                            view = self.add_buttons(view, "⏸️ Resume", ["🔁", ButtonStyle.gray])
-                        case 1:
-                            view = self.add_buttons(view, "⏸️ Resume", ["🔁", ButtonStyle.success])
-                        case 2:
-                            view = self.add_buttons(view, "⏸️ Resume", ["🔂", ButtonStyle.success])
-
-                    await interaction.response.edit_message(embed=self.gen_song_embed(), view=view)
-                    return
-
-                await self.vc.resume()
+        if button_id == "pause":
+            if not self.vc.is_paused():
+                await self.vc.pause()
+                self.is_playing = True
 
                 view = ui.View()
+
                 match self.loop:
                     case 0:
-                        view = self.add_buttons(view, "⏸️ Pause", ["🔁", ButtonStyle.gray])
+                        view = self.add_buttons(view, "▶️ Resume", ["🔁", ButtonStyle.gray])
                     case 1:
-                        view = self.add_buttons(view, "⏸️ Pause", ["🔁", ButtonStyle.success])
+                        view = self.add_buttons(view, "▶️ Resume", ["🔁", ButtonStyle.success])
                     case 2:
-                        view = self.add_buttons(view, "⏸️ Pause", ["🔂", ButtonStyle.success])
+                        view = self.add_buttons(view, "▶️ Resume", ["🔂", ButtonStyle.success])
 
                 await interaction.response.edit_message(embed=self.gen_song_embed(), view=view)
+                return
+
+            await self.vc.resume()
+
+            view = ui.View()
+            match self.loop:
+                case 0:
+                    view = self.add_buttons(view, "⏸️ Pause", ["🔁", ButtonStyle.gray])
+                case 1:
+                    view = self.add_buttons(view, "⏸️ Pause", ["🔁", ButtonStyle.success])
+                case 2:
+                    view = self.add_buttons(view, "⏸️ Pause", ["🔂", ButtonStyle.success])
+
+            await interaction.response.edit_message(embed=self.gen_song_embed(), view=view)
 
         if button_id == "queue":
             await self.nEXT_queue(interaction)
@@ -571,13 +573,18 @@ class music_cog(commands.Cog):
             
             view = ui.View()
 
+            if self.vc.is_paused():
+                paused = "▶️ Resume"
+            else:
+                paused = "⏸️ Pause"
+
             match self.loop:
                 case 0:
-                    view = self.add_buttons(view, "⏸️ Pause", ["🔁", ButtonStyle.gray])
+                    view = self.add_buttons(view, paused, ["🔁", ButtonStyle.gray])
                 case 1:
-                    view = self.add_buttons(view, "⏸️ Pause", ["🔁", ButtonStyle.success])
+                    view = self.add_buttons(view, paused, ["🔁", ButtonStyle.success])
                 case 2:
-                    view = self.add_buttons(view, "⏸️ Pause", ["🔂", ButtonStyle.success])
+                    view = self.add_buttons(view, paused, ["🔂", ButtonStyle.success])
 
             await interaction.response.edit_message(embed=self.gen_song_embed(), view=view)
 
