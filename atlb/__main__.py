@@ -1,4 +1,4 @@
-print("AT PROJECT Limited, 2022 - 2023; ATLB-v2.1.3.3")
+print("AT PROJECT Limited, 2022 - 2023; AT_nEXT-v2.1.4")
 print("Product licensed by CC BY-NC-ND-4, file `LICENSE`")
 print("The license applies to all project files and previous versions (commits)")
 try:
@@ -61,7 +61,6 @@ if not os.path.isfile('.env'):
 print("[ \x1b[32;1mOK\x1b[39;0m ]  Checked `.env`")
 
 # Env and config loading
-
 load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
 PASSWD = os.getenv('PASSWD')
@@ -113,10 +112,6 @@ async def on_wavelink_node_ready(node: wavelink.Node):
 
 
 @bot.event
-async def on_voice():
-        print('reason')
-
-@bot.event
 async def on_member_join(member):
     channel = bot.get_channel(827542572868042812)
 
@@ -144,16 +139,6 @@ def successEmbed(text):
 @bot.command()
 async def inspect(ctx, command=None):
     match command:
-        case "ban":
-            await ctx.send(embed=embeds.ban())
-        case "unban":
-            await ctx.send(embed=embeds.unban())
-        case "clear":
-            await ctx.send(embed=embeds.clearchat())
-        case "closechat":
-            await ctx.send(embed=embeds.closechat())
-        case "openchat":
-            await ctx.send(embed=embeds.openchat())
         case "clearqueue":
             await ctx.send(embed=embeds.clearqueue())
         case "playlist":
@@ -171,96 +156,6 @@ async def inspect(ctx, command=None):
         case _:
             await ctx.send(embed=embeds.default())
 
-
-@bot.command()
-async def ban(ctx, user: discord.User = None, reason=None, deleteMassageDays = 0):
-    try:
-        if user == None:
-            await inspect(ctx, command="ban")
-        elif ctx.message.author.guild_permissions.ban_members:
-            if reason == None:
-                rsn = "No reason given"
-            else:
-                rsn = f'Reason: {reason}'
-            try:
-                await ctx.guild.ban(user=user, reason=reason, delete_message_days=deleteMassageDays)
-                await ctx.send(embed=successEmbed(f'***User @{user.name} successfully banned!*** {rsn}'))
-            except:
-                await ctx.send(embed=embeds.errorEmbed2())
-        else:
-            await ctx.send(embed=embeds.errorEmbed())
-    except Exception as exc:
-        print("\r[ \x1b[31;1mERR\x1b[39;0m ]  Error occurred while executing command.")
-        print(f"\t\x1b[39;1m{exc}\x1b[39;0m")
-        await ctx.send(embed=embeds.unknownError())
-
-
-@bot.command()
-async def unban(ctx, user: discord.User = None):
-    try:
-        if user == None:
-            await inspect(ctx, command="unban")
-        elif ctx.message.author.guild_permissions.administrator:
-            await ctx.guild.unban(user=user)
-            await ctx.send(embed=successEmbed(f'***User @{user.name} successfully unbanned!***'))
-        else:
-            await ctx.send(embed=embeds.errorEmbed())
-    except Exception as exc:
-        print("\r[ \x1b[31;1mERR\x1b[39;0m ]  Error occurred while executing command.")
-        print(f"\t\x1b[39;1m{exc}\x1b[39;0m")
-        await ctx.send(embed=embeds.unknownError())
-
-
-@bot.command()
-async def clear(ctx, number=None):
-    try:
-        if number == None:
-            await inspect(ctx, command="clearchat")
-        elif ctx.message.author.guild_permissions.manage_messages:
-            mgs = []
-            number = int(number) + 1
-            async for x in ctx.channel.history(limit = number):
-                mgs.append(x)
-            try:
-                await ctx.channel.delete_messages(mgs)
-            except Exception as exc:
-                print("\r[ \x1b[31;1mERR\x1b[39;0m ]  Error occurred while executing command.")
-                print(f"\t\x1b[39;1m{exc}\x1b[39;0m")
-                await ctx.send(embed=embeds.errorEmbedCustom(855, "Messages can`t be deleted!", "You are trying to delete messages, that was sended more than 2 week ago!"))
-        else:
-            await ctx.send(embed=embeds.errorEmbed())
-    except Exception as exc:
-        print("\r[ \x1b[31;1mERR\x1b[39;0m ]  Error occurred while executing command.")
-        print(f"\t\x1b[39;1m{exc}\x1b[39;0m")
-        await ctx.send(embed=embeds.unknownError())
-
-
-@bot.command()
-async def closechat(ctx):
-    try:
-        if ctx.message.author.guild_permissions.manage_messages:
-            await ctx.channel.set_permissions(ctx.guild.default_role, send_messages=False)
-            await ctx.send(embed=successEmbed(f'Chat successfully **closed**'))
-        else:
-            await ctx.send(embed=embeds.errorEmbed())
-    except Exception as exc:
-        print("\r[ \x1b[31;1mERR\x1b[39;0m ]  Error occurred while executing command.")
-        print(f"\t\x1b[39;1m{exc}\x1b[39;0m")
-        await ctx.send(embed=embeds.unknownError())
-
-
-@bot.command()
-async def openchat(ctx):
-    try:
-        if ctx.message.author.guild_permissions.manage_messages:
-            await ctx.channel.set_permissions(ctx.guild.default_role, send_messages=True)
-            await ctx.send(embed=successEmbed(f'Chat successfully **opened**'))
-        else:
-            await ctx.send(embed=embeds.errorEmbed())
-    except Exception as exc:
-        print("\r[ \x1b[31;1mERR\x1b[39;0m ]  Error occurred while executing command.")
-        print(f"\t\x1b[39;1m{exc}\x1b[39;0m")
-        await ctx.send(embed=embeds.unknownError())
 
 try:
     if logs:
