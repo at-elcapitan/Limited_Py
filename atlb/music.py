@@ -192,6 +192,32 @@ class music_cog(commands.Cog):
             await ctx.send(embed=unknownError())
 
 
+    @commands.command(name="clearqueue", aliases=["cq"])
+    async def clear(self, ctx, num = None):
+        try:
+            if num == None:
+                if self.vc != None and self.vc.is_playing():
+                    await self.vc.stop()
+                self.set_none_song()
+                self.loop = 0
+                await ctx.send(embed=eventEmbed(name="✅ Success!", text="Queue cleared"))
+            else:
+                title = self.music_queue[int(num) - 1][0].title
+                if title == self.song_title:
+                    self.vc.stop()
+                    self.change_song(ctx)
+                self.music_queue.pop(int(num) - 1)
+                await ctx.send(embed=eventEmbed(name="✅ Success!", text="Song **" + title + "** succesfully cleared!"))
+        except Exception as exc:
+            print("\r[ \x1b[31;1mERR\x1b[39;0m ]  Error occurred while executing command.")
+            print(f"\t\x1b[39;1m{exc}\x1b[39;0m")
+            if self.is_logging:
+                self.logger.warning(traceback.format_exc())
+            else:
+                print(traceback.format_exc())
+            await ctx.send(embed=unknownError())
+
+
     # User playlist
     @commands.command(name='playlist', aliases=['pll'])
     async def import_list(self, ctx, num = 0):
@@ -472,6 +498,12 @@ class music_cog(commands.Cog):
 
         await self.msg.delete()
         self.msg = None
+
+
+    @commands.command("resendctl", aliases=["rctl", "rcl"])
+    async def resend_song_ctl(self, ctx):
+        await self.msg.delete()
+        await self.song_stats(ctx)
 
     
     def add_buttons(self, view, clab1: str, clab2: list) -> ui.View:
