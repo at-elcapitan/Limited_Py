@@ -151,6 +151,8 @@ async def inspect(ctx, command=None):
             await ctx.send(embed=embeds.clearlist())
         case "initlist":
             await ctx.send(embed=embeds.initlist())
+        case "resendctl":
+            await ctx.send(embed=embeds.resendctl())
         case "seek":
             await ctx.send(embed=embeds.seek())
         case _:

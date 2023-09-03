@@ -1,57 +1,23 @@
-# AT PROJECT Limited 2022 - 2023; ATLB-v2.1
+# AT PROJECT Limited 2022 - 2023; AT_nEXT-v2.1.5
 import discord
 
 def default():
     embed = discord.Embed(title="ENTIRE command list", description="List of ALL system commands", color=0xa31eff)
 
     embed.add_field(name="Global COMMANDS", value="`inspect`", inline=False)
-    embed.add_field(name="Work with chat", value="`clear`, `closechat`, `openchat`", inline=False)
-    embed.add_field(name="Work with user", value="`ban`, `unban`", inline=False)
     embed.add_field(name="Music", value="`*play [p]`, ``*24/7`")
-    embed.add_field(name="User list [Music]", value="`playlist [pll]`, `addtolist [atl]`, `printlist [ptl]`, `clearlist [cll]`, `initlist [inl]`")
+    embed.add_field(name="User list [Music]", value="`playlist [pll]`, `addtolist [atl]`, `printlist [ptl]`, `clearlist [cll]`,"
+                    " `initlist [inl]`, `resendctl [rctl]`")
 
     embed.set_footer(text="To get more information about COMMAND, type sc.inpect <fullCommandName> \n * - command have no description")
 
     return embed
 
 
-def ban():
-    embed = discord.Embed(title="BAN command", description="", color=0xa31eff)
+def resendctl():
+    embed = discord.Embed(title="PLAYLIST command/Music", color=0xa31eff)
 
-    embed.add_field(name="sc.ban <user> <reason | Def: None> <delete_message_days | Def: 0>",
-                    value="Work-with-user command, using to ban user account. `[Admin-only]`", inline=False)
-
-    return embed
-
-
-def unban():
-    embed = discord.Embed(title="UNBAN command", color=0xa31eff)
-
-    embed.add_field(name="sc.unban <user>", value="Work-with-user command, using to unban user account. `[Admin-only]`")
-
-    return embed
-
-
-def clearchat():
-    embed = discord.Embed(title="CLEAR command", color=0xa31eff)
-
-    embed.add_field(name="sc.clear <value>", value="Work-with-chat command, using to clear chat. It's possible to delete up to 100 messages at a time `[From Chat-moderator]`")
-
-    return embed
-
-
-def openchat():
-    embed = discord.Embed(title="OPENCHAT command", color=0xa31eff)
-
-    embed.add_field(name="sc.openchat", value="Work-with-chat command, using to open chat for DEFAULT role. `[From Chat-moderator]`")
-
-    return embed
-
-
-def closechat():
-    embed = discord.Embed(title="CLOSECHAT command", color=0xa31eff)
-
-    embed.add_field(name="sc.closechat", value="Work-with-chat command, using to close chat for DEFAULT role. `[From Chat-moderator]`")
+    embed.add_field(name="sc.resendctl \nAliases: `rctl`", value="Resends music control embed.")
 
     return embed
 
