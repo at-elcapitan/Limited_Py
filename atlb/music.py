@@ -477,7 +477,7 @@ class music_cog(commands.Cog):
             uid = str(ctx.author.id)
 
             if uid in data:
-                data[uid].append([song.title, query])
+                data[uid].append([song.title, song.uri])
             else: await ctx.send(embed=errorEmbedCustom("804", "Uknown list", "Error: you don`t have saved list!"))
             f.seek(0)
             json.dump(data, f, indent=4, ensure_ascii=False)
