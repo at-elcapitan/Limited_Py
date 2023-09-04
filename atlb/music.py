@@ -505,7 +505,7 @@ class music_cog(commands.Cog):
             item = lst[int(num) - 1][1]
             
             try:
-                song = await wavelink.YouTubeTrack.search(item[1])
+                song = await wavelink.YouTubeTrack.search(item)
                 song = song[0]
             except:
                 await ctx.send(embed=errorEmbedCustom(854, "Import error", f"Unknown error occurred while importing track **{item[0]}**"))
