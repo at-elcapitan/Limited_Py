@@ -190,10 +190,12 @@ class music_cog(commands.Cog):
                 self.is_playing = True
 
                 self.bot.dispatch("return_message", self.vc.ctx)
+                await interaction.response.defer()
                 return
 
             await self.vc.resume()
             self.bot.dispatch("return_message", self.vc.ctx)
+            await interaction.response.defer()
 
 
         if button_id == "queue":
