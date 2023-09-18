@@ -46,6 +46,8 @@ class music_cog(commands.Cog):
 
 
     async def get_song(self, query):
+        playlist = False
+
         if 'spotify.com' in query or 'spotify:track:' in query:
             try: song = await spotify.SpotifyTrack.search(query)
             except: return None
@@ -53,13 +55,28 @@ class music_cog(commands.Cog):
             if len(song) == 0:
                 return None
             song = song[0]
-        elif "soundcloud.com" in query:
-            try: song = await wavelink.SoundCloudTrack.search(query)
-            except: return None
 
-            if len(song) == 0:
-                return None
-            song = song[0]
+            return [song, playlist]
+        
+        if "soundcloud.com" in query:
+            if 'sets' in query:
+                try: song = await wavelink.SoundCloudPlaylist.search(query)
+                except: return None
+                playlist = True
+            else:
+                try: song = await wavelink.SoundCloudTrack.search(query)
+                except: return None
+
+                if len(song) == 0:
+                    return None
+                song = song[0]
+            
+            return [song, playlist]
+        
+        if 'playlist' in query:
+            try: song = await wavelink.YouTubePlaylist.search(query)
+            except: return None
+            playlist = True
         else:
             try: song = await wavelink.YouTubeTrack.search(query)
             except: return None
@@ -67,8 +84,8 @@ class music_cog(commands.Cog):
             if len(song) == 0:
                 return None
             song = song[0]
-        
-        return song
+
+        return [song, playlist]
 
 
     @commands.command(name="play", aliases=["p"])
@@ -84,6 +101,10 @@ class music_cog(commands.Cog):
         if song is None:
             await ctx.send(embed=errorEmbedCustom(854, "Not found", "Can't find song"))
             return
+        
+        if ctx.author.voice is None:
+            await ctx.send(embed=errorEmbedCustom(399, "VC Error", "Can't get your voice channel"))
+            return
 
         voice_channel = ctx.author.voice.channel
         
@@ -93,11 +114,17 @@ class music_cog(commands.Cog):
             return
         
         if self.vc is None or not self.vc.is_playing():
-            self.music_queue.append([song, voice_channel, ctx.author])
-            self.bot.dispatch("handle_music", ctx, song)
+            if song[1]:
+                for x in song[0].tracks: 
+                    self.music_queue.append([x, voice_channel, ctx.author])
+            else: self.music_queue.append([song[0], voice_channel, ctx.author])
+                
+            self.bot.dispatch("handle_music", ctx)
             return
         
-        self.music_queue.append([song, voice_channel, ctx.author])
+        if song[1]: 
+            for x in song[0]: self.music_queue.append([x, voice_channel, ctx.author])
+        else: self.music_queue.append([song[0], voice_channel, ctx.author])
         self.bot.dispatch("return_message", ctx)
 
     
@@ -114,7 +141,7 @@ class music_cog(commands.Cog):
 
 
     @commands.Cog.listener()
-    async def on_handle_music(self, ctx: commands.Context, song, f = False):
+    async def on_handle_music(self, ctx: commands.Context):
         self.song_source = self.music_queue[self.song_position]
         self.song_title = self.song_source[0].title
         self.command_channel = ctx.channel
@@ -123,7 +150,7 @@ class music_cog(commands.Cog):
             self.vc: wavelink.Player = await self.song_source[1].connect(cls=wavelink.Player)
             self.vc.ctx = ctx
 
-        await self.vc.play(song)
+        await self.vc.play(self.song_source[0])
         self.bot.dispatch("return_message", ctx)
 
     
@@ -317,7 +344,7 @@ class music_cog(commands.Cog):
         if self.loop == 0:
             self.song_position += 1
         
-        self.bot.dispatch("handle_music", ctx, self.music_queue[self.song_position][0])
+        self.bot.dispatch("handle_music", ctx)
 
     
     async def nEXT_queue(self, interaction: Interaction):
@@ -467,17 +494,24 @@ class music_cog(commands.Cog):
         if song is None:
             await ctx.send(embed=errorEmbedCustom(854, "Not found", "Can't find song"))
             return
-
+        
+        title = "[List] " + song[0].name if song[1] else song[0].title
+        url = query if song[1] else song[0].uri
+        
         cursor = self.dbconn.cursor()
         cursor.execute("INSERT INTO music_data (music_name, music_url, user_id) VALUES (%s, %s, %s)", 
-                        (song.title, song.uri, ctx.author.id))
+                        (title, url, ctx.author.id))
         self.dbconn.commit()
 
-        await ctx.send(embed=eventEmbed(name="✅ Success!", text= f'Song added to the list \n **{song.title}**'))
+        await ctx.send(embed=eventEmbed(name="✅ Success!", text= f'Song added to the list \n **{title}**'))
 
     
     @commands.command(name='playlist', aliases=['pll'])
     async def import_list(self, ctx, num = 0):
+        if ctx.author.voice is None:
+            await ctx.send(embed=errorEmbedCustom(399, "VC Error", "Can't get your voice channel"))
+            return
+        
         voice_channel = ctx.author.voice.channel
 
         cursor = self.dbconn.cursor()
@@ -496,26 +530,35 @@ class music_cog(commands.Cog):
                 await ctx.send(embed=errorEmbedCustom(854, "Import error", f"Unknown error occurred while importing track **{lst[int(num) - 1][0]}**"))
                 return
 
-            self.music_queue.append([song, voice_channel, ctx.author])
+            if song[1]:
+                for x in song[0].tracks: 
+                    self.music_queue.append([x, voice_channel, ctx.author])
+            else: self.music_queue.append([song[0], voice_channel, ctx.author])
 
             if self.vc is None or not self.vc.is_playing():
-                self.bot.dispatch("handle_music", ctx, song)
+                self.bot.dispatch("handle_music", ctx)
                 return
             
             self.bot.dispatch("return_message", ctx)
             return
 
         for item in lst:
-            song = await self.get_song(item)
+            song = await self.get_song(item[1])
 
             if song is None:
                 await ctx.send(embed=errorEmbedCustom(854, "Import error", f"Unknown error occurred while importing track **{lst[int(num) - 1][0]}**"))
                 continue
 
             if self.vc is None or not self.vc.is_playing():
-                self.music_queue.append([song, voice_channel, ctx.author])
-                self.bot.dispatch("handle_music", ctx, song)
+                if song[1]:
+                    for x in song[0].tracks: 
+                        self.music_queue.append([x, voice_channel, ctx.author])
+                else: self.music_queue.append([song[0], voice_channel, ctx.author])
+                self.bot.dispatch("handle_music", ctx)
             else:
-                self.music_queue.append([song, voice_channel, ctx.author])
+                if song[1]:
+                    for x in song[0].tracks: 
+                        self.music_queue.append([x, voice_channel, ctx.author])
+                else: self.music_queue.append([song[0], voice_channel, ctx.author])
 
         self.bot.dispatch("return_message", ctx)
