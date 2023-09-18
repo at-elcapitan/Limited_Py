@@ -1,6 +1,5 @@
 # AT PROJECT Limited 2022 - 2023; AT_nEXT-v2.1.5
 import math
-import json
 import asyncio
 import logging
 import datetime
@@ -8,6 +7,7 @@ import traceback
 
 import discord
 import wavelink
+from wavelink.ext import spotify
 import messages
 from discord import ui
 from discord import Interaction
@@ -16,9 +16,10 @@ from discord.ext import commands
 from embeds import errorEmbedCustom, eventEmbed, unknownError
 
 class music_cog(commands.Cog):
-    def __init__(self, bot, time, logs):
+    def __init__(self, bot, time, logs, connection):
         self.bot = bot
         self.is_logging = logs
+        self.dbconn = connection
 
         if self.is_logging:
             self.logger = logging.getLogger("music_cog")
@@ -44,17 +45,48 @@ class music_cog(commands.Cog):
         self.song_position = 0
 
 
+    async def get_song(self, query):
+        if 'spotify.com' in query or 'spotify:track:' in query:
+            try: song = await spotify.SpotifyTrack.search(query)
+            except: return None
+
+            if len(song) == 0:
+                return None
+            song = song[0]
+        elif "soundcloud.com" in query:
+            try: song = await wavelink.SoundCloudTrack.search(query)
+            except: return None
+
+            if len(song) == 0:
+                return None
+            song = song[0]
+        else:
+            try: song = await wavelink.YouTubeTrack.search(query)
+            except: return None
+
+            if len(song) == 0:
+                return None
+            song = song[0]
+        
+        return song
+
+
     @commands.command(name="play", aliases=["p"])
     async def play(self, ctx, *args):
         query = " ".join(args)
 
         if query == '':
-            await ctx.send(embed=errorEmbedCustom(844, "Empty", "Empty request cannot be processed."))
+            await ctx.send(embed=errorEmbedCustom(854, "Empty", "Empty request cannot be processed."))
             return
 
-        song = await wavelink.YouTubeTrack.search(query)
-        song = song[0]
+        song = await self.get_song(query)
+
+        if song is None:
+            await ctx.send(embed=errorEmbedCustom(854, "Not found", "Can't find song"))
+            return
+
         voice_channel = ctx.author.voice.channel
+        
 
         if type(song) == type(True):
             await ctx.send(embed=errorEmbedCustom("801", "URL Incorrect", "Could not play the song. Incorrect format, try another keyword. This could be due to playlist or a livestream format."))
@@ -99,10 +131,8 @@ class music_cog(commands.Cog):
     async def on_return_message(self, ctx):
         view = ui.View()
 
-        if self.vc.is_paused():
-            clab1 = "▶️ Resume"
-        else:
-            clab1 = "⏸️ Pause"
+        if self.vc.is_paused(): clab1 = "▶️ Resume" 
+        else: clab1 = "⏸️ Pause"
 
         match self.loop:
             case 0:
@@ -129,7 +159,7 @@ class music_cog(commands.Cog):
             view.add_item(x)
 
         song_len_formatted = datetime.datetime.fromtimestamp(self.song_source[0].length / 1000).strftime("%M:%S")
-        embed = discord.Embed(title=f"{self.song_title}", description=f"Song length: {song_len_formatted}\n\n> URL: [youtube.com]({self.song_source[0].uri})\n> Ordered by: `{self.song_source[2]}`", color=0xa31eff)        
+        embed = discord.Embed(title=f"{self.song_title}", description=f"Song length: {song_len_formatted}\n\n> URL: [link]({self.song_source[0].uri})\n> Ordered by: `{self.song_source[2]}`", color=0xa31eff)        
 
         match self.loop:
             case 2:
@@ -326,37 +356,28 @@ class music_cog(commands.Cog):
 
     @commands.command(name="seek", aliases=['sk'])
     async def music_seek(self, ctx, num: float):
-        try:
-            if self.vc == None:
-                await ctx.send(embed=errorEmbedCustom("872", "Change error", "Not connected to voice channel."))
-                return
+        if self.vc == None:
+            await ctx.send(embed=errorEmbedCustom("872", "Change error", "Not connected to voice channel."))
+            return
 
 
-            if self.vc.is_playing():
-                pos = self.vc.position + (num * 1000)
-                await self.vc.seek(position=pos)
-                
-                if num > 60:
-                    m = int(num // 60)
-                    s = int(num %  60)
+        if self.vc.is_playing():
+            pos = self.vc.position + (num * 1000)
+            await self.vc.seek(position=pos)
+            
+            if num > 60:
+                m = int(num // 60)
+                s = int(num %  60)
 
-                    if s > 9:
-                        txt = f'{m}m {s}s'
-                    else:
-                        txt = f'{m}m 0{s}s'
+                if s > 9:
+                    txt = f'{m}m {s}s'
                 else:
-                    txt = f'{int(num)}s'
-                await ctx.send(embed=eventEmbed(name="✅ Seek complete", text=f"Track **{self.song_title}** seeked for `{txt}`"))
-        except Exception as exc:
-            print("\r[ \x1b[31;1mERR\x1b[39;0m ]  Error occurred while executing command.")
-            print(f"\t\x1b[39;1m{exc}\x1b[39;0m")
-            if self.is_logging:
-                self.logger.warning(traceback.format_exc())
+                    txt = f'{m}m 0{s}s'
             else:
-                print(traceback.format_exc())
-            await ctx.send(embed=unknownError())
-
+                txt = f'{int(num)}s'
+                await ctx.send(embed=eventEmbed(name="✅ Seek complete", text=f"Track **{self.song_title}** seeked for `{txt}`"))
     
+
     @commands.command(name="clearqueue", aliases=["cq"])
     async def clear(self, ctx, num = None):
         try:
@@ -386,118 +407,82 @@ class music_cog(commands.Cog):
     # Userlist
     @commands.command(name="printlist", aliases=['ptl'])
     async def load_print(self, ctx, page = 1):
-        with open('files/lists.json', 'r', encoding="utf-8") as f:
-            data = json.load(f)
-            uid = str(ctx.author.id)
+        cursor = self.dbconn.cursor()
+        cursor.execute(f"SELECT music_name, music_url FROM music_data WHERE user_id = %s", (ctx.author.id,))
+        lst = cursor.fetchall()
 
-            if uid in data:
-                lst = data[uid]
-                retval = ""
-                embed = discord.Embed(color=0x915AF2)
+        retval = ""
+        embed = discord.Embed(color=0x915AF2)
 
-                pages = math.ceil(len(lst) / 10 + 0.1)
-                page = int(page)
+        pages = math.ceil(len(lst) / 10 + 0.1)
+        page = int(page)
 
-                if page > pages or page <= 0:
-                    await ctx.send(embed=errorEmbedCustom("801.7", "Incorrect Page", "Requested page is not exist."))
-                    return
+        if page > pages or page <= 0:
+            await ctx.send(embed=errorEmbedCustom("801.7", "Incorrect Page", "Requested page is not exist."))
+            return
 
-                if page == 1:
-                    srt, stp = 0, 9
-                else:
-                    srt = 10 * (page - 1) - 1
-                    stp = 10 * page - 1
+        if page == 1:
+            srt, stp = 0, 9
+        else:
+            srt = 10 * (page - 1) - 1
+            stp = 10 * page - 1
+    
+        for i in range(srt, stp):
+            if i > len(lst) - 1:
+                break
 
-                for i in range(srt, stp):
-                    if i > len(lst) - 1:
-                        break
+            if len(lst[i][0]) > 65:
+                z = len(lst[i][0]) - 65
+                title = lst[i][0][:-z] + "..."
+            else:
+                title = lst[i][0]
 
-                    if len(lst[i][0]) > 65:
-                        z = len(lst[i][0]) - 65
-                        title = lst[i][0][:-z] + "..."
-                    else:
-                        title = lst[i][0]
-
-                    retval += f"{i + 1}. " + title + "\n"
-                
-                embed.add_field(name="📄 User list", value=retval)
-                footer = f"Page: {page} of {pages}"
-                embed.set_footer(text=footer)
-                await ctx.send(embed=embed)
-
-            else: await ctx.send(embed=errorEmbedCustom("804", "Uknown list", "Error: you don`t have saved list!"))
+            retval += f"{i + 1}. " + title + "\n"
+        
+        embed.add_field(name="📄 User list", value=retval)
+        footer = f"Page: {page} of {pages}"
+        embed.set_footer(text=footer)
+        await ctx.send(embed=embed)
 
 
     @commands.command(name="clearlist", aliases=['cll'])
-    async def load_delete(self, ctx, num = None):
-        with open('files/lists.json', 'r+', encoding="utf-8") as f:
-            data = json.load(f)
-            uid = str(ctx.author.id)
+    async def load_delete(self, ctx, num: int):
+        cursor = self.dbconn.cursor()
+        cursor.execute(f"SELECT music_name, music_url, id FROM music_data WHERE user_id = %s", (ctx.author.id,))
+        lst = cursor.fetchall()
 
-            if num == None:
-                data[uid] = []
-                await ctx.send(embed=eventEmbed(name="✅ Success!", text="Your playlist was cleared!"))
-            else:
-                if uid in data:
-                    a = data[uid][int(num) - 1][0]
-                    await ctx.send(embed=eventEmbed(name="✅ Success!", text="Song **" + a + "** succesfully cleared!"))
-                    data[uid].pop(int(num) - 1)
-                else: await ctx.send(embed=errorEmbedCustom("804", "Uknown list", "Error: you don`t have saved list!"))
-            f.seek(0)
-            json.dump(data, f, indent=4, ensure_ascii=False)
-            f.truncate()
+        id = lst[num-1][2]
+        name = lst[num-1][0]
 
-
-    @commands.command(name="initlist", aliases=['inl'])
-    async def init_list(self, ctx):
-        uid = str(ctx.author.id)
-
-        with open('files/lists.json', 'r+', encoding="utf-8") as f:
-            data = json.load(f)
-            
-            if uid in data: 
-                await ctx.send(embed=errorEmbedCustom("805", "List exists!", "Error: you already have saved list!"))
-                return
-            else:
-                data[uid] = []
-            f.seek(0)
-            json.dump(data, f, indent=4, ensure_ascii=False)
-            f.truncate()
-            await ctx.send(embed=eventEmbed(name="✅ Success!", text="Your list have been succesfully initialized!"))
+        cursor.execute(f'DELETE FROM music_data WHERE id = %s', (id,))
+        self.dbconn.commit()
+        await ctx.send(embed=eventEmbed(name="✅ Success!", text= f'Track **{name}** deleted'))
 
 
     @commands.command(name="addtolist", aliases=['atl'])
     async def load_save(self, ctx, *args):
         query = " ".join(args)
-        song = await wavelink.YouTubeTrack.search(query)
-        song = song[0]
+        song = await self.get_song(query)
+
+        if song is None:
+            await ctx.send(embed=errorEmbedCustom(854, "Not found", "Can't find song"))
+            return
+
+        cursor = self.dbconn.cursor()
+        cursor.execute("INSERT INTO music_data (music_name, music_url, user_id) VALUES (%s, %s, %s)", 
+                        (song.title, song.uri, ctx.author.id))
+        self.dbconn.commit()
 
         await ctx.send(embed=eventEmbed(name="✅ Success!", text= f'Song added to the list \n **{song.title}**'))
-
-        with open('files/lists.json', 'r+', encoding="utf-8") as f:
-            data = json.load(f)
-            uid = str(ctx.author.id)
-
-            if uid in data:
-                data[uid].append([song.title, song.uri])
-            else: await ctx.send(embed=errorEmbedCustom("804", "Uknown list", "Error: you don`t have saved list!"))
-            f.seek(0)
-            json.dump(data, f, indent=4, ensure_ascii=False)
-            f.truncate()
 
     
     @commands.command(name='playlist', aliases=['pll'])
     async def import_list(self, ctx, num = 0):
-        uid = str(ctx.author.id)
         voice_channel = ctx.author.voice.channel
 
-        with open('files/lists.json', 'r', encoding="utf-8") as f:
-            lst = json.load(f)
-            if uid in lst:
-                lst = lst[uid]
-            else: 
-                await ctx.send(embed=errorEmbedCustom("804", "Uknown list", "Error: you don`t have saved list!"))
-                return
+        cursor = self.dbconn.cursor()
+        cursor.execute(f"SELECT music_name, music_url FROM music_data WHERE user_id = %s", (ctx.author.id,))
+        lst = cursor.fetchall()
 
         if len(lst) == 0:
             await ctx.send(embed=errorEmbedCustom("804.5", "Can`t read list!", "Error: your list is empty!"))
@@ -505,32 +490,26 @@ class music_cog(commands.Cog):
 
         if int(num) != 0:
             item = lst[int(num) - 1][1]
-            
-            try:
-                song = await wavelink.YouTubeTrack.search(item)
-                song = song[0]
-            except:
-                await ctx.send(embed=errorEmbedCustom(854, "Import error", f"Unknown error occurred while importing track **{item[0]}**"))
-                return
+            song = await self.get_song(item)
 
-            if not song:
+            if song is None:
                 await ctx.send(embed=errorEmbedCustom(854, "Import error", f"Unknown error occurred while importing track **{lst[int(num) - 1][0]}**"))
                 return
 
             self.music_queue.append([song, voice_channel, ctx.author])
-            self.bot.dispatch("return_message", ctx)
 
             if self.vc is None or not self.vc.is_playing():
                 self.bot.dispatch("handle_music", ctx, song)
-
+                return
+            
+            self.bot.dispatch("return_message", ctx)
             return
 
         for item in lst:
-            try:
-                song = await wavelink.YouTubeTrack.search(item[1])
-                song = song[0]
-            except:
-                await ctx.send(embed=errorEmbedCustom(854, "Import error", f"Unknown error occurred while importing track **{item[0]}**"))
+            song = await self.get_song(item)
+
+            if song is None:
+                await ctx.send(embed=errorEmbedCustom(854, "Import error", f"Unknown error occurred while importing track **{lst[int(num) - 1][0]}**"))
                 continue
 
             if self.vc is None or not self.vc.is_playing():

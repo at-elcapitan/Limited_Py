@@ -1,3 +1,4 @@
 discord
 wavelink
 python-dotenv
+psycopg2

@@ -1,4 +1,4 @@
-print("AT PROJECT Limited, 2022 - 2023; AT_nEXT-v2.2.1")
+print("AT PROJECT Limited, 2022 - 2023; AT_nEXT-v2.3")
 print("Product licensed by CC BY-NC-ND-4, file `LICENSE`")
 print("The license applies to all project files and previous versions (commits)")
 try:
@@ -10,17 +10,15 @@ try:
     
     import discord
     from discord.ext import commands
-    print("[ \x1b[32;1mOK\x1b[39;0m ]  Imported 'discord'")
+    import psycopg2
     import wavelink
-    print("[ \x1b[32;1mOK\x1b[39;0m ]  Imported 'wavelink'")
+    from wavelink.ext import spotify
     from dotenv import load_dotenv
-    print("[ \x1b[32;1mOK\x1b[39;0m ]  Imported 'dotenv'")
+
     import embeds
-    print("[ \x1b[32;1mOK\x1b[39;0m ]  Imported 'embeds.py'")
     from music import music_cog
-    print("[ \x1b[32;1mOK\x1b[39;0m ]  Imported 'music.py'")
     from exceptions import FileError
-    print("[ \x1b[32;1mOK\x1b[39;0m ]  Imported 'exceptions.py'")
+    print("[ \x1b[32;1mOK\x1b[39;0m ] Libraries imported")
 except Exception as exception:
     print("\r[ \x1b[31;1mERR\x1b[39;0m ]  Importing libraries...")
     raise exception
@@ -42,15 +40,6 @@ if not os.path.isfile('files/config.json'):
         f.truncate()
 print("[ \x1b[32;1mOK\x1b[39;0m ]  Checked `config.json`")
 
-if not os.path.isfile('files/lists.json'):
-    print('Lists file not found, creating...')
-    def_config = {}
-    with open('files/lists.json', 'w') as f:
-        f.seek(0)
-        json.dump(def_config, f, indent=4, ensure_ascii=False)
-        f.truncate()
-print("[ \x1b[32;1mOK\x1b[39;0m ]  Checked `lists.json`")
-
 if not os.path.exists('logs'):
     print("\t `logs` dir not found, creating...")
     os.mkdir('logs')
@@ -62,10 +51,26 @@ print("[ \x1b[32;1mOK\x1b[39;0m ]  Checked `.env`")
 
 # Env and config loading
 load_dotenv()
-TOKEN = os.getenv('DISCORD_TOKEN')
+TOKEN  = os.getenv('DISCORD_TOKEN')
 PASSWD = os.getenv('PASSWD')
+DBUSER = os.getenv('DBUSER')
+DBPASS = os.getenv('DBPASS')
+DBHOST = os.getenv('DBHOST')
+SPCLNT = os.getenv('SPCLNT')
+SPSECR = os.getenv('SPSECR')
 
-if TOKEN is None or PASSWD is None:
+# Connecting to DB
+print("\tConnecting to PSQL DB...")
+conn = psycopg2.connect(
+    host = DBHOST,
+    database = "nextmdb",
+    user = DBUSER,
+    password = DBPASS
+)
+
+print("[ \x1b[32;1mOK\x1b[39;0m ]  Connected to PSQL DB")
+
+if TOKEN is None or PASSWD is None or DBHOST is None or DBPASS is None or DBUSER is None:
     print("\r[ \x1b[31;1mERR\x1b[39;0m ]  Loading config...")
     raise(FileError('.env', 'corrupt'))
 
@@ -92,7 +97,7 @@ bot = commands.Bot(command_prefix = "sc.", intents=discord.Intents.all())
 async def on_ready():
     if music:
         try:
-            await bot.add_cog(music_cog(bot, time, logs))
+            await bot.add_cog(music_cog(bot, time, logs, conn))
             print("\r[ \x1b[32;1mOK\x1b[39;0m ]  Music COG imported.")
         except:
             pass
@@ -102,10 +107,14 @@ async def on_ready():
     print("\r[ \x1b[32;1mOK\x1b[39;0m ]  Bot started.")
 
     if music:
+        sc = spotify.SpotifyClient(
+            client_id=SPCLNT,
+            client_secret=SPSECR
+        )
         node: wavelink.Node = wavelink.Node(uri='http://localhost:2333', password=PASSWD)
-        await wavelink.NodePool.connect(client=bot, nodes=[node])
+        await wavelink.NodePool.connect(client=bot, nodes=[node], spotify=sc)
 
-
+    
 @bot.event
 async def on_wavelink_node_ready(node: wavelink.Node):
     print(f"\r[ \x1b[32;1mOK\x1b[39;0m ]  Node \x1b[39;1mID: {node.id}\x1b[39;0m ready.")
