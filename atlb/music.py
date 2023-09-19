@@ -216,7 +216,7 @@ class music_cog(commands.Cog):
         reason = payload.reason
 
         if reason == "STOPPED" and not self.vc == None and len(self.music_queue) != 0:
-            self.bot.dispatch("return_message", self.vc.ctx)
+            self.bot.dispatch("return_message", player.ctx)
 
         try:
             if reason == 'FINISHED':
@@ -338,7 +338,7 @@ class music_cog(commands.Cog):
     def change_song(self, ctx):
         if self.song_position == len(self.music_queue) - 1 and self.loop == 0:
             self.set_none_song()
-            self.bot.dispatch("return_message")
+            self.bot.dispatch("return_message", ctx)
             return
         
         if self.loop == 1:
