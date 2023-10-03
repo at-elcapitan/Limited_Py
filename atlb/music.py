@@ -32,6 +32,7 @@ class music_cog(commands.Cog):
         self.loop = 0
         self.command_channel = ""
         self.music_queue = []
+        self.server_id: int = None;
         self.msg = None
         self.vc = None
 
@@ -88,8 +89,15 @@ class music_cog(commands.Cog):
         return [song, playlist]
 
 
-    @commands.command(name="play", aliases=["p"])
+    @commands.command(name="playt", aliases=["pyt"])
     async def play(self, ctx, *args):
+        if self.server_id == None:
+            self.server_id = ctx.guild.id
+        else:
+            if self.server_id != ctx.guild.id:
+                await ctx.send(embed=errorEmbedCustom(399.1, "VC Error", "Can't execute command. Bot already connected to other guild's channel."))
+                return
+
         query = " ".join(args)
 
         if query == '':
@@ -268,6 +276,7 @@ class music_cog(commands.Cog):
                 await self.vc.disconnect()
                 self.set_none_song()
                 self.vc = None
+                self.server_id = None
         
                 await self.msg.delete()
                 self.msg = None
@@ -514,6 +523,13 @@ class music_cog(commands.Cog):
     
     @commands.command(name='playlist', aliases=['pll'])
     async def import_list(self, ctx, num = 0):
+        if self.server_id == None:
+            self.server_id = ctx.guild.id
+        else:
+            if self.server_id != ctx.guild.id:
+                await ctx.send(embed=errorEmbedCustom(399.1, "VC Error", "Can't execute command. Bot already connected to other guild's channel."))
+                return
+            
         if ctx.author.voice is None:
             await ctx.send(embed=errorEmbedCustom(399, "VC Error", "Can't get your voice channel"))
             return

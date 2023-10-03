@@ -119,23 +119,6 @@ async def on_ready():
 async def on_wavelink_node_ready(node: wavelink.Node):
     print(f"\r[ \x1b[32;1mOK\x1b[39;0m ]  Node \x1b[39;1mID: {node.id}\x1b[39;0m ready.")
 
-
-@bot.event
-async def on_member_join(member):
-    channel = bot.get_channel(827542572868042812)
-
-    role = discord.utils.get(member.guild.roles, name='User')
-    role_bot = discord.utils.get(member.guild.roles, name="Bots")
-
-    await member.add_roles(role)
-
-    embed = discord.Embed(title="Welcome!", color=0xa31eff, description=f"User {member.mention} just landed to Limited server!")
-    embed.set_thumbnail(url=member.avatar)
-    embed.add_field(name="Server statistics", value=f"Members: `{len(role.members)}`\nBots: `{len(role_bot.members)}`")
-
-    await channel.send(embed=embed)
-
-
 # Success embed
 def successEmbed(text):
     embed = discord.Embed(title=None, color=0x00FF00)
