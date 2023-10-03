@@ -1,4 +1,4 @@
-# AT PROJECT Limited 2022 - 2023; AT_nEXT-v2.1.5
+# AT PROJECT Limited 2022 - 2023; AT_nEXT-v2.5-endof2.0
 import math
 import asyncio
 import logging
@@ -46,10 +46,10 @@ class music_cog(commands.Cog):
         self.song_position = 0
 
 
-    async def get_song(self, query):
+    async def get_song(self, query, type: str = None):
         playlist = False
 
-        if 'spotify.com' in query or 'spotify:track:' in query:
+        if 'spotify.com' in query or 'spotify:track:' in query or type == 's':
             try: song = await spotify.SpotifyTrack.search(query)
             except: return None
 
@@ -59,7 +59,7 @@ class music_cog(commands.Cog):
 
             return [song, playlist]
         
-        if "soundcloud.com" in query:
+        if "soundcloud.com" in query or type == 'sc':
             if 'sets' in query:
                 try: song = await wavelink.SoundCloudPlaylist.search(query)
                 except: return None
@@ -89,15 +89,8 @@ class music_cog(commands.Cog):
         return [song, playlist]
 
 
-    @commands.command(name="playt", aliases=["pyt"])
-    async def play(self, ctx, *args):
-        if self.server_id == None:
-            self.server_id = ctx.guild.id
-        else:
-            if self.server_id != ctx.guild.id:
-                await ctx.send(embed=errorEmbedCustom(399.1, "VC Error", "Can't execute command. Bot already connected to other guild's channel."))
-                return
-
+    @commands.command(name="playoutube", aliases=["pyt"])
+    async def play_yt(self, ctx, *args):
         query = " ".join(args)
 
         if query == '':
@@ -105,6 +98,40 @@ class music_cog(commands.Cog):
             return
 
         song = await self.get_song(query)
+        await self.play(ctx, song)
+
+
+    @commands.command(name="playsoundcloud", aliases=["psd"])
+    async def play_sc(self, ctx, *args):
+        query = " ".join(args)
+
+        if query == '':
+            await ctx.send(embed=errorEmbedCustom(854, "Empty", "Empty request cannot be processed."))
+            return
+
+        song = await self.get_song(query, 'sc')
+        await self.play(ctx, song)
+
+
+    @commands.command(name="playspotify", aliases=["ps"])
+    async def play_sp(self, ctx, *args):
+        query = " ".join(args)
+
+        if query == '':
+            await ctx.send(embed=errorEmbedCustom(854, "Empty", "Empty request cannot be processed."))
+            return
+
+        song = await self.get_song(query, 's')
+        await self.play(ctx, song)
+
+
+    async def play(self, ctx, song):
+        if self.server_id == None:
+            self.server_id = ctx.guild.id
+        else:
+            if self.server_id != ctx.guild.id:
+                await ctx.send(embed=errorEmbedCustom(399.1, "VC Error", "Can't execute command. Bot already connected to other guild's channel."))
+                return
 
         if song is None:
             await ctx.send(embed=errorEmbedCustom(854, "Not found", "Can't find song"))
@@ -115,7 +142,6 @@ class music_cog(commands.Cog):
             return
 
         voice_channel = ctx.author.voice.channel
-        
 
         if type(song) == type(True):
             await ctx.send(embed=errorEmbedCustom("801", "URL Incorrect", "Could not play the song. Incorrect format, try another keyword. This could be due to playlist or a livestream format."))
@@ -422,28 +448,19 @@ class music_cog(commands.Cog):
 
     @commands.command(name="clearqueue", aliases=["cq"])
     async def clear(self, ctx, num = None):
-        try:
-            if num == None:
-                if self.vc != None and self.vc.is_playing():
-                    await self.vc.stop()
-                self.set_none_song()
-                self.loop = 0
-                await ctx.send(embed=eventEmbed(name="✅ Success!", text="Queue cleared"))
-            else:
-                title = self.music_queue[int(num) - 1][0].title
-                if title == self.song_title:
-                    self.vc.stop()
-                    self.change_song(ctx)
-                self.music_queue.pop(int(num) - 1)
-                await ctx.send(embed=eventEmbed(name="✅ Success!", text="Song **" + title + "** succesfully cleared!"))
-        except Exception as exc:
-            print("\r[ \x1b[31;1mERR\x1b[39;0m ]  Error occurred while executing command.")
-            print(f"\t\x1b[39;1m{exc}\x1b[39;0m")
-            if self.is_logging:
-                self.logger.warning(traceback.format_exc())
-            else:
-                print(traceback.format_exc())
-            await ctx.send(embed=unknownError())
+        if num == None:
+            if self.vc != None and self.vc.is_playing():
+                await self.vc.stop()
+            self.set_none_song()
+            self.loop = 0
+            await ctx.send(embed=eventEmbed(name="✅ Success!", text="Queue cleared"))
+        else:
+            title = self.music_queue[int(num) - 1][0].title
+            if title == self.song_title:
+                self.vc.stop()
+                self.change_song(ctx)
+            self.music_queue.pop(int(num) - 1)
+            await ctx.send(embed=eventEmbed(name="✅ Success!", text="Song **" + title + "** succesfully cleared!"))
 
 
     # Userlist
