@@ -2,6 +2,7 @@
 
 | Version    | Supported          |
 | ---------- | ------------------ |
-| 2.0        | :white_check_mark: |
+| 3.0-beta   | Comming update     |
+| 2.5        | Only fixes         |
 | 1.7.13     | Only fixes         |
 | <1.7       | :x:                |
