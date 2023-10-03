@@ -68,6 +68,14 @@ class ListControl(ui.View):
             self.time = 0
             
             await self.__print_list(interaction, button)
+            return
+        
+        if self.pages == 1:
+            await interaction.response.defer()
+
+        self.page = self.pages
+        self.time = 0
+        await self.__print_list(interaction, button)
 
 
     @ui.button(label="Next ➡️", style=ButtonStyle.primary)
@@ -77,3 +85,10 @@ class ListControl(ui.View):
             self.time = 0
 
             await self.__print_list(interaction, button)
+
+        if self.pages == 1:
+            await interaction.response.defer()
+
+        self.page = 1
+        self.time = 0
+        await self.__print_list(interaction, button)

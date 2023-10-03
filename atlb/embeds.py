@@ -1,4 +1,4 @@
-# AT PROJECT Limited 2022 - 2023; AT_nEXT-v2.1.5
+# AT PROJECT Limited 2022 - 2023; AT_nEXT-v2.5-endof2.0
 import discord
 
 def default():
@@ -7,7 +7,7 @@ def default():
     embed.add_field(name="Global COMMANDS", value="`inspect`", inline=False)
     embed.add_field(name="Music", value="`*play [p]`, ``*24/7`")
     embed.add_field(name="User list [Music]", value="`playlist [pll]`, `addtolist [atl]`, `printlist [ptl]`, `clearlist [cll]`,"
-                    " `initlist [inl]`, `resendctl [rctl]`")
+                    " `initlist [inl]`, `resendctl [rctl]`, `playoutube [pyt]`, `playsoundcloud [psd]`, `playspotify [ps]`")
 
     embed.set_footer(text="To get more information about COMMAND, type sc.inpect <fullCommandName> \n * - command have no description")
 
@@ -67,6 +67,30 @@ def seek():
 
     embed.add_field(name="sc.seek <time (secs)> \nAliases: `sk`", value="Seeks track for n seconds.")
 
+    return embed
+
+
+def playyoutube():
+    embed = discord.Embed(title="PLAYYOUTUBE command/Music", color=0xa31eff)
+
+    embed.add_field(name="sc.playyoutube <youtube link> \nAliases: `pyt`", value="Plays a youtube link.")
+    
+    return embed
+
+
+def playsoundcloud():
+    embed = discord.Embed(title="PLAYSOUNDCLOUD command/Music", color=0xa31eff)
+    
+    embed.add_field(name="sc.playsoundcloud <soundcloud link> \nAliases: `psd`", value="Plays a soundcloud link.")
+    
+    return embed
+
+
+def playspotify():
+    embed = discord.Embed(title="PLAYSPOTIFY command/Music", color=0xa31eff)
+    
+    embed.add_field(name="sc.playspotify <spotify link> \nAliases: `ps`", value="Plays a spotify link.")
+    
     return embed
 
 

@@ -1,4 +1,4 @@
-print("AT PROJECT Limited, 2022 - 2023; AT_nEXT-v2.4")
+print("AT PROJECT Limited, 2022 - 2023; AT_nEXT-v2.5-endof2.0")
 print("Product licensed by CC BY-NC-ND-4, file `LICENSE`")
 print("The license applies to all project files and previous versions (commits)")
 try:
@@ -20,11 +20,11 @@ try:
     from exceptions import FileError
     print("[ \x1b[32;1mOK\x1b[39;0m ] Libraries imported")
 except Exception as exception:
-    print("\r[ \x1b[31;1mERR\x1b[39;0m ]  Importing libraries...")
+    print("\r[\x1b[31;1mERR\x1b[39;0m ]  Importing libraries...")
     raise exception
 
-# Some checks
 
+# Some checks
 print('\tChecking files...')
 if not os.path.exists('files'):
     print("\t `logs` dir not found, creating...")
@@ -49,6 +49,7 @@ if not os.path.isfile('.env'):
     raise(FileError('.env', 'notfound'))
 print("[ \x1b[32;1mOK\x1b[39;0m ]  Checked `.env`")
 
+
 # Env and config loading
 load_dotenv()
 TOKEN  = os.getenv('DISCORD_TOKEN')
@@ -59,6 +60,7 @@ DBHOST = os.getenv('DBHOST')
 SPCLNT = os.getenv('SPCLNT')
 SPSECR = os.getenv('SPSECR')
 
+
 # Connecting to DB
 print("\tConnecting to PSQL DB...")
 conn = psycopg2.connect(
@@ -67,17 +69,18 @@ conn = psycopg2.connect(
     user = DBUSER,
     password = DBPASS
 )
-
 print("[ \x1b[32;1mOK\x1b[39;0m ]  Connected to PSQL DB")
+
 
 if TOKEN is None or PASSWD is None or DBHOST is None or DBPASS is None or DBUSER is None:
     print("\r[ \x1b[31;1mERR\x1b[39;0m ]  Loading config...")
     raise(FileError('.env', 'corrupt'))
 
+
 with open("files/config.json", "r") as f:
     data = json.load(f)
     logs = data["logging"]
-    music = data["music"]
+
 
 time = datetime.now().strftime("%d-%m-%Y_%H-%M-%S")
 
@@ -89,52 +92,29 @@ if logs:
     logger.addHandler(handler)
     print(f"\r[ \x1b[32;1mOK\x1b[39;0m ]  Loging started to file '{time}.log'.")
 else:
-    print(f"\r[ \x1b[33;1mWARN\x1b[39;0m ]  Log system disabled.")
+    print(f"\r[\x1b[33;1mWARN\x1b[39;0m]  Log system disabled.")
 bot = commands.Bot(command_prefix = "sc.", intents=discord.Intents.all())
 
 
 @bot.event
 async def on_ready():
-    if music:
-        try:
-            await bot.add_cog(music_cog(bot, time, logs, conn))
-            print("\r[ \x1b[32;1mOK\x1b[39;0m ]  Music COG imported.")
-        except:
-            pass
-    else:
-        print(f"\r[ \x1b[33;1mWARN\x1b[39;0m ]  Music module disabled.")
+    await bot.add_cog(music_cog(bot, time, logs, conn))
+    print("\r[ \x1b[32;1mOK\x1b[39;0m ]  Music COG imported.")
+
     await bot.change_presence(status=discord.Status.online, activity=discord.Game("Link, start.."))
     print("\r[ \x1b[32;1mOK\x1b[39;0m ]  Bot started.")
 
-    if music:
-        sc = spotify.SpotifyClient(
-            client_id=SPCLNT,
-            client_secret=SPSECR
-        )
-        node: wavelink.Node = wavelink.Node(uri='http://localhost:2333', password=PASSWD)
-        await wavelink.NodePool.connect(client=bot, nodes=[node], spotify=sc)
+    sc = spotify.SpotifyClient(
+        client_id=SPCLNT,
+        client_secret=SPSECR
+    )
+    node: wavelink.Node = wavelink.Node(uri='http://localhost:2333', password=PASSWD)
+    await wavelink.NodePool.connect(client=bot, nodes=[node], spotify=sc)
 
     
 @bot.event
 async def on_wavelink_node_ready(node: wavelink.Node):
     print(f"\r[ \x1b[32;1mOK\x1b[39;0m ]  Node \x1b[39;1mID: {node.id}\x1b[39;0m ready.")
-
-
-@bot.event
-async def on_member_join(member):
-    channel = bot.get_channel(827542572868042812)
-
-    role = discord.utils.get(member.guild.roles, name='User')
-    role_bot = discord.utils.get(member.guild.roles, name="Bots")
-
-    await member.add_roles(role)
-
-    embed = discord.Embed(title="Welcome!", color=0xa31eff, description=f"User {member.mention} just landed to Limited server!")
-    embed.set_thumbnail(url=member.avatar)
-    embed.add_field(name="Server statistics", value=f"Members: `{len(role.members)}`\nBots: `{len(role_bot.members)}`")
-
-    await channel.send(embed=embed)
-
 
 # Success embed
 def successEmbed(text):
@@ -164,6 +144,12 @@ async def inspect(ctx, command=None):
             await ctx.send(embed=embeds.resendctl())
         case "seek":
             await ctx.send(embed=embeds.seek())
+        case "playyoutube":
+            await ctx.send(embed=embeds.playyoutube())
+        case "playspotify":
+            await ctx.send(embed=embeds.playspotify())
+        case "playsoundcloud":
+            await ctx.send(embed=embeds.playsoundcloud())
         case _:
             await ctx.send(embed=embeds.default())
 
@@ -174,5 +160,5 @@ try:
     else:
         bot.run(TOKEN)
 except Exception as exception:
-    print("\r[ \x1b[31;1mERR\x1b[39;0m ]  Starting bot...")
+    print("\r[\x1b[31;1mERR\x1b[39;0m ]  Starting bot...")
     raise(exception)

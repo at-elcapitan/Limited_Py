@@ -1,4 +1,4 @@
-# AT PROJECT Limited 2022 - 2023; AT_nEXT-v2.1.5
+# AT PROJECT Limited 2022 - 2023; AT_nEXT-v2.5-endof2.0
 import math
 import asyncio
 import logging
@@ -32,6 +32,7 @@ class music_cog(commands.Cog):
         self.loop = 0
         self.command_channel = ""
         self.music_queue = []
+        self.server_id: int = None;
         self.msg = None
         self.vc = None
 
@@ -45,10 +46,10 @@ class music_cog(commands.Cog):
         self.song_position = 0
 
 
-    async def get_song(self, query):
+    async def get_song(self, query, type: str = None):
         playlist = False
 
-        if 'spotify.com' in query or 'spotify:track:' in query:
+        if 'spotify.com' in query or 'spotify:track:' in query or type == 's':
             try: song = await spotify.SpotifyTrack.search(query)
             except: return None
 
@@ -58,7 +59,7 @@ class music_cog(commands.Cog):
 
             return [song, playlist]
         
-        if "soundcloud.com" in query:
+        if "soundcloud.com" in query or type == 'sc':
             if 'sets' in query:
                 try: song = await wavelink.SoundCloudPlaylist.search(query)
                 except: return None
@@ -88,8 +89,8 @@ class music_cog(commands.Cog):
         return [song, playlist]
 
 
-    @commands.command(name="play", aliases=["p"])
-    async def play(self, ctx, *args):
+    @commands.command(name="playoutube", aliases=["pyt"])
+    async def play_yt(self, ctx, *args):
         query = " ".join(args)
 
         if query == '':
@@ -97,6 +98,40 @@ class music_cog(commands.Cog):
             return
 
         song = await self.get_song(query)
+        await self.play(ctx, song)
+
+
+    @commands.command(name="playsoundcloud", aliases=["psd"])
+    async def play_sc(self, ctx, *args):
+        query = " ".join(args)
+
+        if query == '':
+            await ctx.send(embed=errorEmbedCustom(854, "Empty", "Empty request cannot be processed."))
+            return
+
+        song = await self.get_song(query, 'sc')
+        await self.play(ctx, song)
+
+
+    @commands.command(name="playspotify", aliases=["ps"])
+    async def play_sp(self, ctx, *args):
+        query = " ".join(args)
+
+        if query == '':
+            await ctx.send(embed=errorEmbedCustom(854, "Empty", "Empty request cannot be processed."))
+            return
+
+        song = await self.get_song(query, 's')
+        await self.play(ctx, song)
+
+
+    async def play(self, ctx, song):
+        if self.server_id == None:
+            self.server_id = ctx.guild.id
+        else:
+            if self.server_id != ctx.guild.id:
+                await ctx.send(embed=errorEmbedCustom(399.1, "VC Error", "Can't execute command. Bot already connected to other guild's channel."))
+                return
 
         if song is None:
             await ctx.send(embed=errorEmbedCustom(854, "Not found", "Can't find song"))
@@ -107,7 +142,6 @@ class music_cog(commands.Cog):
             return
 
         voice_channel = ctx.author.voice.channel
-        
 
         if type(song) == type(True):
             await ctx.send(embed=errorEmbedCustom("801", "URL Incorrect", "Could not play the song. Incorrect format, try another keyword. This could be due to playlist or a livestream format."))
@@ -133,11 +167,6 @@ class music_cog(commands.Cog):
         await self.msg.delete()
         self.msg = None
         self.bot.dispatch("return_message", ctx)
-
-
-    @commands.Cog.listener()
-    async def on_set_none(self):
-        await self.msg.edit(embed=discord.Embed(title="Music is not playing", description=f"Song length: 00:00\n\n> URL: \n> Ordered by: ", color=0xa31eff))
 
 
     @commands.Cog.listener()
@@ -185,8 +214,11 @@ class music_cog(commands.Cog):
         for x in items:
             view.add_item(x)
 
-        song_len_formatted = datetime.datetime.fromtimestamp(self.song_source[0].length / 1000).strftime("%M:%S")
-        embed = discord.Embed(title=f"{self.song_title}", description=f"Song length: {song_len_formatted}\n\n> URL: [link]({self.song_source[0].uri})\n> Ordered by: `{self.song_source[2]}`", color=0xa31eff)        
+        if len(self.music_queue) != 0:
+            song_len_formatted = datetime.datetime.fromtimestamp(self.song_source[0].length / 1000).strftime("%M:%S")
+            embed = discord.Embed(title=f"{self.song_title}", description=f"Song length: {song_len_formatted}\n\n> URL: [link]({self.song_source[0].uri})\n> Ordered by: `{self.song_source[2]}`", color=0xa31eff)        
+        else:
+            embed = discord.Embed(title="Music is not playing", description=f"Song length: 00:00\n\n> URL: \n> Ordered by: ", color=0xa31eff)
 
         match self.loop:
             case 2:
@@ -203,7 +235,13 @@ class music_cog(commands.Cog):
             self.msg = await ctx.send(embed=embed, view=view)
             return
         
-        await self.msg.edit(embed=embed, view=view)
+        try:
+            await self.msg.edit(embed=embed, view=view)
+        except discord.errors.HTTPException:
+            await self.msg.delete()
+            self.msg = await ctx.send(embed=embed, view=view)
+            
+
 
 
     @commands.Cog.listener()
@@ -212,7 +250,7 @@ class music_cog(commands.Cog):
         reason = payload.reason
 
         if reason == "STOPPED" and not self.vc == None and len(self.music_queue) != 0:
-            self.bot.dispatch("return_message", self.vc.ctx)
+            self.bot.dispatch("return_message", player.ctx)
 
         try:
             if reason == 'FINISHED':
@@ -229,110 +267,113 @@ class music_cog(commands.Cog):
         
         button_id = interaction.data["custom_id"]
 
-        if button_id == "down":
-            if not self.vc.volume == 0:
-                await self.vc.set_volume(self.vc.volume - 10)
-                self.bot.dispatch("return_message", self.vc.ctx)
-                await interaction.response.defer()
+        match button_id:
+            case "down":
+                if not self.vc.volume == 0:
+                    await self.vc.set_volume(self.vc.volume - 10)
+                    self.bot.dispatch("return_message", self.vc.ctx)
+                    await interaction.response.defer()
 
-        if button_id == "up":
-            if not self.vc.volume == 150:
-                await self.vc.set_volume(self.vc.volume + 10)
-                self.bot.dispatch("return_message", self.vc.ctx)
-                await interaction.response.defer()
+            case "up":
+                if not self.vc.volume == 150:
+                    await self.vc.set_volume(self.vc.volume + 10)
+                    self.bot.dispatch("return_message", self.vc.ctx)
+                    await interaction.response.defer()
 
-        if button_id == "pause":
-            if not self.vc.is_paused():
-                await self.vc.pause()
-                self.is_playing = True
+            case "pause":
+                if not self.vc.is_paused():
+                    await self.vc.pause()
+                    self.is_playing = True
 
-                self.bot.dispatch("return_message", self.vc.ctx)
-                await interaction.response.defer()
-                return
-
-            await self.vc.resume()
-            self.bot.dispatch("return_message", self.vc.ctx)
-            await interaction.response.defer()
-
-
-        if button_id == "queue":
-            await self.nEXT_queue(interaction)
-
-        if button_id == "stop":
-            await self.vc.stop()
-            await self.vc.disconnect()
-            self.set_none_song()
-            self.vc = None
-    
-            await self.msg.delete()
-            self.msg = None
-            
-            await interaction.response.defer()
-
-        if button_id == "clearq":
-            await self.vc.stop()
-            self.set_none_song()
-            embed = discord.Embed(title="Music is not playing", description=f"Song length: 00:00\n\n> URL: \n> Ordered by: ", color=0xa31eff)        
-            await interaction.response.edit_message(embed=embed)
-
-        if button_id == "loop":
-            if self.loop != 2:
-                self.loop += 1
-            else:
-                self.loop = 0
-            
-            self.bot.dispatch("return_message", self.vc.ctx)
-            await interaction.response.defer()
-
-        if button_id == "beg":
-            await self.vc.seek(position=0)
-            await interaction.response.defer()
-
-        if button_id == "next":
-            if self.vc != None:
-                if self.loop == 1:
-                    if len(self.music_queue) == 0:
-                        await self.vc.stop()
-                        self.set_none_song()
-
-                    if self.song_position == len(self.music_queue):
-                        self.song_position = 0
-
-                    await self.vc.stop()
-                    self.change_song(self.vc.ctx)
+                    self.bot.dispatch("return_message", self.vc.ctx)
                     await interaction.response.defer()
                     return
+
+                await self.vc.resume()
+                self.bot.dispatch("return_message", self.vc.ctx)
+                await interaction.response.defer()
+
+
+            case "queue":
+                await self.nEXT_queue(interaction)
+
+            case "stop":
+                await self.vc.stop()
+                await self.vc.disconnect()
+                self.set_none_song()
+                self.vc = None
+                self.server_id = None
+        
+                await self.msg.delete()
+                self.msg = None
                 
+                await interaction.response.defer()
+
+            case "clearq":
                 await self.vc.stop()
-                if self.loop == 2:
-                    self.song_position += 1
+                await self.vc.resume()
+                self.set_none_song()
+                self.bot.dispatch("return_message", self.vc.ctx)     
+                await interaction.response.defer()
 
-                self.change_song(self.vc.ctx)
+            case "loop":
+                if self.loop != 2:
+                    self.loop += 1
+                else:
+                    self.loop = 0
+                
+                self.bot.dispatch("return_message", self.vc.ctx)
+                await interaction.response.defer()
 
-            self.bot.dispatch("return_message", self.vc.ctx)
-            await interaction.response.defer()
+            case "beg":
+                await self.vc.seek(position=0)
+                await interaction.response.defer()
 
-        if button_id == "prev":
-            if self.song_position != 0:
-                await self.vc.stop()
-                if self.loop == 2: self.song_position -= 1
-                else: self.song_position -= 2
-                self.change_song(self.vc.ctx)
-            else:
-                await self.vc.stop()
-                if self.loop == 2: self.song_position = len(self.music_queue) - 1
-                else: self.song_position = len(self.music_queue) - 2
-                self.change_song(self.vc.ctx)
+            case "next":
+                if self.vc != None:
+                    if self.loop == 1:
+                        if len(self.music_queue) == 0:
+                            await self.vc.stop()
+                            self.set_none_song()
 
-            self.bot.dispatch("return_message", self.vc.ctx)
-            await interaction.response.defer()
+                        if self.song_position == len(self.music_queue):
+                            self.song_position = 0
+
+                        await self.vc.stop()
+                        self.change_song(self.vc.ctx)
+                        await interaction.response.defer()
+                        return
+                    
+                    await self.vc.stop()
+                    if self.loop == 2:
+                        self.song_position += 1
+
+                    self.change_song(self.vc.ctx)
+
+                self.bot.dispatch("return_message", self.vc.ctx)
+                await interaction.response.defer()
+
+            case "prev":
+                if self.song_position != 0:
+                    await self.vc.stop()
+                    if self.loop == 2: self.song_position -= 1
+                    else: self.song_position -= 2
+                    self.change_song(self.vc.ctx)
+                else:
+                    await self.vc.stop()
+                    if self.loop == 2: self.song_position = len(self.music_queue) - 1
+                    else: self.song_position = len(self.music_queue) - 2
+                    self.change_song(self.vc.ctx)
+
+                self.bot.dispatch("return_message", self.vc.ctx)
+                await interaction.response.defer()
 
 
     # Commands
     def change_song(self, ctx):
         if self.song_position == len(self.music_queue) - 1 and self.loop == 0:
             self.set_none_song()
-            self.bot.dispatch("set_none")
+            self.bot.dispatch("return_message", ctx)
             return
         
         if self.loop == 1:
@@ -407,28 +448,19 @@ class music_cog(commands.Cog):
 
     @commands.command(name="clearqueue", aliases=["cq"])
     async def clear(self, ctx, num = None):
-        try:
-            if num == None:
-                if self.vc != None and self.vc.is_playing():
-                    await self.vc.stop()
-                self.set_none_song()
-                self.loop = 0
-                await ctx.send(embed=eventEmbed(name="✅ Success!", text="Queue cleared"))
-            else:
-                title = self.music_queue[int(num) - 1][0].title
-                if title == self.song_title:
-                    self.vc.stop()
-                    self.change_song(ctx)
-                self.music_queue.pop(int(num) - 1)
-                await ctx.send(embed=eventEmbed(name="✅ Success!", text="Song **" + title + "** succesfully cleared!"))
-        except Exception as exc:
-            print("\r[ \x1b[31;1mERR\x1b[39;0m ]  Error occurred while executing command.")
-            print(f"\t\x1b[39;1m{exc}\x1b[39;0m")
-            if self.is_logging:
-                self.logger.warning(traceback.format_exc())
-            else:
-                print(traceback.format_exc())
-            await ctx.send(embed=unknownError())
+        if num == None:
+            if self.vc != None and self.vc.is_playing():
+                await self.vc.stop()
+            self.set_none_song()
+            self.loop = 0
+            await ctx.send(embed=eventEmbed(name="✅ Success!", text="Queue cleared"))
+        else:
+            title = self.music_queue[int(num) - 1][0].title
+            if title == self.song_title:
+                self.vc.stop()
+                self.change_song(ctx)
+            self.music_queue.pop(int(num) - 1)
+            await ctx.send(embed=eventEmbed(name="✅ Success!", text="Song **" + title + "** succesfully cleared!"))
 
 
     # Userlist
@@ -508,6 +540,13 @@ class music_cog(commands.Cog):
     
     @commands.command(name='playlist', aliases=['pll'])
     async def import_list(self, ctx, num = 0):
+        if self.server_id == None:
+            self.server_id = ctx.guild.id
+        else:
+            if self.server_id != ctx.guild.id:
+                await ctx.send(embed=errorEmbedCustom(399.1, "VC Error", "Can't execute command. Bot already connected to other guild's channel."))
+                return
+            
         if ctx.author.voice is None:
             await ctx.send(embed=errorEmbedCustom(399, "VC Error", "Can't get your voice channel"))
             return
