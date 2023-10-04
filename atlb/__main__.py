@@ -1,4 +1,4 @@
-print("AT PROJECT Limited, 2022 - 2023; AT_nEXT-v2.5-endof2.0")
+print("AT PROJECT Limited, 2022 - 2023;  AT_nEXT-v3.0-multiserversupport-test-beta1")
 print("Product licensed by CC BY-NC-ND-4, file `LICENSE`")
 print("The license applies to all project files and previous versions (commits)")
 try:
@@ -98,11 +98,13 @@ bot = commands.Bot(command_prefix = "sc.", intents=discord.Intents.all())
 
 @bot.event
 async def on_ready():
-    await bot.add_cog(music_cog(bot, time, logs, conn))
+    guilds = [guild.id for guild in bot.guilds]
+    await bot.add_cog(music_cog(bot, time, logs, conn, guilds))
     print("\r[ \x1b[32;1mOK\x1b[39;0m ]  Music COG imported.")
 
     await bot.change_presence(status=discord.Status.online, activity=discord.Game("Link, start.."))
     print("\r[ \x1b[32;1mOK\x1b[39;0m ]  Bot started.")
+    
 
     sc = spotify.SpotifyClient(
         client_id=SPCLNT,
