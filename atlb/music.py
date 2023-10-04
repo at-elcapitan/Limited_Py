@@ -1,4 +1,4 @@
-# AT PROJECT Limited 2022 - 2023; AT_nEXT-v3.0-multiserversupport-test-beta1
+# AT PROJECT Limited 2022 - 2023; AT_nEXT-v3.0-multiserversupport-test-beta2
 import math
 import asyncio
 import logging
@@ -469,9 +469,6 @@ class music_cog(commands.Cog):
             await ctx.send(embed=eventEmbed(name="✅ Success!", text="Song **" + title + "** succesfully cleared!"))
 
 
-    # 2.0 ----------------------------------------------------------------
-    # Refactored code
-    # Commands
     # Userlist
     @commands.command(name="printlist", aliases=['ptl'])
     async def load_print(self, ctx, page = 1):
@@ -548,14 +545,7 @@ class music_cog(commands.Cog):
 
     
     @commands.command(name='playlist', aliases=['pll'])
-    async def import_list(self, ctx, num = 0):
-        if self.server_id == None:
-            self.server_id = ctx.guild.id
-        else:
-            if self.server_id != ctx.guild.id:
-                await ctx.send(embed=errorEmbedCustom(399.1, "VC Error", "Can't execute command. Bot already connected to other guild's channel."))
-                return
-            
+    async def import_list(self, ctx, num = 0):            
         if ctx.author.voice is None:
             await ctx.send(embed=errorEmbedCustom(399, "VC Error", "Can't get your voice channel"))
             return
@@ -580,10 +570,10 @@ class music_cog(commands.Cog):
 
             if song[1]:
                 for x in song[0].tracks: 
-                    self.music_queue.append([x, voice_channel, ctx.author])
-            else: self.music_queue.append([song[0], voice_channel, ctx.author])
+                    self.music_queue[ctx.guild.id].append([x, voice_channel, ctx.author])
+            else: self.music_queue[ctx.guild.id].append([song[0], voice_channel, ctx.author])
 
-            if self.vc is None or not self.vc.is_playing():
+            if self.vc[ctx.guild.id] is None or not self.vc[ctx.guild.id].is_playing():
                 self.bot.dispatch("handle_music", ctx)
                 return
             
@@ -597,16 +587,16 @@ class music_cog(commands.Cog):
                 await ctx.send(embed=errorEmbedCustom(854, "Import error", f"Unknown error occurred while importing track **{lst[int(num) - 1][0]}**"))
                 continue
 
-            if self.vc is None or not self.vc.is_playing():
+            if self.vc[ctx.guild.id] is None or not self.vc[ctx.guild.id].is_playing():
                 if song[1]:
                     for x in song[0].tracks: 
-                        self.music_queue.append([x, voice_channel, ctx.author])
-                else: self.music_queue.append([song[0], voice_channel, ctx.author])
+                        self.music_queue[ctx.guild.id].append([x, voice_channel, ctx.author])
+                else: self.music_queue[ctx.guild.id].append([song[0], voice_channel, ctx.author])
                 self.bot.dispatch("handle_music", ctx)
             else:
                 if song[1]:
                     for x in song[0].tracks: 
-                        self.music_queue.append([x, voice_channel, ctx.author])
-                else: self.music_queue.append([song[0], voice_channel, ctx.author])
+                        self.music_queue[ctx.guild.id].append([x, voice_channel, ctx.author])
+                else: self.music_queue[ctx.guild.id].append([song[0], voice_channel, ctx.author])
 
         self.bot.dispatch("return_message", ctx)

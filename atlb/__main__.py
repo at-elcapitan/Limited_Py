@@ -1,4 +1,4 @@
-print("AT PROJECT Limited, 2022 - 2023;  AT_nEXT-v3.0-multiserversupport-test-beta1")
+print("AT PROJECT Limited, 2022 - 2023;  AT_nEXT-v3.0-multiserversupport-test-beta2")
 print("Product licensed by CC BY-NC-ND-4, file `LICENSE`")
 print("The license applies to all project files and previous versions (commits)")
 try:
