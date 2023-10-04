@@ -1,4 +1,4 @@
-# AT PROJECT Limited 2022 - 2023; AT_nEXT-v2.5-endof2.0
+# AT PROJECT Limited 2022 - 2023; AT_nEXT-v3.0-beta1
 import math
 import asyncio
 import logging
