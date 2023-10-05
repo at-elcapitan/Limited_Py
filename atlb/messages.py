@@ -1,4 +1,4 @@
-# AT PROJECT Limited 2022 - 2023; ATLB-v2.0
+# AT PROJECT Limited 2022 - 2023; ATLB-v3.0.2
 import math
 import asyncio
 
@@ -8,7 +8,7 @@ from discord import Interaction
 from discord import ButtonStyle
 
 class ListControl(ui.View):
-    def __init__(self, queue: list, song_title: str):
+    def __init__(self, queue: list, song_position: int):
         super().__init__()
 
         self.page = 1
@@ -16,7 +16,7 @@ class ListControl(ui.View):
         self.time = 0 
 
         self.music_queue = queue
-        self.song_title = song_title
+        self.song_position = song_position
 
 
     async def time_stop(self):
@@ -49,8 +49,8 @@ class ListControl(ui.View):
             else:
                 title = self.music_queue[i][0].title
 
-            if self.song_title == self.music_queue[i][0].title:
-                retval += "**  • " + title + "**\n"
+            if i == self.song_position:
+                retval += f"**{i + 1}. " + title + "\n**"
                 continue
 
             retval += f"{i + 1}. " + title + "\n"
@@ -72,6 +72,7 @@ class ListControl(ui.View):
         
         if self.pages == 1:
             await interaction.response.defer()
+            return
 
         self.page = self.pages
         self.time = 0
@@ -85,9 +86,11 @@ class ListControl(ui.View):
             self.time = 0
 
             await self.__print_list(interaction, button)
+            return
 
         if self.pages == 1:
             await interaction.response.defer()
+            return
 
         self.page = 1
         self.time = 0

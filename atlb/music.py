@@ -1,4 +1,4 @@
-# AT PROJECT Limited 2022 - 2023; AT_nEXT-v3.0-multiserversupport-test-beta2
+# AT PROJECT Limited 2022 - 2023; ATLB-v3.0.2
 import math
 import asyncio
 import logging
@@ -101,19 +101,15 @@ class music_cog(commands.Cog):
             await ctx.send(embed=errorEmbedCustom("801", "URL Incorrect", "Could not play the song. Incorrect format, try another keyword. This could be due to playlist or a livestream format."))
             return
         
-        if self.vc[ctx.guild.id] is None or not self.vc[ctx.guild.id].is_playing():
-            if song[1]:
+        if song[1]:
                 for x in song[0].tracks: 
                     self.music_queue[ctx.guild.id].append([x, voice_channel, ctx.author])
-            else: self.music_queue[ctx.guild.id].append([song[0], voice_channel, ctx.author])
-                
+        else: self.music_queue[ctx.guild.id].append([song[0], voice_channel, ctx.author])
+
+        if self.vc[ctx.guild.id] is None or not self.vc[ctx.guild.id].is_playing() and len(self.music_queue[ctx.guild.id]) == 1:    
             self.bot.dispatch("handle_music", ctx)
             return
-        
-        
-        if song[1]: 
-            for x in song[0]: self.music_queue[ctx.guild.id].append([x, voice_channel, ctx.author])
-        else: self.music_queue[ctx.guild.id].append([song[0], voice_channel, ctx.author])
+
         self.bot.dispatch("return_message", ctx)
 
 
@@ -387,7 +383,7 @@ class music_cog(commands.Cog):
     
     async def nEXT_queue(self, interaction: Interaction):
         guildid = interaction.guild.id
-        view = messages.ListControl(self.music_queue[guildid], self.song_title[guildid])
+        view = messages.ListControl(self.music_queue[guildid], self.song_position[guildid])
 
         retval = ""
         embed = discord.Embed(color=0x915AF2)
@@ -404,7 +400,7 @@ class music_cog(commands.Cog):
             else:
                 title = self.music_queue[guildid][i][0].title
 
-            if self.song_title[guildid] == self.music_queue[guildid][i][0].title:
+            if i == self.song_position[guildid]:
                 retval += f"**{i + 1}. " + title + "\n**"
                 continue
             retval += f"{i + 1}. " + title + "\n"
@@ -451,14 +447,16 @@ class music_cog(commands.Cog):
                 await self.vc[ctx.guild.id].stop()
             self.set_none_song(ctx)
             self.loop[ctx.guild.id] = 0
-            await ctx.send(embed=eventEmbed(name="✅ Success!", text="Queue cleared"))
+            await ctx.send(embed=eventEmbed(name="✅ Success!", text="Queue cleared\n\n"
+                                            "**Warning!** You are just executed сommand from the old version of the bot. Please manually update the control message `sc.rctl`"))
         else:
             title = self.music_queue[ctx.guild.id][int(num) - 1][0].title
             if title == self.song_title[ctx.guild.id]:
-                self.vc[ctx.guild.id].stop()
+                await self.vc[ctx.guild.id].stop()
                 self.change_song(ctx)
             self.music_queue[ctx.guild.id].pop(int(num) - 1)
-            await ctx.send(embed=eventEmbed(name="✅ Success!", text="Song **" + title + "** succesfully cleared!"))
+            await ctx.send(embed=eventEmbed(name="✅ Success!", text="Song **" + title + "** succesfully cleared!\n\n" 
+                                            "**Warning!** You are just executed сommand from the old version of the bot. Please manually update the control message `sc.rctl`"))
 
 
     # Userlist
@@ -565,7 +563,7 @@ class music_cog(commands.Cog):
                     self.music_queue[ctx.guild.id].append([x, voice_channel, ctx.author])
             else: self.music_queue[ctx.guild.id].append([song[0], voice_channel, ctx.author])
 
-            if self.vc[ctx.guild.id] is None or not self.vc[ctx.guild.id].is_playing():
+            if self.vc[ctx.guild.id] is None or not self.vc[ctx.guild.id].is_playing() and len(self.music_queue[ctx.guild.id]) == 1:
                 self.bot.dispatch("handle_music", ctx)
                 return
             
@@ -579,16 +577,13 @@ class music_cog(commands.Cog):
                 await ctx.send(embed=errorEmbedCustom(854, "Import error", f"Unknown error occurred while importing track **{lst[int(num) - 1][0]}**"))
                 continue
 
-            if self.vc[ctx.guild.id] is None or not self.vc[ctx.guild.id].is_playing():
-                if song[1]:
-                    for x in song[0].tracks: 
-                        self.music_queue[ctx.guild.id].append([x, voice_channel, ctx.author])
-                else: self.music_queue[ctx.guild.id].append([song[0], voice_channel, ctx.author])
+            if song[1]:
+                for x in song[0].tracks: 
+                    self.music_queue[ctx.guild.id].append([x, voice_channel, ctx.author])
+            else: self.music_queue[ctx.guild.id].append([song[0], voice_channel, ctx.author])
+
+            if self.vc[ctx.guild.id] is None or not self.vc[ctx.guild.id].is_playing() and len(self.music_queue[ctx.guild.id]) == 1:
                 self.bot.dispatch("handle_music", ctx)
-            else:
-                if song[1]:
-                    for x in song[0].tracks: 
-                        self.music_queue[ctx.guild.id].append([x, voice_channel, ctx.author])
-                else: self.music_queue[ctx.guild.id].append([song[0], voice_channel, ctx.author])
+                continue
 
         self.bot.dispatch("return_message", ctx)
