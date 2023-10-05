@@ -1,56 +1,59 @@
 print("AT PROJECT Limited, 2022 - 2023;  AT_nEXT-v3.0-multiserversupport-test-beta2")
 print("Product licensed by CC BY-NC-ND-4, file `LICENSE`")
 print("The license applies to all project files and previous versions (commits)")
-try:
-    print("\tImporting libraries...")
-    import os
-    import json
-    import logging
-    from datetime import datetime
-    
-    import discord
-    from discord.ext import commands
-    import psycopg2
-    import wavelink
-    from wavelink.ext import spotify
-    from dotenv import load_dotenv
+import os
+import sys
+import logging
+from datetime import datetime
 
-    import embeds
-    from music import music_cog
-    from exceptions import FileError
-    print("[ \x1b[32;1mOK\x1b[39;0m ] Libraries imported")
-except Exception as exception:
-    print("\r[\x1b[31;1mERR\x1b[39;0m ]  Importing libraries...")
-    raise exception
+import discord
+from discord.ext import commands
+import psycopg2
+import wavelink
+import colorama
+from wavelink.ext import spotify
+from dotenv import load_dotenv
+
+import embeds
+from music import music_cog
+from exceptions import FileError
+
+# Logger setup
+colorama.init(autoreset=True)
+class ColoredFormatter(logging.Formatter):
+    COLOR_MAP = {
+        'DEBUG': colorama.Fore.BLUE,
+        'INFO': colorama.Fore.GREEN,
+        'WARN': colorama.Fore.YELLOW,
+        'ERROR': colorama.Fore.RED,
+        'CRIT': colorama.Fore.MAGENTA,
+    }
+
+    def format(self, record):
+        if record.levelname == 'WARNING':
+            record.levelname = 'WARN'
+
+        if record.levelname == 'CRITICAL':
+            record.levelname = 'CRIT'
+
+        log_message = super().format(record)
+        log_level_color = self.COLOR_MAP.get(record.levelname, colorama.Fore.WHITE)
+        log_message = f"[{record.created:.1f}s] {log_level_color}[{record.levelname}]{colorama.Style.RESET_ALL}\t- {log_message}"
+        return log_message
+
+time = datetime.now().strftime("%d-%m-%Y_%H-%M-%S")
+handler = logging.FileHandler(filename=f'logs/{time}.log', encoding='utf-8', mode='w')
+handler.setFormatter(logging.Formatter('%(asctime)s:%(levelname)s:%(name)s: %(message)s'))
+
+output_handler = logging.StreamHandler(sys.stdout)
+output_handler.setFormatter(ColoredFormatter())
+
+logger = logging.getLogger('discord')
+logger.setLevel(logging.DEBUG)
+logger.addHandler(output_handler)
+logger.addHandler(handler)
 
 
-# Some checks
-print('\tChecking files...')
-if not os.path.exists('files'):
-    print("\t `logs` dir not found, creating...")
-    os.mkdir('logs')
-print("[ \x1b[32;1mOK\x1b[39;0m ]  Checked `files/`")
-
-if not os.path.isfile('files/config.json'):
-    print('Config file not found, creating...')
-    def_config = { "logging" : False, "music" : True }
-    with open('files/config.json', 'w') as f:
-        f.seek(0)
-        json.dump(def_config, f, indent=4, ensure_ascii=False)
-        f.truncate()
-print("[ \x1b[32;1mOK\x1b[39;0m ]  Checked `config.json`")
-
-if not os.path.exists('logs'):
-    print("\t `logs` dir not found, creating...")
-    os.mkdir('logs')
-print("[ \x1b[32;1mOK\x1b[39;0m ]  Checked `logs/`")
-
-if not os.path.isfile('.env'):
-    raise(FileError('.env', 'notfound'))
-print("[ \x1b[32;1mOK\x1b[39;0m ]  Checked `.env`")
-
-
-# Env and config loading
 load_dotenv()
 TOKEN  = os.getenv('DISCORD_TOKEN')
 PASSWD = os.getenv('PASSWD')
@@ -61,72 +64,48 @@ SPCLNT = os.getenv('SPCLNT')
 SPSECR = os.getenv('SPSECR')
 
 
-# Connecting to DB
-print("\tConnecting to PSQL DB...")
-conn = psycopg2.connect(
-    host = DBHOST,
-    database = "nextmdb",
-    user = DBUSER,
-    password = DBPASS
-)
-print("[ \x1b[32;1mOK\x1b[39;0m ]  Connected to PSQL DB")
-
-
-if TOKEN is None or PASSWD is None or DBHOST is None or DBPASS is None or DBUSER is None:
-    print("\r[ \x1b[31;1mERR\x1b[39;0m ]  Loading config...")
-    raise(FileError('.env', 'corrupt'))
-
-
-with open("files/config.json", "r") as f:
-    data = json.load(f)
-    logs = data["logging"]
-
-
 time = datetime.now().strftime("%d-%m-%Y_%H-%M-%S")
-
-if logs:
-    handler = logging.FileHandler(filename=f'logs/{time}.log', encoding='utf-8', mode='w')
-    handler.setFormatter(logging.Formatter('%(asctime)s:%(levelname)s:%(name)s: %(message)s'))
-    logger = logging.getLogger('discord')
-    logger.setLevel(logging.DEBUG)
-    logger.addHandler(handler)
-    print(f"\r[ \x1b[32;1mOK\x1b[39;0m ]  Loging started to file '{time}.log'.")
-else:
-    print(f"\r[\x1b[33;1mWARN\x1b[39;0m]  Log system disabled.")
 bot = commands.Bot(command_prefix = "sc.", intents=discord.Intents.all())
+conn = psycopg2.connect(
+        host = DBHOST,
+        database = "nextmdb",
+        user = DBUSER,
+        password = DBPASS)
+logger.info("Connected to PSQL database")
+
+if not os.path.exists('logs'):
+    os.mkdir('logs')
+
+if not os.path.isfile('.env'):
+    raise(FileError('.env', 'notfound'))
+
+if None in [TOKEN, PASSWD, DBHOST, DBPASS, DBUSER]:
+    raise(FileError('.env', 'corrupt'))
+logger.info("Files checked")
 
 
+# Bot configuration
 @bot.event
 async def on_ready():
     guilds = [guild.id for guild in bot.guilds]
-    await bot.add_cog(music_cog(bot, time, logs, conn, guilds))
-    print("\r[ \x1b[32;1mOK\x1b[39;0m ]  Music COG imported.")
-
+    await bot.add_cog(music_cog(bot, conn, guilds))
     await bot.change_presence(status=discord.Status.online, activity=discord.Game("Link, start.."))
-    print("\r[ \x1b[32;1mOK\x1b[39;0m ]  Bot started.")
     
-
     sc = spotify.SpotifyClient(
         client_id=SPCLNT,
         client_secret=SPSECR
     )
+
     node: wavelink.Node = wavelink.Node(uri='http://localhost:2333', password=PASSWD)
     await wavelink.NodePool.connect(client=bot, nodes=[node], spotify=sc)
-
+    logger.info("Bot ready")
     
+
 @bot.event
 async def on_wavelink_node_ready(node: wavelink.Node):
-    print(f"\r[ \x1b[32;1mOK\x1b[39;0m ]  Node \x1b[39;1mID: {node.id}\x1b[39;0m ready.")
-
-# Success embed
-def successEmbed(text):
-    embed = discord.Embed(title=None, color=0x00FF00)
-    embed.add_field(name="✅ Success", value=text)
-
-    return embed
+    logger.info(f"Node \x1b[39;1mID: {node.id}\x1b[39;0m ready.")
 
 
-# Bot Commands
 @bot.command()
 async def inspect(ctx, command=None):
     match command:
@@ -156,11 +135,5 @@ async def inspect(ctx, command=None):
             await ctx.send(embed=embeds.default())
 
 
-try:
-    if logs:
-        bot.run(TOKEN, log_handler=handler)
-    else:
-        bot.run(TOKEN)
-except Exception as exception:
-    print("\r[\x1b[31;1mERR\x1b[39;0m ]  Starting bot...")
-    raise(exception)
+if __name__ == "__main__":
+    bot.run(TOKEN, log_handler=handler)

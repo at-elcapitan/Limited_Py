@@ -16,17 +16,9 @@ from discord.ext import commands
 from embeds import errorEmbedCustom, eventEmbed
 
 class music_cog(commands.Cog):
-    def __init__(self, bot, time, logs, connection, guilds):
+    def __init__(self, bot, connection, guilds):
         self.bot = bot
-        self.is_logging = logs
         self.dbconn = connection
-
-        if self.is_logging:
-            self.logger = logging.getLogger("music_cog")
-            handler = logging.FileHandler(filename=f'logs/{time}.log', encoding='utf-8', mode='a')
-            self.logger.addHandler(handler)
-
-        # Multiserver vc
         self.vc = {}
         self.music_queue = {}
         self.song_source = {}
