@@ -1,4 +1,5 @@
 discord
 wavelink
 python-dotenv
+colorama
 psycopg2
