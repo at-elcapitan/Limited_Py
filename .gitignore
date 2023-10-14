@@ -1,9 +1,14 @@
-.env
-cookies.txt
+# Python
+__pycache__
+
+# Bot
 logs
 lvlnk
+.env
 application.yml
-__pycache__
 files
-.vscode
 venv
+venvl
+
+# VS Code
+.vscode
