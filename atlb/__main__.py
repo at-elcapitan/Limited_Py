@@ -3,8 +3,6 @@ print("Product licensed by CC BY-NC-ND-4, file `LICENSE`")
 print("The license applies to all project files and previous versions (commits)")
 import os
 import sys
-import signal
-import asyncio
 import logging
 from datetime import datetime
 
