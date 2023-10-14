@@ -1,4 +1,4 @@
-# AT PROJECT Limited 2022 - 2023; ATLB-v3.1
+# AT PROJECT Limited 2022 - 2023; ATLB-v3.1.1
 import math
 import asyncio
 import datetime
@@ -48,7 +48,11 @@ class music_cog(commands.Cog):
         self.bot.tree.add_command(self.clear)
 
 
-    
+    async def bot_cleanup(self):
+        for message in self.msg:
+            if self.msg[message] is not None: await self.msg[message].delete()
+
+
     async def play(self, interaction: discord.Interaction, song):
         if song is None:
             await interaction.response.send_message(embed=errorEmbedCustom(854, "Not found", "Can't find song"), ephemeral = True)
@@ -71,9 +75,11 @@ class music_cog(commands.Cog):
         else: self.music_queue[interaction.guild_id].append([song[0], voice_channel, interaction.user])
         
         if self.vc[interaction.guild_id] is None or not self.vc[interaction.guild_id].is_playing() and len(self.music_queue[interaction.guild_id]) == 1:    
+            await interaction.response.send_message("Processing...", ephemeral=True)
             self.bot.dispatch("handle_music", interaction)
             return
-
+        
+        await interaction.response.send_message("Processing...", ephemeral=True)
         self.bot.dispatch("return_message", interaction)
 
 
@@ -150,9 +156,9 @@ class music_cog(commands.Cog):
 
         await self.vc[interaction.guild_id].play(self.song_source[interaction.guild_id][0])
         self.bot.dispatch("return_message", interaction)
+    
 
-
-    @commands.Cog.listener()
+    @commands.Cog.listener()    
     async def on_guilds_autosync(self, guilds):
         for guild in guilds:
             fmt = await self.bot.tree.sync(guild=guild)
@@ -401,7 +407,6 @@ class music_cog(commands.Cog):
                                                     ephemeral= True)
             return
 
-        await interaction.response.send_message("Processing...", ephemeral=True)
         song = await self.get_song(query)
         await self.play(interaction, song)
 
@@ -417,7 +422,6 @@ class music_cog(commands.Cog):
             return
 
         song = await self.get_song(query, 'sc')
-        await interaction.response.send_message("Processing...", ephemeral=True)
         await self.play(interaction, song)
 
 
@@ -432,7 +436,6 @@ class music_cog(commands.Cog):
             return
 
         song = await self.get_song(query, 's')
-        await interaction.response.send_message("Processing...", ephemeral=True)
         await self.play(interaction, song)
 
 

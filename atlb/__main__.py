@@ -1,8 +1,10 @@
-print("AT PROJECT Limited, 2022 - 2023;  ATLB-v3.1")
+print("AT PROJECT Limited, 2022 - 2023;  ATLB-v3.1.1")
 print("Product licensed by CC BY-NC-ND-4, file `LICENSE`")
 print("The license applies to all project files and previous versions (commits)")
 import os
 import sys
+import signal
+import asyncio
 import logging
 from datetime import datetime
 
@@ -13,7 +15,6 @@ import wavelink
 import colorama
 from wavelink.ext import spotify
 from dotenv import load_dotenv
-
 import embeds
 from music import music_cog
 from exceptions import FileError
@@ -64,8 +65,22 @@ SPCLNT = os.getenv('SPCLNT')
 SPSECR = os.getenv('SPSECR')
 
 
+class Bot(commands.Bot):
+    def __init__(self, commands_prefix, intents):
+        super().__init__(command_prefix=commands_prefix, intents=intents)
+
+    async def async_cleanup(self):
+        await self.cogs['music_cog'].bot_cleanup()
+
+    async def close(self):
+        logger.info("Cleaning up...")
+        await self.async_cleanup()
+        logger.info("Shutting down")
+        await super().close()
+
+
 time = datetime.now().strftime("%d-%m-%Y_%H-%M-%S")
-bot = commands.Bot(command_prefix = "sc.", intents=discord.Intents.all())
+bot = Bot(commands_prefix = "sc.", intents=discord.Intents.all())
 conn = psycopg2.connect(
         host = DBHOST,
         database = "nextmdb",
@@ -105,11 +120,6 @@ async def on_ready():
 @bot.event
 async def on_wavelink_node_ready(node: wavelink.Node):
     logger.info(f"Node \x1b[39;1mID: {node.id}\x1b[39;0m ready.")
-
-
-@bot.command()
-async def inspect(ctx):
-    await ctx.send(embed=embeds.default())
 
 
 if __name__ == "__main__":
