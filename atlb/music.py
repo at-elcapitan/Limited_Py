@@ -15,8 +15,9 @@ from discord import app_commands
 from embeds import errorEmbedCustom, eventEmbed
 
 class music_cog(commands.Cog):
-    def __init__(self, bot, connection, guilds):
-        self.bot = bot
+    def __init__(self, bot, connection, guilds, logger):
+        self.logger = logger
+        self.bot: commands.Bot = bot
         self.dbconn = connection
         self.vc = {}
         self.music_queue = {}
@@ -34,6 +35,18 @@ class music_cog(commands.Cog):
             self.song_position[guild] = 0
             self.loop[guild] = False
             self.msg[guild] = None
+
+        self.bot.tree.add_command(self.play_yt)
+        self.bot.tree.add_command(self.play_soundcloud)
+        self.bot.tree.add_command(self.play_spotify)
+        self.bot.tree.add_command(self.user_list_clear)
+        self.bot.tree.add_command(self.user_list_print)
+        self.bot.tree.add_command(self.load_save)
+        self.bot.tree.add_command(self.import_list)
+        self.bot.tree.add_command(self.music_seek)
+        self.bot.tree.add_command(self.resend_song_ctl)
+        self.bot.tree.add_command(self.clear)
+
 
     
     async def play(self, interaction: discord.Interaction, song):
@@ -137,6 +150,19 @@ class music_cog(commands.Cog):
 
         await self.vc[interaction.guild_id].play(self.song_source[interaction.guild_id][0])
         self.bot.dispatch("return_message", interaction)
+
+
+    @commands.Cog.listener()
+    async def on_guilds_autosync(self, guilds):
+        for guild in guilds:
+            fmt = await self.bot.tree.sync(guild=guild)
+            self.logger.info(f"Synced {len(fmt)} commands for \x1b[39;1m{guild} [{guild.id}]\x1b[39;0m guild")
+
+
+    @commands.Cog.listener()
+    async def on_guild_join(self, guild):
+        fmt = await self.bot.tree.sync(guild=guild)
+        self.logger.info(f"Synced {len(fmt)} commands for \x1b[39;1m{guild} [{guild.id}]\x1b[39;0m guild")
 
 
     @commands.Cog.listener()
@@ -246,7 +272,7 @@ class music_cog(commands.Cog):
             self.bot.dispatch("return_message", player.interaction)
 
         try:
-            if reason == 'FINISHED':
+            if reason == 'FINISHED':    
                 self.change_song(player.interaction)
         except:
             pass
@@ -445,14 +471,6 @@ class music_cog(commands.Cog):
                 await interaction.response.send_message(embed=eventEmbed(name="✅ Seek complete", 
                                                                          ext=f"Track **{self.song_title}** seeked for `{txt}`"),
                                                         ephemeral= True)
-    
-    @commands.command(name="sync")
-    async def sync(self, ctx: commands.Context):
-        if not ctx.author.guild_permissions.administrator:
-            return
-
-        fmt = await self.bot.tree.sync(guild=ctx.guild)
-        await ctx.send(f"Synced {len(fmt)} commands.")
 
 
     @app_commands.command(name="clear", description="Deleting soundtrack from the queue")
@@ -532,13 +550,13 @@ class music_cog(commands.Cog):
     @app_commands.command(name="list_add", description="Removing song by position")
     @app_commands.describe(query="Song name or link")
     @app_commands.describe(provider="Song name or link")
-    @app_commands.choices(choises=[
-        app_commands.Choice(name="YouTube", value=None),
+    @app_commands.choices(provider=[
+        app_commands.Choice(name="YouTube", value='yt'),
         app_commands.Choice(name="SoundCloud", value="sc"),
         app_commands.Choice(name="Spotify", value="s"),
     ])
-    async def load_save(self, interaction: discord.Interaction, query: str, provider):
-        song = await self.get_song(query, provider)
+    async def load_save(self, interaction: discord.Interaction, query: str, provider: app_commands.Choice[str]):
+        song = await self.get_song(query, provider.value)
 
         if song is None:
             await interaction.response.send_message(embed=errorEmbedCustom(854, "Not found", "Can't find song"),
@@ -559,7 +577,7 @@ class music_cog(commands.Cog):
     
     @app_commands.command(name="list_play", description="Plays songs from user list")
     @app_commands.describe(position="Song position [optional]")
-    async def import_list(self, interaction: discord.Interaction, position = 0):
+    async def import_list(self, interaction: discord.Interaction, position: int = 0):
         if interaction.user.voice is None:
             await interaction.response.send_message(embed=errorEmbedCustom(399, "VC Error", "Can't get your voice channel"),
                                                     ephemeral=True)
@@ -615,5 +633,6 @@ class music_cog(commands.Cog):
             if self.vc[interaction.guild_id] is None or not self.vc[interaction.guild_id].is_playing() and len(self.music_queue[interaction.guild_id]) == 1:
                 self.bot.dispatch("handle_music", interaction)
                 continue
-
+        
+        await interaction.response.send_message("Processing...", ephemeral=True)
         self.bot.dispatch("return_message", interaction)

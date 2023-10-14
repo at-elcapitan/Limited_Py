@@ -88,9 +88,9 @@ logger.info("Files checked")
 @bot.event
 async def on_ready():
     guilds = [guild.id for guild in bot.guilds]
-    await bot.add_cog(music_cog(bot, conn, guilds), guilds=[discord.Object(id=guild) for guild in guilds])
+    await bot.add_cog(music_cog(bot, conn, guilds, logger), guilds=[discord.Object(id=guild) for guild in guilds])
     await bot.change_presence(status=discord.Status.online, activity=discord.Game("Link, start.."))
-
+    bot.dispatch("guilds_autosync", bot.guilds)
 
     sc = spotify.SpotifyClient(
         client_id=SPCLNT,
