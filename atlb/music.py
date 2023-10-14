@@ -487,7 +487,7 @@ class music_cog(commands.Cog):
         
 
     # Userlist
-    @app_commands.command(name="list_show", description="Displaying user list")
+    @app_commands.command(name="list_display", description="Displaying user list")
     @app_commands.describe(page="List page")
     async def user_list_print(self, interaction: discord.Interaction, page: int = 1):
         cursor = self.dbconn.cursor()
@@ -531,7 +531,7 @@ class music_cog(commands.Cog):
         await interaction.response.send_message(embed=embed, ephemeral = True)
 
 
-    @app_commands.command(name="list_clear", description="Removing song by position")
+    @app_commands.command(name="list_remove", description="Removing song by position")
     @app_commands.describe(position="position")
     async def user_list_clear(self, interaction: discord.Interaction, position: int):
         cursor = self.dbconn.cursor()
@@ -555,7 +555,7 @@ class music_cog(commands.Cog):
         app_commands.Choice(name="SoundCloud", value="sc"),
         app_commands.Choice(name="Spotify", value="s"),
     ])
-    async def load_save(self, interaction: discord.Interaction, query: str, provider: app_commands.Choice[str]):
+    async def load_save(self, interaction: discord.Interaction, provider: app_commands.Choice[str], query: str):
         song = await self.get_song(query, provider.value)
 
         if song is None:
@@ -610,9 +610,11 @@ class music_cog(commands.Cog):
             else: self.music_queue[interaction.guild_id].append([song[0], voice_channel, interaction.user])
 
             if self.vc[interaction.guild_id] is None or not self.vc[interaction.guild_id].is_playing() and len(self.music_queue[interaction.guild_id]) == 1:
+                await interaction.response.send_message("Processing...", ephemeral=True)
                 self.bot.dispatch("handle_music", interaction)
                 return
             
+            await interaction.response.send_message("Processing...", ephemeral=True)
             self.bot.dispatch("return_message", interaction)
             return
 
