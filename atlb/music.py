@@ -471,7 +471,7 @@ class music_cog(commands.Cog):
     # Userlist
     @app_commands.command(name="list_show", description="Displaying user list")
     @app_commands.describe(page="List page")
-    async def user_list_print(self, interaction: discord.Interaction, page = 1):
+    async def user_list_print(self, interaction: discord.Interaction, page: int = 1):
         cursor = self.dbconn.cursor()
         cursor.execute(f"SELECT music_name, music_url FROM music_data WHERE user_id = %s", (interaction.user.id,))
         lst = cursor.fetchall()
@@ -532,7 +532,7 @@ class music_cog(commands.Cog):
     @app_commands.command(name="list_add", description="Removing song by position")
     @app_commands.describe(query="Song name or link")
     @app_commands.describe(provider="Song name or link")
-    @app_commands.choices([
+    @app_commands.choices(choises=[
         app_commands.Choice(name="YouTube", value=None),
         app_commands.Choice(name="SoundCloud", value="sc"),
         app_commands.Choice(name="Spotify", value="s"),
