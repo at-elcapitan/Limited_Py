@@ -1,4 +1,4 @@
-print("AT PROJECT Limited, 2022 - 2023;  ATLB-v3.0.2")
+print("AT PROJECT Limited, 2022 - 2023;  ATLB-v3.1")
 print("Product licensed by CC BY-NC-ND-4, file `LICENSE`")
 print("The license applies to all project files and previous versions (commits)")
 import os
@@ -88,9 +88,10 @@ logger.info("Files checked")
 @bot.event
 async def on_ready():
     guilds = [guild.id for guild in bot.guilds]
-    await bot.add_cog(music_cog(bot, conn, guilds))
+    await bot.add_cog(music_cog(bot, conn, guilds, logger), guilds=[discord.Object(id=guild) for guild in guilds])
     await bot.change_presence(status=discord.Status.online, activity=discord.Game("Link, start.."))
-    
+    bot.dispatch("guilds_autosync", bot.guilds)
+
     sc = spotify.SpotifyClient(
         client_id=SPCLNT,
         client_secret=SPSECR
@@ -107,32 +108,8 @@ async def on_wavelink_node_ready(node: wavelink.Node):
 
 
 @bot.command()
-async def inspect(ctx, command=None):
-    match command:
-        case "clearqueue":
-            await ctx.send(embed=embeds.clearqueue())
-        case "playlist":
-            await ctx.send(embed=embeds.playlist())
-        case "addtolist":
-            await ctx.send(embed=embeds.addtolist())
-        case "printlist":
-            await ctx.send(embed=embeds.printlist())
-        case "clearlist":
-            await ctx.send(embed=embeds.clearlist())
-        case "initlist":
-            await ctx.send(embed=embeds.initlist())
-        case "resendctl":
-            await ctx.send(embed=embeds.resendctl())
-        case "seek":
-            await ctx.send(embed=embeds.seek())
-        case "playyoutube":
-            await ctx.send(embed=embeds.playyoutube())
-        case "playspotify":
-            await ctx.send(embed=embeds.playspotify())
-        case "playsoundcloud":
-            await ctx.send(embed=embeds.playsoundcloud())
-        case _:
-            await ctx.send(embed=embeds.default())
+async def inspect(ctx):
+    await ctx.send(embed=embeds.default())
 
 
 if __name__ == "__main__":
