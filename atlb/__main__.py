@@ -1,4 +1,4 @@
-print("AT PROJECT Limited, 2022 - 2023;  ATLB-v3.0.2")
+print("AT PROJECT Limited, 2022 - 2023;  ATLB-v3.1_beta")
 print("Product licensed by CC BY-NC-ND-4, file `LICENSE`")
 print("The license applies to all project files and previous versions (commits)")
 import os
@@ -88,9 +88,10 @@ logger.info("Files checked")
 @bot.event
 async def on_ready():
     guilds = [guild.id for guild in bot.guilds]
-    await bot.add_cog(music_cog(bot, conn, guilds))
+    await bot.add_cog(music_cog(bot, conn, guilds), guilds=[discord.Object(id=guild) for guild in guilds])
     await bot.change_presence(status=discord.Status.online, activity=discord.Game("Link, start.."))
-    
+
+
     sc = spotify.SpotifyClient(
         client_id=SPCLNT,
         client_secret=SPSECR
