@@ -1,4 +1,4 @@
-# AT PROJECT Limited 2022 - 2023; ATLB-v3.1.1
+# AT PROJECT Limited 2022 - 2023; ATLB-v3.1.1.1
 import math
 import asyncio
 import datetime
@@ -93,8 +93,8 @@ class music_cog(commands.Cog):
 
     def change_song(self, interaction: discord.Interaction):
         if self.song_position[interaction.guild_id] == len(self.music_queue[interaction.guild_id]) - 1 and self.loop[interaction.guild_id] == 0:
-            self.set_none_song(interaction.guild_id)
-            self.bot.dispatch("return_message", interaction.guild_id)
+            self.set_none_song(interaction)
+            self.bot.dispatch("return_message", interaction)
             return
         
         if self.loop[interaction.guild_id] == 1:
@@ -106,7 +106,7 @@ class music_cog(commands.Cog):
         if self.loop[interaction.guild_id] == 0:
             self.song_position[interaction.guild_id] += 1
         
-        self.bot.dispatch("handle_music", interaction.guild_id)
+        self.bot.dispatch("handle_music", interaction)
 
     
     async def nEXT_queue(self, interaction: Interaction):
@@ -277,11 +277,8 @@ class music_cog(commands.Cog):
         if reason == "STOPPED" and not self.vc[player.guild.id] == None and len(self.music_queue[player.guild.id]) != 0:
             self.bot.dispatch("return_message", player.interaction)
 
-        try:
-            if reason == 'FINISHED':    
-                self.change_song(player.interaction)
-        except:
-            pass
+        if reason == 'FINISHED':
+            self.change_song(player.interaction)
 
 
     @commands.Cog.listener()
@@ -471,9 +468,10 @@ class music_cog(commands.Cog):
 
             else:
                 txt = f'{int(seconds)}s'
-                await interaction.response.send_message(embed=eventEmbed(name="✅ Seek complete", 
-                                                                         ext=f"Track **{self.song_title}** seeked for `{txt}`"),
-                                                        ephemeral= True)
+
+            await interaction.response.send_message(embed=eventEmbed(name="✅ Seek complete", 
+                                                                        text=f"Track **{self.song_title}** seeked for `{txt}`"),
+                                                    ephemeral= True)
 
 
     @app_commands.command(name="clear", description="Deleting soundtrack from the queue")

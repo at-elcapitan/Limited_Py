@@ -1,4 +1,4 @@
-print("AT PROJECT Limited, 2022 - 2023;  ATLB-v3.1.1")
+print("AT PROJECT Limited, 2022 - 2023;  ATLB-v3.1.1.1")
 print("Product licensed by CC BY-NC-ND-4, file `LICENSE`")
 print("The license applies to all project files and previous versions (commits)")
 import os
@@ -13,8 +13,8 @@ import wavelink
 import colorama
 from wavelink.ext import spotify
 from dotenv import load_dotenv
-import embeds
 from music import music_cog
+import embeds
 from exceptions import FileError
 
 # Logger setup
@@ -119,6 +119,10 @@ async def on_ready():
 async def on_wavelink_node_ready(node: wavelink.Node):
     logger.info(f"Node \x1b[39;1mID: {node.id}\x1b[39;0m ready.")
 
+
+@bot.command()
+async def inspect(ctx):
+    await ctx.send(embed=embeds.default())
 
 if __name__ == "__main__":
     bot.run(TOKEN, log_handler=handler)
