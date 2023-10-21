@@ -1,4 +1,4 @@
-# AT PROJECT Limited 2022 - 2023; ATLB-v3.1.1.1
+# AT PROJECT Limited 2022 - 2023; ATLB-v3.1.1.2
 import math
 import asyncio
 import datetime
@@ -470,7 +470,7 @@ class music_cog(commands.Cog):
                 txt = f'{int(seconds)}s'
 
             await interaction.response.send_message(embed=eventEmbed(name="✅ Seek complete", 
-                                                                        text=f"Track **{self.song_title}** seeked for `{txt}`"),
+                                                                        text=f"Track **{self.song_title[interaction.guild_id]}** seeked for `{txt}`"),
                                                     ephemeral= True)
 
 
