@@ -36,3 +36,20 @@ SPSECR =              # Spotify secret
 ```
 
 With the configuration in place, your bot is now ready to use. Simply run the `run.sh` or `run.bat` file to start it.
+
+## Commands
+
+
+| Command Name      | Description                                        |
+| ----------------- | -------------------------------------------------- |
+| sc.inspect        | Displays all command list                          |
+| /youtube          | Play a YouTube track                               |
+| /soundcloud       | Play a SoundCloud track                            |
+| /spotify          | Play a Spotify track                               |
+| /resend_control   | Resend the music control panel                     |
+| /seek             | Seek the current soundtrack                        |
+| /clear            | Delete a song from the queue                       |
+| /list_display     | Display the user list                              |
+| /list_remove      | Remove a song from the user list                   |
+| /list_add         | Add a song to the user list                        |
+| /list_play        | Play songs from the user list                      |
