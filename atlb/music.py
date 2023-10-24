@@ -1,4 +1,4 @@
-# AT PROJECT Limited 2022 - 2023; ATLB-v3.1.1.2
+# AT PROJECT Limited 2022 - 2023; ATLB-v3.1.2
 import math
 import asyncio
 import datetime
@@ -12,7 +12,7 @@ from discord import Interaction
 from discord import ButtonStyle
 from discord.ext import commands
 from discord import app_commands
-from embeds import errorEmbedCustom, eventEmbed
+from embeds import error_embed, eventEmbed
 
 class music_cog(commands.Cog):
     def __init__(self, bot, connection, guilds, logger):
@@ -55,17 +55,17 @@ class music_cog(commands.Cog):
 
     async def play(self, interaction: discord.Interaction, song):
         if song is None:
-            await interaction.response.send_message(embed=errorEmbedCustom(854, "Not found", "Can't find song"), ephemeral = True)
+            await interaction.response.send_message(embed=error_embed("872", "Not found", "Can't find song"), ephemeral = True)
             return
         
         if interaction.user.voice is None:
-            await interaction.response.send_message(embed=errorEmbedCustom(399, "VC Error", "Can't get your voice channel"), ephemeral = True)
+            await interaction.response.send_message(embed=error_embed("870", "VC Error", "Can't get your voice channel"), ephemeral = True)
             return
 
         voice_channel = interaction.user.voice.channel
 
         if type(song) == type(True):
-            await interaction.response.send_message(embed=errorEmbedCustom("801", "URL Incorrect", 
+            await interaction.response.send_message(embed=error_embed("872.1", "URL Incorrect", 
                 "Could not play the song. Incorrect format, try another keyword. This could be due to playlist or a livestream format."), ephemeral = True)
             return
         
@@ -169,6 +169,13 @@ class music_cog(commands.Cog):
     async def on_guild_join(self, guild):
         fmt = await self.bot.tree.sync(guild=guild)
         self.logger.info(f"Synced {len(fmt)} commands for \x1b[39;1m{guild} [{guild.id}]\x1b[39;0m guild")
+        self.vc[guild] = None
+        self.music_queue[guild] = []
+        self.song_source[guild] = None
+        self.song_title[guild] = None
+        self.song_position[guild] = 0
+        self.loop[guild] = False
+        self.msg[guild] = None
 
 
     @commands.Cog.listener()
@@ -400,7 +407,7 @@ class music_cog(commands.Cog):
                       query: str):
 
         if query == '':
-            await interaction.response.send_message(embed=errorEmbedCustom(854, "Empty", "Empty request cannot be processed."),
+            await interaction.response.send_message(embed=error_embed("872.2", "Empty", "Empty request cannot be processed."),
                                                     ephemeral= True)
             return
 
@@ -414,7 +421,7 @@ class music_cog(commands.Cog):
                       interaction: discord.Interaction, 
                       query: str):
         if query == '':
-            await interaction.response.send_message(embed=errorEmbedCustom(854, "Empty", "Empty request cannot be processed."),
+            await interaction.response.send_message(embed=error_embed("872.2", "Empty", "Empty request cannot be processed."),
                                                     ephemeral= True)
             return
 
@@ -428,7 +435,7 @@ class music_cog(commands.Cog):
                       interaction: discord.Interaction, 
                       query: str):
         if query == '':
-            await interaction.response.send_message(embed=errorEmbedCustom(854, "Empty", "Empty request cannot be processed."),
+            await interaction.response.send_message(embed=error_embed("872.2", "Empty", "Empty request cannot be processed."),
                                                     ephemeral= True)
             return
 
@@ -448,7 +455,7 @@ class music_cog(commands.Cog):
     @app_commands.describe(seconds="Seconds to seek")
     async def music_seek(self, interaction: discord.Interaction, seconds: int):
         if self.vc[interaction.guild_id] == None:
-            await interaction.response.send_message(embed=errorEmbedCustom("872", "Change error", "Not connected to voice channel."),
+            await interaction.response.send_message(embed=error_embed("870.1", "Change error", "Not connected to voice channel."),
                                                     ephemeral = True)
             return
 
@@ -503,7 +510,7 @@ class music_cog(commands.Cog):
 
         if page > pages or page <= 0:
             await interaction.response.send_message(embed=
-                                                    errorEmbedCustom("801.7",
+                                                    error_embed("873",
                                                     "Incorrect Page", "Requested page is not exist."),
                                                     ephemeral = True)
             return
@@ -560,7 +567,7 @@ class music_cog(commands.Cog):
         song = await self.get_song(query, provider.value)
 
         if song is None:
-            await interaction.response.send_message(embed=errorEmbedCustom(854, "Not found", "Can't find song"),
+            await interaction.response.send_message(embed=error_embed("872", "Not found", "Can't find song"),
                                                     ephemeral=True)
             return
         
@@ -580,7 +587,7 @@ class music_cog(commands.Cog):
     @app_commands.describe(position="Song position [optional]")
     async def import_list(self, interaction: discord.Interaction, position: int = 0):
         if interaction.user.voice is None:
-            await interaction.response.send_message(embed=errorEmbedCustom(399, "VC Error", "Can't get your voice channel"),
+            await interaction.response.send_message(embed=error_embed("870", "VC Error", "Can't get your voice channel"),
                                                     ephemeral=True)
             return
         
@@ -591,7 +598,7 @@ class music_cog(commands.Cog):
         lst = cursor.fetchall()
 
         if len(lst) == 0:
-            await interaction.response.send_message(embed=errorEmbedCustom("804.5", "Can`t read list!", "Error: your list is empty!"),
+            await interaction.response.send_message(embed=error_embed("873.1", "Can`t read list!", "Error: your list is empty!"),
                                                     ephemeral=True)
             return
 
@@ -600,7 +607,7 @@ class music_cog(commands.Cog):
             song = await self.get_song(item)
 
             if song is None:
-                await interaction.response.send_message(embed=errorEmbedCustom(854, "Import error", 
+                await interaction.response.send_message(embed=error_embed("872", "Import error", 
                                                                                f"Unknown error occurred while importing track **{lst[int(position) - 1][0]}**"),
                                                                                ephemeral=True)
                 return
@@ -623,7 +630,7 @@ class music_cog(commands.Cog):
             song = await self.get_song(item[1])
 
             if song is None:
-                await interaction.response.send_message(embed=errorEmbedCustom(854, "Import error",
+                await interaction.channel.send(embed=error_embed("872", "Import error",
                                                                                 f"Unknown error occurred while importing track **{lst[int(position) - 1][0]}**"),
                                                                                 ephemeral=True)
                 continue
