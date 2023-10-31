@@ -1,4 +1,4 @@
-# AT PROJECT Limited 2022 - 2023; ATLB-v3.1.2
+# AT PROJECT Limited 2022 - 2023; ATLB-v3.1.3
 import math
 import asyncio
 import datetime
@@ -490,7 +490,9 @@ class music_cog(commands.Cog):
             await self.vc[interaction.guild_id].stop()
             self.change_song(interaction)
 
-        await interaction.response.send_message("Processing...", ephemeral=True)
+        self.music_queue[interaction.guild_id].pop(int(position) - 1)
+
+        await interaction.response.send_message(embed=eventEmbed(name="✅ Complete", text=f"Track **{title}** removed"), ephemeral=True)
         self.bot.dispatch("return_message", interaction)
         
 
