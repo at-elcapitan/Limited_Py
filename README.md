@@ -12,6 +12,7 @@ Limited nEXT is one of the bots in the 'Limited' series, which includes:
 
 The bot is designed to provide a seamless music streaming experience on Discord, and it is equipped with features that make it stand out.
 
+
 ## Bot Setup and Usage
 
 To get started with Limited nEXT, follow these steps:
@@ -22,8 +23,10 @@ Clone this repository to your local machine using the Git program:
  git clone https://github.com/at-elcapitan/Limited_Py.git
 ```
 
-Create a .env file in the bot's directory and fill it with your specific values. The file should follow this pattern:
 
+### Configuring
+
+Create a `.env` file in the bot's directory and fill it with your specific values. The file should follow this pattern:
 
 ```yaml
 DISCORD_TOKEN =       # Your bot token
@@ -35,10 +38,24 @@ SPCLNT =              # Spotify client key
 SPSECR =              # Spotify secret
 ```
 
+
+### Setting up PostgreSQL database
+
+Create a database named `nextmdb` and then table using the following query:
+
+```sql
+create table if not exists music_data (
+	id serial primary key,
+	music_name text not null,
+	music_url text not null,
+	user_id bigint not null
+);
+```
+
 With the configuration in place, your bot is now ready to use. Simply run the `run.sh` or `run.bat` file to start it.
 
-## Commands
 
+## Commands
 
 | Command Name      | Description                                        |
 | ----------------- | -------------------------------------------------- |
