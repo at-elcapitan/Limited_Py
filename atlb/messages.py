@@ -1,5 +1,4 @@
-# AT PROJECT Limited 2022 - 2023; ATLB-v3.0.2
-import math
+# AT PROJECT Limited 2022 - 2023; ATLB-v3.2
 import asyncio
 
 from discord import ui
@@ -7,16 +6,18 @@ from discord import Embed
 from discord import Interaction
 from discord import ButtonStyle
 
-class ListControl(ui.View):
-    def __init__(self, queue: list, song_position: int):
+class ListView(ui.View):
+    def __init__(self, ulist: list, pages: int, position: int, is_queue: bool = False, 
+                 current_position: int = None):
         super().__init__()
 
-        self.page = 1
-        self.pages = math.ceil(len(queue) / 10 + 0.1)
-        self.time = 0 
+        self.page = position
+        self.pages = pages
+        self.time = 0
+        self.is_queue = is_queue 
+        self.song_position = current_position
 
-        self.music_queue = queue
-        self.song_position = song_position
+        self.ulist = ulist
 
 
     async def time_stop(self):
@@ -29,34 +30,33 @@ class ListControl(ui.View):
                 return
 
 
-    async def __print_list(self, interaction: Interaction, button: ui.Button):
+    async def __print_list(self, interaction: Interaction):
         retval = ""
         embed = Embed(color=0x915AF2)
-        pages = math.ceil(len(self.music_queue) / 10 + 0.1)
 
         if self.page == 1:
-            srt, stp = 0, 10
+            srt, stp = 0, 9
         else:
-            srt = 10 * (self.page - 1)
-            stp = 10 * self.page
-
+            srt = 10 * (self.page - 1) - 1
+            stp = 10 * self.page - 1
+    
         for i in range(srt, stp):
-            if i > len(self.music_queue) - 1:
+            if i > len(self.ulist) - 1:
                 break
-            if len(self.music_queue[i][0].title) > 65:
-                z = len(self.music_queue[i][0].title) - 65
-                title = self.music_queue[i][0].title[:-z] + "..."
-            else:
-                title = self.music_queue[i][0].title
+            
+            title = self.ulist[i][0] if not self.is_queue else self.ulist[i][0].title
 
-            if i == self.song_position:
+            if len(title) > 65:
+                title = title[:-(len(title) - 65)] + "..."
+
+            if self.is_queue and i == self.song_position:
                 retval += f"**{i + 1}. " + title + "\n**"
                 continue
 
             retval += f"{i + 1}. " + title + "\n"
-            
-        embed.add_field(name="📄 Playlist", value=retval)
-        embed.set_footer(text=f"Page: {self.page} of {pages}\n")
+        
+        embed.add_field(name="📄 User list", value=retval)
+        embed.set_footer(text=f"Page: {self.page} of {self.pages}\n")
         
         await interaction.response.edit_message(embed=embed)
 
@@ -67,7 +67,7 @@ class ListControl(ui.View):
             self.page -= 1
             self.time = 0
             
-            await self.__print_list(interaction, button)
+            await self.__print_list(interaction)
             return
         
         if self.pages == 1:
@@ -76,7 +76,7 @@ class ListControl(ui.View):
 
         self.page = self.pages
         self.time = 0
-        await self.__print_list(interaction, button)
+        await self.__print_list(interaction)
 
 
     @ui.button(label="Next ➡️", style=ButtonStyle.primary)
@@ -85,7 +85,7 @@ class ListControl(ui.View):
             self.page += 1
             self.time = 0
 
-            await self.__print_list(interaction, button)
+            await self.__print_list(interaction)
             return
 
         if self.pages == 1:
@@ -94,4 +94,4 @@ class ListControl(ui.View):
 
         self.page = 1
         self.time = 0
-        await self.__print_list(interaction, button)
+        await self.__print_list(interaction)

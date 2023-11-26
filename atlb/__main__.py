@@ -1,4 +1,4 @@
-print("AT PROJECT Limited, 2022 - 2023;  ATLB-v3.1.3")
+print("AT PROJECT Limited, 2022 - 2023;  ATLB-v3.2")
 print("Product licensed by CC BY-NC-ND-4, file `LICENSE`")
 print("The license applies to all project files and previous versions (commits)")
 import os
@@ -8,14 +8,16 @@ from datetime import datetime
 
 import discord
 from discord.ext import commands
+
 import psycopg2
 import wavelink
 import colorama
-from wavelink.ext import spotify
 from dotenv import load_dotenv
-from music import music_cog
+from wavelink.ext import spotify
+
 import embeds
 from exceptions import FileError
+from music import music_cog
 
 # Logger setup
 colorama.init(autoreset=True)
@@ -101,9 +103,9 @@ logger.info("Files checked")
 @bot.event
 async def on_ready():
     guilds = [guild.id for guild in bot.guilds]
-    await bot.add_cog(music_cog(bot, conn, guilds, logger), guilds=[discord.Object(id=guild) for guild in guilds])
+    await bot.add_cog(music_cog(bot, conn, guilds, logger))
     await bot.change_presence(status=discord.Status.online, activity=discord.Game("Link, start.."))
-    bot.dispatch("guilds_autosync", bot.guilds)
+    bot.dispatch("guilds_autosync")
 
     sc = spotify.SpotifyClient(
         client_id=SPCLNT,
