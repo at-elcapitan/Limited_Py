@@ -1,4 +1,4 @@
-# AT PROJECT Limited 2022 - 2023; ATLB-v3.2
+# AT PROJECT Limited 2022 - 2023; ATLB-v3.2-gpl3
 import math
 import datetime
 

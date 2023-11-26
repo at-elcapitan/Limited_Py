@@ -1,6 +1,6 @@
-print("AT PROJECT Limited, 2022 - 2023;  ATLB-v3.2")
-print("Product licensed by CC BY-NC-ND-4, file `LICENSE`")
-print("The license applies to all project files and previous versions (commits)")
+print("AT PROJECT Limited, 2022 - 2023;  ATLB-v3.2-gpl3")
+print("Product licensed by GPLv3, file `LICENSE`")
+print("The license applies to all project files since ATLB-v3.2-gpl3")
 import os
 import sys
 import logging
