@@ -1,0 +1,31 @@
+version: '3.2-gpl3-docker'
+
+services:
+  nEXT:
+    restart: unless-stopped
+    image: atproject/limitednext:lastest
+    container_name: limitednext
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    network_mode: host # Comment if not using existing not docker database
+    command: python atlb
+    env_file: docker.env
+
+  lavalink:
+    image: ghcr.io/lavalink-devs/lavalink:3
+    container_name: lavalink
+    restart: unless-stopped
+    environment:
+      - _JAVA_OPTIONS=-Xmx6G
+      - SERVER_PORT=2333
+      - LAVALINK_SERVER_PASSWORD=youshallnotpass
+    networks:
+      - lavalink
+    expose:
+      - 2333
+    ports:
+      - "2333:2333"
+networks:
+  lavalink:
+    name: lavalink

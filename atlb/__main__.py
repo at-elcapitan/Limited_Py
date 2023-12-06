@@ -1,4 +1,4 @@
-print("AT PROJECT Limited, 2022 - 2023;  ATLB-v3.2-gpl3")
+print("AT PROJECT Limited, 2022 - 2023;  ATLB-v3.2-gpl3-docker")
 print("Product licensed by GPLv3, file `LICENSE`")
 print("The license applies to all project files since ATLB-v3.2-gpl3")
 import os
@@ -12,7 +12,6 @@ from discord.ext import commands
 import psycopg2
 import wavelink
 import colorama
-from dotenv import load_dotenv
 from wavelink.ext import spotify
 
 import embeds
@@ -43,26 +42,19 @@ class ColoredFormatter(logging.Formatter):
         return log_message
 
 time = datetime.now().strftime("%d-%m-%Y_%H-%M-%S")
-handler = logging.FileHandler(filename=f'logs/{time}.log', encoding='utf-8', mode='w')
-handler.setFormatter(logging.Formatter('%(asctime)s:%(levelname)s:%(name)s: %(message)s'))
-
 output_handler = logging.StreamHandler(sys.stdout)
 output_handler.setFormatter(ColoredFormatter())
-
 logger = logging.getLogger('discord')
 logger.setLevel(logging.DEBUG)
 logger.addHandler(output_handler)
-logger.addHandler(handler)
 
-
-load_dotenv()
-TOKEN  = os.getenv('DISCORD_TOKEN')
-PASSWD = os.getenv('PASSWD')
-DBUSER = os.getenv('DBUSER')
-DBPASS = os.getenv('DBPASS')
-DBHOST = os.getenv('DBHOST')
-SPCLNT = os.getenv('SPCLNT')
-SPSECR = os.getenv('SPSECR')
+TOKEN  = os.environ['DISCORD_TOKEN']
+PASSWD = os.environ['PASSWD']
+DBUSER = os.environ['DBUSER']
+DBPASS = os.environ['DBPASS']
+DBHOST = os.environ['DBHOST']
+SPCLNT = os.environ['SPCLNT']
+SPSECR = os.environ['SPSECR']
 
 
 class Bot(commands.Bot):
@@ -91,8 +83,6 @@ logger.info("Connected to PSQL database")
 if not os.path.exists('logs'):
     os.mkdir('logs')
 
-if not os.path.isfile('.env'):
-    raise(FileError('.env', 'notfound'))
 
 if None in [TOKEN, PASSWD, DBHOST, DBPASS, DBUSER]:
     raise(FileError('.env', 'corrupt'))
@@ -127,4 +117,4 @@ async def inspect(ctx):
     await ctx.send(embed=embeds.default())
 
 if __name__ == "__main__":
-    bot.run(TOKEN, log_handler=handler)
+    bot.run(TOKEN)

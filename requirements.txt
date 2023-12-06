@@ -1,5 +1,4 @@
 discord
-wavelink
-python-dotenv
+wavelink==2.6.5
 colorama
 psycopg2
