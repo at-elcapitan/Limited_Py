@@ -1,4 +1,4 @@
-# AT PROJECT Limited 2022 - 2023; ATLB-v3.2-gpl3
+# AT PROJECT Limited 2022 - 2023; ATLB-v3.2.1
 import math
 import datetime
 
@@ -234,7 +234,7 @@ class music_cog(commands.Cog):
         
         try:
             await self.msg[interaction.guild_id].edit(embed=embed, view=view)
-        except discord.errors.HTTPException:
+        except:
             await self.msg[interaction.guild_id].delete()
             self.msg[interaction.guild_id] = await interaction.channel.send(embed=embed, view=view)
 

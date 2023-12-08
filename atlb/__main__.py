@@ -1,4 +1,4 @@
-print("AT PROJECT Limited, 2022 - 2023;  ATLB-v3.2-gpl3-docker")
+print("AT PROJECT Limited, 2022 - 2023;  ATLB-v3.2.1-docker")
 print("Product licensed by GPLv3, file `LICENSE`")
 print("The license applies to all project files since ATLB-v3.2-gpl3")
 import os
