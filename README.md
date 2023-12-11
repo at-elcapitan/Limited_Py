@@ -26,7 +26,7 @@ Clone this repository to your local machine using the Git program:
 
 ### Configuring
 
-Create a `docker.env` file in the bot's directory and fill it with your specific values. The file should follow this pattern:
+Create a `.env` file in the bot's directory and fill it with your specific values. The file should follow this pattern:
 
 ```yaml
 DISCORD_TOKEN =       # Your bot token
@@ -52,11 +52,7 @@ create table if not exists music_data (
 );
 ```
 
-To start docker container user
-```sh
-docker-compose up -d
-```
-
+With the configuration in place, your bot is now ready to use. Simply run the `run.sh` or `run.bat` file to start it.
 
 
 ## Commands
@@ -74,3 +70,4 @@ docker-compose up -d
 | /list remove      | Remove a song from the user list                   |
 | /list add         | Add a song to the user list                        |
 | /list play        | Play songs from the user list                      |
+| /jmp              | Changes song to position                           |
