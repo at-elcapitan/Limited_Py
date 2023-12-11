@@ -39,17 +39,6 @@ class music_cog(commands.Cog):
             self.loop[guild] = False
             self.msg[guild] = None
 
-        """ self.bot.tree.add_command(self.play_yt)
-        self.bot.tree.add_command(self.play_soundcloud)
-        self.bot.tree.add_command(self.play_spotify)
-        self.bot.tree.add_command(self.user_list_clear)
-        self.bot.tree.add_command(self.user_list_print)
-        self.bot.tree.add_command(self.load_save)
-        self.bot.tree.add_command(self.import_list)
-        self.bot.tree.add_command(self.music_seek)
-        self.bot.tree.add_command(self.resend_song_ctl)
-        self.bot.tree.add_command(self.clear) """
-
 
     async def bot_cleanup(self):
         for message in self.msg:
@@ -58,18 +47,21 @@ class music_cog(commands.Cog):
 
     async def play(self, interaction: discord.Interaction, song):
         if song is None:
-            await interaction.response.send_message(embed=error_embed("872", "Not found", "Can't find song"), ephemeral = True)
+            await interaction.response.send_message(embed=error_embed("872", 
+                                "Not found", "Can't find song"), ephemeral = True)
             return
         
         if interaction.user.voice is None:
-            await interaction.response.send_message(embed=error_embed("870", "VC Error", "Can't get your voice channel"), ephemeral = True)
+            await interaction.response.send_message(embed=error_embed("870",
+                        "VC Error", "Can't get your voice channel"), ephemeral = True)
             return
 
         voice_channel = interaction.user.voice.channel
 
         if type(song) == type(True):
             await interaction.response.send_message(embed=error_embed("872.1", "URL Incorrect", 
-                "Could not play the song. Incorrect format, try another keyword. This could be due to playlist or a livestream format."), ephemeral = True)
+                "Could not play the song. Incorrect format, try another keyword."
+                "This could be due to playlist or a livestream format."), ephemeral = True)
             return
         
         if song[1]:
@@ -77,7 +69,8 @@ class music_cog(commands.Cog):
                     self.music_queue[interaction.guild_id].append([x, voice_channel, interaction.user])
         else: self.music_queue[interaction.guild_id].append([song[0], voice_channel, interaction.user])
         
-        if self.vc[interaction.guild_id] is None or not self.vc[interaction.guild_id].is_playing() and len(self.music_queue[interaction.guild_id]) == 1:    
+        if self.vc[interaction.guild_id] is None or not self.vc[interaction.guild_id].is_playing()\
+                and len(self.music_queue[interaction.guild_id]) == 1:    
             await interaction.response.send_message("Processing...", ephemeral=True)
             self.bot.dispatch("handle_music", interaction)
             return
@@ -95,7 +88,8 @@ class music_cog(commands.Cog):
 
 
     def change_song(self, interaction: discord.Interaction):
-        if self.song_position[interaction.guild_id] == len(self.music_queue[interaction.guild_id]) - 1 and self.loop[interaction.guild_id] == 0:
+        if self.song_position[interaction.guild_id] == len(self.music_queue[interaction.guild_id]) - 1\
+                and self.loop[interaction.guild_id] == 0:
             self.set_none_song(interaction)
             self.bot.dispatch("return_message", interaction)
             return
@@ -144,7 +138,7 @@ class music_cog(commands.Cog):
             retval += f"{i + 1}. " + title + "\n"
             
         embed.add_field(name="📄 Playlist", value=retval)
-        embed.set_footer(text=f"Page: {1} of {pages}")
+        embed.set_footer(text=f"Page: {page} of {pages}")
 
         await interaction.response.send_message(embed=embed, view=view, ephemeral=True)
         await view.time_stop()
@@ -153,11 +147,14 @@ class music_cog(commands.Cog):
     # Listeners
     @commands.Cog.listener()
     async def on_handle_music(self, interaction: discord.Interaction):
-        self.song_source[interaction.guild_id] = self.music_queue[interaction.guild_id][self.song_position[interaction.guild_id]]
+        self.song_position[interaction.guild_id] = 0
+        self.song_source[interaction.guild_id] = self.music_queue[interaction.guild_id]\
+                                            [self.song_position[interaction.guild_id]]
         self.song_title[interaction.guild_id] = self.song_source[interaction.guild_id][0].title
 
         if self.vc[interaction.guild_id] is None:
-            self.vc[interaction.guild_id]: wavelink.Player = await self.song_source[interaction.guild_id][1].connect(cls=wavelink.Player)
+            self.vc[interaction.guild_id]: wavelink.Player = await self.song_source[interaction.guild_id][1]\
+                                                        .connect(cls=wavelink.Player)
             self.vc[interaction.guild_id].interaction = interaction
 
         await self.vc[interaction.guild_id].play(self.song_source[interaction.guild_id][0])
@@ -219,13 +216,22 @@ class music_cog(commands.Cog):
             view.add_item(x)
 
         if len(self.music_queue[interaction.guild_id]) != 0:
-            song_len_formatted = datetime.datetime.fromtimestamp(self.song_source[interaction.guild_id][0].length / 1000).strftime("%M:%S")
-            embed = discord.Embed(title=f"{self.song_title[interaction.guild_id]}", description=f"Song length: {song_len_formatted}\n\n> URL: [link]({self.song_source[interaction.guild_id][0].uri})\n> Ordered by: `{self.song_source[interaction.guild_id][2]}`", color=0xa31eff)        
+            song_len_formatted = datetime.datetime\
+                                 .fromtimestamp(self.song_source[interaction.guild_id][0].length / 1000)\
+                                 .strftime("%M:%S")
+            embed = discord.Embed(title=f"{self.song_title[interaction.guild_id]}", 
+                                  description=f"Song length: {song_len_formatted}\n\n> URL: [link]"
+                                    f"({self.song_source[interaction.guild_id][0].uri})\n> Ordered by:"
+                                    f" `{self.song_source[interaction.guild_id][2]}`", color=0xa31eff,)
+            footer = f"Loop: {loop_on}\nPosition: {self.song_position[interaction.guild_id] + 1} "\
+                     f"of {len(self.music_queue[interaction.guild_id])}\nVolume: {self.vc[interaction.guild_id].volume}%"
         else:
-            embed = discord.Embed(title="Music is not playing", description=f"Song length: 00:00\n\n> URL: \n> Ordered by: ", color=0xa31eff)
+            embed = discord.Embed(title="Music is not playing", 
+                                  description=f"Song length: 00:00\n\n> URL: \n> Ordered by: ",
+                                  color=0xa31eff)
+            footer=f"Loop: {loop_on}\nPosition: 0 of 0 \n"\
+                   f"Volume: {self.vc[interaction.guild_id].volume}%"
 
-
-        footer = f"Loop: {loop_on}\nPosition: {self.song_position[interaction.guild_id] + 1} of {len(self.music_queue[interaction.guild_id])}\nVolume: {self.vc[interaction.guild_id].volume}%"
         embed.set_footer(text=footer)
 
         if self.msg[interaction.guild_id] == None:
@@ -287,7 +293,8 @@ class music_cog(commands.Cog):
         player = payload.player
         reason = payload.reason
 
-        if reason == "STOPPED" and not self.vc[player.guild.id] == None and len(self.music_queue[player.guild.id]) != 0:
+        if reason == "STOPPED" and not self.vc[player.guild.id] == None\
+                and len(self.music_queue[player.guild.id]) != 0:
             self.bot.dispatch("return_message", player.interaction)
 
         if reason == 'FINISHED':
@@ -413,7 +420,8 @@ class music_cog(commands.Cog):
                       query: str):
 
         if query == '':
-            await interaction.response.send_message(embed=error_embed("872.2", "Empty", "Empty request cannot be processed."),
+            await interaction.response.send_message(embed=error_embed("872.2", "Empty", 
+                                                    "Empty request cannot be processed."),
                                                     ephemeral= True)
             return
 
@@ -427,7 +435,8 @@ class music_cog(commands.Cog):
                       interaction: discord.Interaction, 
                       query: str):
         if query == '':
-            await interaction.response.send_message(embed=error_embed("872.2", "Empty", "Empty request cannot be processed."),
+            await interaction.response.send_message(embed=error_embed("872.2", "Empty", 
+                                                    "Empty request cannot be processed."),
                                                     ephemeral= True)
             return
 
@@ -441,7 +450,8 @@ class music_cog(commands.Cog):
                       interaction: discord.Interaction, 
                       query: str):
         if query == '':
-            await interaction.response.send_message(embed=error_embed("872.2", "Empty", "Empty request cannot be processed."),
+            await interaction.response.send_message(embed=error_embed("872.2", "Empty", 
+                                                    "Empty request cannot be processed."),
                                                     ephemeral= True)
             return
 
@@ -461,7 +471,8 @@ class music_cog(commands.Cog):
     @app_commands.describe(seconds="Seconds to seek")
     async def music_seek(self, interaction: discord.Interaction, seconds: int):
         if self.vc[interaction.guild_id] == None:
-            await interaction.response.send_message(embed=error_embed("870.1", "Change error", "Not connected to voice channel."),
+            await interaction.response.send_message(embed=error_embed("870.1", "Change error", 
+                                                    "Not connected to voice channel."),
                                                     ephemeral = True)
             return
 
@@ -483,7 +494,7 @@ class music_cog(commands.Cog):
                 txt = f'{int(seconds)}s'
 
             await interaction.response.send_message(embed=eventEmbed(name="✅ Seek complete", 
-                                                                        text=f"Track **{self.song_title[interaction.guild_id]}** seeked for `{txt}`"),
+                                                    text=f"Track **{self.song_title[interaction.guild_id]}** seeked for `{txt}`"),
                                                     ephemeral= True)
 
 
@@ -501,6 +512,20 @@ class music_cog(commands.Cog):
         await interaction.response.send_message(embed=eventEmbed(name="✅ Complete", text=f"Track **{title}** removed"), ephemeral=True)
         self.bot.dispatch("return_message", interaction)
         
+    @app_commands.command(name="jmp", description="Jump to a track")
+    @app_commands.describe(position="Song position")
+    async def song_jump(self, interaction: discord.Interaction, position: int):
+        if not position <= len(self.music_queue[interaction.guild_id]):
+            await interaction.response.send_message(embed=
+                                                    error_embed("870",
+                                                    "Incorrect position", "Track does not exist."),
+                                                    ephemeral = True)
+            return
+        
+        self.song_position[interaction.guild_id] = position - 1
+        await interaction.response.send_message("Processing...", ephemeral=True)
+        self.bot.dispatch("handle_music", interaction)
+
 
     # Userlist
     @group.command(name="display", description="Displaying user list")
@@ -620,13 +645,16 @@ class music_cog(commands.Cog):
             return
 
         if int(position) != 0:
-            item = lst[int(position) - 1][1]
-            song = await self.get_song(item)
+            song = await self.get_song(lst[int(position) - 1][1])
+            
+            await interaction.response.send_message("Processing...", ephemeral=True)
 
             if song is None:
-                await interaction.response.send_message(embed=error_embed("872", "Import error", 
-                                                                               f"Unknown error occurred while importing track **{lst[int(position) - 1][0]}**"),
-                                                                               ephemeral=True)
+                await interaction.edit_original_response(
+                    embed=error_embed("872", "Import error", 
+                    f"Unknown error occurred while importing track **{lst[int(position) - 1][0]}**"),
+                    ephemeral=True
+                )
                 return
 
             if song[1]:
@@ -634,22 +662,23 @@ class music_cog(commands.Cog):
                     self.music_queue[interaction.guild_id].append([x, voice_channel, interaction.user])
             else: self.music_queue[interaction.guild_id].append([song[0], voice_channel, interaction.user])
 
-            if self.vc[interaction.guild_id] is None or not self.vc[interaction.guild_id].is_playing() and len(self.music_queue[interaction.guild_id]) == 1:
-                await interaction.response.send_message("Processing...", ephemeral=True)
+            if self.vc[interaction.guild_id] is None or not self.vc[interaction.guild_id].is_playing()\
+                    and len(self.music_queue[interaction.guild_id]) == 1:
                 self.bot.dispatch("handle_music", interaction)
                 return
             
-            await interaction.response.send_message("Processing...", ephemeral=True)
             self.bot.dispatch("return_message", interaction)
             return
-
-        for item in lst:
+        
+        error_string = ""
+        await interaction.response.send_message("Processing...", ephemeral=True)
+        for i, item in enumerate(lst):
             song = await self.get_song(item[1])
 
             if song is None:
-                await interaction.channel.send(embed=error_embed("872", "Import error",
-                                               f"Unknown error occurred while importing track **{lst[int(position) - 1][0]}**"))
-                                                                                
+                error_string += f"\n- {lst[i][0]} [{i}]"
+                await interaction.edit_original_response(content=f"Error while importing songs: {error_string}")
+                                                                             
                 continue
 
             if song[1]:
@@ -657,9 +686,9 @@ class music_cog(commands.Cog):
                     self.music_queue[interaction.guild_id].append([x, voice_channel, interaction.user])
             else: self.music_queue[interaction.guild_id].append([song[0], voice_channel, interaction.user])
 
-            if self.vc[interaction.guild_id] is None or not self.vc[interaction.guild_id].is_playing() and len(self.music_queue[interaction.guild_id]) == 1:
+            if self.vc[interaction.guild_id] is None or not self.vc[interaction.guild_id].is_playing()\
+                    and len(self.music_queue[interaction.guild_id]) == 1:
                 self.bot.dispatch("handle_music", interaction)
                 continue
         
-        await interaction.response.defer()
         self.bot.dispatch("return_message", interaction)
