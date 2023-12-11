@@ -147,7 +147,6 @@ class music_cog(commands.Cog):
     # Listeners
     @commands.Cog.listener()
     async def on_handle_music(self, interaction: discord.Interaction):
-        self.song_position[interaction.guild_id] = 0
         self.song_source[interaction.guild_id] = self.music_queue[interaction.guild_id]\
                                             [self.song_position[interaction.guild_id]]
         self.song_title[interaction.guild_id] = self.song_source[interaction.guild_id][0].title
@@ -512,6 +511,7 @@ class music_cog(commands.Cog):
         await interaction.response.send_message(embed=eventEmbed(name="✅ Complete", text=f"Track **{title}** removed"), ephemeral=True)
         self.bot.dispatch("return_message", interaction)
         
+
     @app_commands.command(name="jmp", description="Jump to a track")
     @app_commands.describe(position="Song position")
     async def song_jump(self, interaction: discord.Interaction, position: int):
