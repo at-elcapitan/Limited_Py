@@ -147,7 +147,6 @@ class music_cog(commands.Cog):
     # Listeners
     @commands.Cog.listener()
     async def on_handle_music(self, interaction: discord.Interaction):
-        self.song_position[interaction.guild_id] = 0
         self.song_source[interaction.guild_id] = self.music_queue[interaction.guild_id]\
                                             [self.song_position[interaction.guild_id]]
         self.song_title[interaction.guild_id] = self.song_source[interaction.guild_id][0].title
