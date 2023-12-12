@@ -26,7 +26,7 @@ Clone this repository to your local machine using the Git program:
 
 ### Configuring
 
-Create a `.env` file in the bot's directory and fill it with your specific values. The file should follow this pattern:
+Create a `docker.env` file in the bot's directory and fill it with your specific values. The file should follow this pattern:
 
 ```yaml
 DISCORD_TOKEN =       # Your bot token
