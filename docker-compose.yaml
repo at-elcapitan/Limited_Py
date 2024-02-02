@@ -1,4 +1,4 @@
-version: '3.3'
+version: '3.8'
 
 services:
   nEXT:
@@ -8,7 +8,13 @@ services:
     build:
       context: .
       dockerfile: ./Dockerfile
-    network_mode: host # Comment if not using existing not docker database
+    #network_mode: host                                # Uncomment if using external DB
+    links:
+      - postgres                                       # Comment if using external DB
+      - lavalink
+    depends_on:
+      - postgres
+      - lavalink
     command: python atlb
     env_file: docker.env
 
@@ -20,12 +26,18 @@ services:
       - _JAVA_OPTIONS=-Xmx6G
       - SERVER_PORT=2333
       - LAVALINK_SERVER_PASSWORD=youshallnotpass
-    networks:
-      - lavalink
     expose:
       - 2333
     ports:
       - "2333:2333"
-networks:
-  lavalink:
-    name: lavalink
+
+  # Comment postgres if using external DB
+  postgres:
+    image: postgres:latest
+
+    environment:
+      POSTGRES_DB: "nextmdb"
+      POSTGRES_USER: "postgres"
+      POSTGRES_PASSWORD: "yourpassword"
+    volumes:
+    - ./init.sql:/docker-entrypoint-initdb.d/0_init.sql

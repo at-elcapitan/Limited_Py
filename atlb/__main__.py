@@ -1,4 +1,4 @@
-print("AT PROJECT Limited, 2022 - 2023;  ATLB-v3.2.1-docker")
+print("AT PROJECT Limited, 2022 - 2023;  ATLB-v3.4")
 print("Product licensed by GPLv3, file `LICENSE`")
 print("The license applies to all project files since ATLB-v3.2-gpl3")
 import os
@@ -45,7 +45,7 @@ time = datetime.now().strftime("%d-%m-%Y_%H-%M-%S")
 output_handler = logging.StreamHandler(sys.stdout)
 output_handler.setFormatter(ColoredFormatter())
 logger = logging.getLogger('discord')
-logger.setLevel(logging.DEBUG)
+logger.setLevel(logging.INFO)
 logger.addHandler(output_handler)
 
 TOKEN  = os.environ['DISCORD_TOKEN']
@@ -53,6 +53,7 @@ PASSWD = os.environ['PASSWD']
 DBUSER = os.environ['DBUSER']
 DBPASS = os.environ['DBPASS']
 DBHOST = os.environ['DBHOST']
+LVHOST = os.environ['LVHOST']
 SPCLNT = os.environ['SPCLNT']
 SPSECR = os.environ['SPSECR']
 
@@ -102,7 +103,7 @@ async def on_ready():
         client_secret=SPSECR
     )
 
-    node: wavelink.Node = wavelink.Node(uri='http://localhost:2333', password=PASSWD)
+    node: wavelink.Node = wavelink.Node(uri=f'http://{LVHOST}', password=PASSWD)
     await wavelink.NodePool.connect(client=bot, nodes=[node], spotify=sc)
     logger.info("Bot ready")
     
@@ -117,4 +118,4 @@ async def inspect(ctx):
     await ctx.send(embed=embeds.default())
 
 if __name__ == "__main__":
-    bot.run(TOKEN)
+    bot.run(TOKEN, log_handler=None)

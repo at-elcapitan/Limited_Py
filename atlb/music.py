@@ -1,4 +1,4 @@
-# AT PROJECT Limited 2022 - 2023; ATLB-v3.2.1
+# AT PROJECT Limited 2022 - 2023; ATLB-v3.4
 import math
 import datetime
 
@@ -530,7 +530,7 @@ class music_cog(commands.Cog):
     # Userlist
     @group.command(name="display", description="Displaying user list")
     @app_commands.describe(page="List page")
-    async def user_list_print(self, interaction: discord.Interaction, page: int = 1):
+    async def user_list_print(self, interaction: discord.Interaction, page: int = 0):
         cursor = self.dbconn.cursor()
         cursor.execute(f"SELECT music_name, music_url FROM music_data WHERE user_id = %s", (interaction.user.id,))
         lst = cursor.fetchall()
@@ -539,7 +539,7 @@ class music_cog(commands.Cog):
         embed = discord.Embed(color=0x915AF2)
 
         pages = math.ceil(len(lst) / 10 + 0.1)
-        page = int(page)
+        page = int(page) if page != 0 else pages
 
         if page > pages or page <= 0:
             await interaction.response.send_message(embed=
@@ -692,3 +692,22 @@ class music_cog(commands.Cog):
                 continue
         
         self.bot.dispatch("return_message", interaction)
+
+
+    @group.command(name="add_current", description="Adds current song to the playlist")
+    async def add_current(self, interaction):
+        try:
+            song: wavelink.GenericTrack = self.song_source[interaction.guild_id][0]
+        except:
+            await interaction.response.send_message(embed=error_embed("872.3", "Not found", "May be you are not playing any song"),
+                                                    ephemeral=True)
+            return
+        
+        cursor = self.dbconn.cursor()
+        cursor.execute("INSERT INTO music_data (music_name, music_url, user_id) VALUES (%s, %s, %s)", 
+                        (song.title, song.uri, interaction.user.id))
+        self.dbconn.commit()
+
+        await interaction.response.send_message(embed=eventEmbed(name="✅ Success!", 
+                                                text=f'Song added to the list \n **{song.title}**'),
+                                                ephemeral=True)

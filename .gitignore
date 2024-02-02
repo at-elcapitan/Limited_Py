@@ -9,6 +9,7 @@ application.yml
 files
 venv
 venvl
+run.sh
 
 # VS Code
 .vscode
