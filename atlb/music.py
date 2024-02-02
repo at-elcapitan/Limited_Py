@@ -1,4 +1,4 @@
-# AT PROJECT Limited 2022 - 2023; ATLB-v3.2-gpl3
+# AT PROJECT Limited 2022 - 2023; ATLB-v3.2.1
 import math
 import datetime
 
@@ -239,7 +239,7 @@ class music_cog(commands.Cog):
         
         try:
             await self.msg[interaction.guild_id].edit(embed=embed, view=view)
-        except discord.errors.HTTPException:
+        except:
             await self.msg[interaction.guild_id].delete()
             self.msg[interaction.guild_id] = await interaction.channel.send(embed=embed, view=view)
 
@@ -511,6 +511,7 @@ class music_cog(commands.Cog):
         await interaction.response.send_message(embed=eventEmbed(name="✅ Complete", text=f"Track **{title}** removed"), ephemeral=True)
         self.bot.dispatch("return_message", interaction)
         
+
     @app_commands.command(name="jmp", description="Jump to a track")
     @app_commands.describe(position="Song position")
     async def song_jump(self, interaction: discord.Interaction, position: int):
