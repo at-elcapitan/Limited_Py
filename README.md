@@ -29,30 +29,17 @@ Clone this repository to your local machine using the Git program:
 Create a `docker.env` file in the bot's directory and fill it with your specific values. The file should follow this pattern:
 
 ```yaml
-DISCORD_TOKEN =       # Your bot token
-PASSWD =              # Lavalink server password
-DBHOST =              # URL to your PostgreSQL DB
-DBUSER =              # Your PostgreSQL DB username
-DBPASS =              # PostgreSQL DB password
-SPCLNT =              # Spotify client key
-SPSECR =              # Spotify secret
+DISCORD_TOKEN = your_token
+PASSWD = youshallnotpass
+LVHOST = lavalink:2333
+DBHOST = postgres
+DBUSER = postgres
+DBPASS = yourpassword
+SPCLNT = your_spotify_client
+SPSECR = your_spotify_secret
 ```
 
-
-### Setting up PostgreSQL database
-
-Create a database named `nextmdb` and then table using the following query:
-
-```sql
-create table if not exists music_data (
-	id serial primary key,
-	music_name text not null,
-	music_url text not null,
-	user_id bigint not null
-);
-```
-
-With the configuration in place, your bot is now ready to use. Simply run the `run.sh` or `run.bat` file to start it.
+With the configuration in place, your bot is now ready to use. Simply run the `docker-compose up -d` command. Bot, Lavalink and PostgreSQL DB will be created and initialized automatically.
 
 
 ## Commands
