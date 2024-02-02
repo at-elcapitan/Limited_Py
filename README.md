@@ -56,5 +56,6 @@ With the configuration in place, your bot is now ready to use. Simply run the `d
 | /list display     | Display the user list                              |
 | /list remove      | Remove a song from the user list                   |
 | /list add         | Add a song to the user list                        |
+| /list add_current | Adds current (playing) song from queue to list     |
 | /list play        | Play songs from the user list                      |
 | /jmp              | Changes song to position                           |
