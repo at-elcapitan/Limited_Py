@@ -1,4 +1,4 @@
-# AT PROJECT Limited 2022 - 2023; ATLB-v3.4
+# AT PROJECT Limited 2022 - 2023; AT_nEXT-v3.4.1
 import math
 import datetime
 
@@ -13,7 +13,7 @@ import wavelink
 from wavelink.ext import spotify
 
 import messages
-from embeds import error_embed, eventEmbed
+from embeds import error_embed, event_embed
 
 class music_cog(commands.Cog):
     group = app_commands.Group(name = "list", description = "user list commands group")
@@ -492,7 +492,7 @@ class music_cog(commands.Cog):
             else:
                 txt = f'{int(seconds)}s'
 
-            await interaction.response.send_message(embed=eventEmbed(name="✅ Seek complete", 
+            await interaction.response.send_message(embed=event_embed(name="✅ Seek complete", 
                                                     text=f"Track **{self.song_title[interaction.guild_id]}** seeked for `{txt}`"),
                                                     ephemeral= True)
 
@@ -506,9 +506,12 @@ class music_cog(commands.Cog):
             await self.vc[interaction.guild_id].stop()
             self.change_song(interaction)
 
+        self.song_position[interaction.guild_id] -= 1 if self.song_position[interaction.guild_id] ==\
+            len(self.music_queue[interaction.guild_id]) - 1 else self.song_position[interaction.guild_id]
+
         self.music_queue[interaction.guild_id].pop(int(position) - 1)
 
-        await interaction.response.send_message(embed=eventEmbed(name="✅ Complete", text=f"Track **{title}** removed"), ephemeral=True)
+        await interaction.response.send_message(embed=event_embed(name="✅ Complete", text=f"Track **{title}** removed"), ephemeral=True)
         self.bot.dispatch("return_message", interaction)
         
 
@@ -587,7 +590,7 @@ class music_cog(commands.Cog):
 
         cursor.execute(f'DELETE FROM music_data WHERE id = %s', (id,))
         self.dbconn.commit()
-        await interaction.response.send_message(embed=eventEmbed(name="✅ Success!", text= f'Track **{name}** deleted'),
+        await interaction.response.send_message(embed=event_embed(name="✅ Success!", text= f'Track **{name}** deleted'),
                                                 ephemeral=True)
 
 
@@ -615,7 +618,7 @@ class music_cog(commands.Cog):
                         (title, url, interaction.user.id))
         self.dbconn.commit()
 
-        await interaction.response.send_message(embed=eventEmbed(name="✅ Success!", text= f'Song added to the list \n **{title}**'),
+        await interaction.response.send_message(embed=event_embed(name="✅ Success!", text= f'Song added to the list \n **{title}**'),
                                                 ephemeral=True)
 
     
@@ -708,6 +711,6 @@ class music_cog(commands.Cog):
                         (song.title, song.uri, interaction.user.id))
         self.dbconn.commit()
 
-        await interaction.response.send_message(embed=eventEmbed(name="✅ Success!", 
+        await interaction.response.send_message(embed=event_embed(name="✅ Success!", 
                                                 text=f'Song added to the list \n **{song.title}**'),
                                                 ephemeral=True)

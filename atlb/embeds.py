@@ -1,4 +1,4 @@
-# AT PROJECT Limited 2022 - 2023; ATLB-v3.2-gpl3
+# AT PROJECT Limited 2022 - 2023; AT_nEXT-v3.4.1
 import discord
 
 def default():
@@ -17,7 +17,7 @@ def error_embed(error_num: str, name: str, text: str):
     return embed
 
 
-def eventEmbed(title = None, text = None, name = ""):
+def event_embed(title = None, text = None, name = ""):
     embed = discord.Embed(title=title, color=0x915AF2)
     embed.add_field(name=name, value=text, inline=False)
     return embed

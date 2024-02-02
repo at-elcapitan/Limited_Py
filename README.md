@@ -51,7 +51,7 @@ With the configuration in place, your bot is now ready to use. Simply run the `d
 | /spotify          | Play a Spotify track                               |
 | /resend_control   | Resend the music control panel                     |
 | /seek             | Seek the current soundtrack                        |
-| /clear            | Delete a song from the queue                       |
+| /remove           | Delete a song from the queue                       |
 | /list display     | Display the user list                              |
 | /list remove      | Remove a song from the user list                   |
 | /list add         | Add a song to the user list                        |
