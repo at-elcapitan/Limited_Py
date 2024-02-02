@@ -41,7 +41,6 @@ SPSECR = your_spotify_secret
 
 With the configuration in place, your bot is now ready to use. Simply run the `docker-compose up -d` command. Bot, Lavalink and PostgreSQL DB will be created and initialized automatically.
 
-
 ## Commands
 
 | Command Name      | Description                                        |
@@ -59,3 +58,40 @@ With the configuration in place, your bot is now ready to use. Simply run the `d
 | /list add_current | Adds current (playing) song from queue to list     |
 | /list play        | Play songs from the user list                      |
 | /jmp              | Changes song to position                           |
+
+## Using external PostgreSQL Database
+
+For using your own external DB, you have to edit `docker-compose.yaml`. Use this pattern:
+
+```yaml
+version: '3.8'
+
+services:
+  nEXT:
+    restart: unless-stopped
+    image: atproject/limitednext:lastest
+    container_name: limitednext
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    network_mode: host
+    depends_on:
+      - lavalink
+    command: python atlb
+    env_file: docker.env
+
+  lavalink:
+    image: ghcr.io/lavalink-devs/lavalink:3
+    container_name: lavalink
+    restart: unless-stopped
+    environment:
+      - _JAVA_OPTIONS=-Xmx6G
+      - SERVER_PORT=2333
+      - LAVALINK_SERVER_PASSWORD=youshallnotpass
+    expose:
+      - 2333
+    ports:
+      - "2333:2333"
+```
+
+And do not forget to replace `LVHOST` variable from `docker.env` file with the real Lavalink address.
