@@ -1,4 +1,4 @@
-print("AT PROJECT Limited, 2022 - 2024;  AT_nEXT-v3.4.1")
+print("AT PROJECT Limited, 2022 - 2024;  AT_nEXT-v3.4.2")
 print("Product licensed by GPLv3, file `LICENSE`")
 print("The license applies to all project files since ATLB-v3.2-gpl3")
 import os
@@ -7,12 +7,10 @@ import logging
 from datetime import datetime
 
 import discord
-from discord.ext import commands
-
 import psycopg2
 import wavelink
 import colorama
-from wavelink.ext import spotify
+from discord.ext import commands
 
 import embeds
 from exceptions import FileError
@@ -54,8 +52,6 @@ DBUSER = os.environ['DBUSER']
 DBPASS = os.environ['DBPASS']
 DBHOST = os.environ['DBHOST']
 LVHOST = os.environ['LVHOST']
-SPCLNT = os.environ['SPCLNT']
-SPSECR = os.environ['SPSECR']
 
 
 class Bot(commands.Bot):
@@ -64,7 +60,7 @@ class Bot(commands.Bot):
 
     async def async_cleanup(self):
         await self.cogs['music_cog'].bot_cleanup()
-
+    
     async def close(self):
         logger.info("Cleaning up...")
         await self.async_cleanup()
@@ -98,13 +94,8 @@ async def on_ready():
     await bot.change_presence(status=discord.Status.online, activity=discord.Game("Link, start.."))
     bot.dispatch("guilds_autosync")
 
-    sc = spotify.SpotifyClient(
-        client_id=SPCLNT,
-        client_secret=SPSECR
-    )
-
     node: wavelink.Node = wavelink.Node(uri=f'http://{LVHOST}', password=PASSWD)
-    await wavelink.NodePool.connect(client=bot, nodes=[node], spotify=sc)
+    await wavelink.NodePool.connect(client=bot, nodes=[node])
     logger.info("Bot ready")
     
 

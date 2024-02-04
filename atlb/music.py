@@ -1,16 +1,14 @@
-# AT PROJECT Limited 2022 - 2023; AT_nEXT-v3.4.1
+# AT PROJECT Limited 2022 - 2023; AT_nEXT-v3.4.2
 import math
 import datetime
 
 import discord
+import wavelink
 from discord import ui
 from discord import Interaction
 from discord import ButtonStyle
 from discord.ext import commands
 from discord import app_commands
-
-import wavelink
-from wavelink.ext import spotify
 
 import messages
 from embeds import error_embed, event_embed
@@ -87,10 +85,11 @@ class music_cog(commands.Cog):
         self.song_position[interaction.guild_id] = 0
 
 
-    def change_song(self, interaction: discord.Interaction):
+    async def change_song(self, interaction: discord.Interaction):
         if self.song_position[interaction.guild_id] == len(self.music_queue[interaction.guild_id]) - 1\
                 and self.loop[interaction.guild_id] == 0:
             self.set_none_song(interaction)
+            await self.vc[interaction.guild_id].stop()
             self.bot.dispatch("return_message", interaction)
             return
         
@@ -156,6 +155,7 @@ class music_cog(commands.Cog):
                                                         .connect(cls=wavelink.Player)
             self.vc[interaction.guild_id].interaction = interaction
 
+        await self.vc[interaction.guild_id].stop()
         await self.vc[interaction.guild_id].play(self.song_source[interaction.guild_id][0])
         self.bot.dispatch("return_message", interaction)
     
@@ -246,16 +246,6 @@ class music_cog(commands.Cog):
 
     async def get_song(self, query, type: str = None):
         playlist = False
-
-        if 'spotify.com' in query or 'spotify:track:' in query or type == 's':
-            try: song = await spotify.SpotifyTrack.search(query)
-            except: return None
-
-            if len(song) == 0:
-                return None
-            song = song[0]
-
-            return [song, playlist]
         
         if "soundcloud.com" in query or type == 'sc':
             if 'sets' in query:
@@ -297,7 +287,7 @@ class music_cog(commands.Cog):
             self.bot.dispatch("return_message", player.interaction)
 
         if reason == 'FINISHED':
-            self.change_song(player.interaction)
+            await self.change_song(player.interaction)
 
 
     @commands.Cog.listener()
@@ -372,40 +362,31 @@ class music_cog(commands.Cog):
                 await interaction.response.defer()
 
             case "next":
-                if self.vc[guildid] != None:
-                    if self.loop[guildid] == 1:
-                        if len(self.music_queue[guildid]) == 0:
-                            await self.vc[guildid].stop()
-                            self.set_none_song(self.vc[guildid].interaction)
+                if self.vc[guildid] == None:
+                    await interaction.response.defer()
+                    return
+                
+                if self.loop[guildid] == 1:
+                    await self.change_song(self.vc[guildid].interaction)
+                    await interaction.response.defer()
+                    return
+                
+                if self.loop[guildid] == 2:
+                    self.song_position[guildid] += 1
 
-                        if self.song_position[guildid] == len(self.music_queue[guildid]):
-                            self.song_position[guildid] = 0
-
-                        await self.vc[guildid].stop()
-                        self.change_song(self.vc[guildid].interaction)
-                        await interaction.response.defer()
-                        return
-                    
-                    await self.vc[guildid].stop()
-                    if self.loop[guildid] == 2:
-                        self.song_position[guildid] += 1
-
-                    self.change_song(self.vc[guildid].interaction)
-
-                self.bot.dispatch("return_message", self.vc[guildid].interaction)
                 await interaction.response.defer()
+                await self.change_song(self.vc[guildid].interaction)
+                self.bot.dispatch("return_message", self.vc[guildid].interaction)
 
             case "prev":
                 if self.song_position[guildid] != 0:
-                    await self.vc[guildid].stop()
                     if self.loop[guildid] == 2: self.song_position[guildid] -= 1
                     else: self.song_position[guildid] -= 2
-                    self.change_song(self.vc[guildid].interaction)
+                    await self.change_song(self.vc[guildid].interaction)
                 else:
-                    await self.vc[guildid].stop()
                     if self.loop[guildid] == 2: self.song_position[guildid] = len(self.music_queue[guildid]) - 1
                     else: self.song_position[guildid] = len(self.music_queue[guildid]) - 2
-                    self.change_song(self.vc[guildid].interaction)
+                    await self.change_song(self.vc[guildid].interaction)
 
                 self.bot.dispatch("return_message", self.vc[guildid].interaction)
                 await interaction.response.defer()
@@ -440,21 +421,6 @@ class music_cog(commands.Cog):
             return
 
         song = await self.get_song(query, 'sc')
-        await self.play(interaction, song)
-
-
-    @app_commands.command(name="spotify", description="Play Spotify track")
-    @app_commands.describe(query="Song name or link")
-    async def play_spotify(self, 
-                      interaction: discord.Interaction, 
-                      query: str):
-        if query == '':
-            await interaction.response.send_message(embed=error_embed("872.2", "Empty", 
-                                                    "Empty request cannot be processed."),
-                                                    ephemeral= True)
-            return
-
-        song = await self.get_song(query, 's')
         await self.play(interaction, song)
 
 
@@ -503,8 +469,7 @@ class music_cog(commands.Cog):
         title = self.music_queue[interaction.guild_id][int(position) - 1][0].title
 
         if title == self.song_title[interaction.guild_id]:
-            await self.vc[interaction.guild_id].stop()
-            self.change_song(interaction)
+            await self.change_song(interaction)
 
         self.song_position[interaction.guild_id] -= 1 if self.song_position[interaction.guild_id] ==\
             len(self.music_queue[interaction.guild_id]) - 1 else self.song_position[interaction.guild_id]
