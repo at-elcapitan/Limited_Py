@@ -35,9 +35,9 @@ LVHOST = lavalink:2333
 DBHOST = postgres
 DBUSER = postgres
 DBPASS = yourpassword
-SPCLNT = your_spotify_client
-SPSECR = your_spotify_secret
 ```
+
+Don't forget to replace `DISCORD_TOKEN` with your value. 
 
 With the configuration in place, your bot is now ready to use. Simply run the `docker-compose up -d` command. Bot, Lavalink and PostgreSQL DB will be created and initialized automatically.
 
