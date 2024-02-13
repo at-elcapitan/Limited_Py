@@ -1,4 +1,4 @@
-# AT PROJECT Limited 2022 - 2023; AT_nEXT-v3.4.2
+# AT PROJECT Limited 2022 - 2023; AT_nEXT-v3.4.3
 import math
 import datetime
 
@@ -565,7 +565,6 @@ class music_cog(commands.Cog):
     @app_commands.choices(provider=[
         app_commands.Choice(name="YouTube", value='yt'),
         app_commands.Choice(name="SoundCloud", value="sc"),
-        app_commands.Choice(name="Spotify", value="s"),
     ])
     async def user_list_add(self, interaction: discord.Interaction, provider: app_commands.Choice[str], query: str):
         song = await self.get_song(query, provider.value)
