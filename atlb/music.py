@@ -284,11 +284,11 @@ class music_cog(commands.Cog):
         player = payload.player
         reason = payload.reason
 
-        if reason == "STOPPED" and not self.vc[player.guild.id] == None\
+        if reason == "stopped" and not self.vc[player.guild.id] == None\
                 and len(self.music_queue[player.guild.id]) != 0:
             self.bot.dispatch("return_message", player.interaction)
 
-        if reason == 'FINISHED':
+        if reason == 'finished':
             await self.change_song(player.interaction)
 
 
