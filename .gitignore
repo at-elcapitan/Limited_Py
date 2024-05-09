@@ -5,7 +5,6 @@ __pycache__
 logs
 lvlnk
 *.env
-application.yml
 files
 venv
 venvl

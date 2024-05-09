@@ -1,4 +1,4 @@
-print("AT PROJECT Limited, 2022 - 2024;  AT_nEXT-v3.4.3")
+print("AT PROJECT Limited, 2022 - 2024;  AT_nEXT-v3.5")
 print("Product licensed by GPLv3, file `LICENSE`")
 print("The license applies to all project files since ATLB-v3.2-gpl3")
 import os
@@ -15,6 +15,10 @@ from discord.ext import commands
 import embeds
 from exceptions import FileError
 from music import music_cog
+
+# For development
+# from dotenv import load_dotenv
+# load_dotenv()
 
 # Logger setup
 colorama.init(autoreset=True)
@@ -95,13 +99,13 @@ async def on_ready():
     bot.dispatch("guilds_autosync")
 
     node: wavelink.Node = wavelink.Node(uri=f'http://{LVHOST}', password=PASSWD)
-    await wavelink.NodePool.connect(client=bot, nodes=[node])
+    await wavelink.Pool.connect(client=bot, nodes=[node])
     logger.info("Bot ready")
     
 
 @bot.event
-async def on_wavelink_node_ready(node: wavelink.Node):
-    logger.info(f"Node \x1b[39;1mID: {node.id}\x1b[39;0m ready.")
+async def on_wavelink_node_ready(payload: wavelink.NodeReadyEventPayload):
+    logger.info(f"Node \x1b[39;1mID: {payload.node.identifier}\x1b[39;0m ready.")
 
 
 @bot.command()
