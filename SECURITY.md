@@ -1,6 +1,6 @@
 ## Supported Versions
 
-| Version    | Supported                |
+| Version    | Status                   |
 | ---------- | ------------------------ |
 | 3.x.x      | Currently updating       |
 | 2.x.x      | Not supported            |
