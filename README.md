@@ -48,7 +48,6 @@ With the configuration in place, your bot is now ready to use. Simply run the `d
 | sc.inspect        | Displays all command list                          |
 | /youtube          | Play a YouTube track                               |
 | /soundcloud       | Play a SoundCloud track                            |
-| /spotify          | Play a Spotify track                               |
 | /resend_control   | Resend the music control panel                     |
 | /seek             | Seek the current soundtrack                        |
 | /remove           | Delete a song from the queue                       |
