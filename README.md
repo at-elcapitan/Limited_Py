@@ -45,9 +45,13 @@ With the configuration in place, your bot is now ready to use. Simply run the `d
 
 If you will modify the `application.yml` or `docker-compose.yaml`, to prevent them from being overwritten, use the following commands:
 
-```git update-index --skip-worktree application.yml```
+```sh
+git update-index --skip-worktree application.yml
+```
 
-```git update-index --skip-worktree docker-compose.yaml```
+```sh
+git update-index --skip-worktree docker-compose.yaml
+```
 
 ## Commands
 
