@@ -1,4 +1,4 @@
-# AT PROJECT Limited 2022 - 2023; AT_nEXT-v3.4.1
+# AT PROJECT Limited 2022 - 2024; AT_nEXT-v3.4.1
 import discord
 
 def default():

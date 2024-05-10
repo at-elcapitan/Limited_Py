@@ -1,5 +1,6 @@
-# AT PROJECT Limited 2022 - 2023; AT_nEXT-v3.5
+# AT PROJECT Limited 2022 - 2024; AT_nEXT-v3.5.1
 import math
+import asyncio
 import datetime
 
 import discord
@@ -10,6 +11,7 @@ from discord import ButtonStyle
 from discord.ext import commands
 from discord import app_commands
 
+import strparser
 import messages
 from embeds import error_embed, event_embed
 
@@ -139,7 +141,7 @@ class music_cog(commands.Cog):
         embed.add_field(name="📄 Playlist", value=retval)
         embed.set_footer(text=f"Page: {page} of {pages}")
 
-        await interaction.response.send_message(embed=embed, view=view, ephemeral=True)
+        await interaction.followup.send(embed=embed, view=view, ephemeral=True)
         await view.time_stop()
 
 
@@ -151,9 +153,13 @@ class music_cog(commands.Cog):
         self.song_title[interaction.guild_id] = self.song_source[interaction.guild_id][0].title
 
         if self.vc[interaction.guild_id] is None:
-            self.vc[interaction.guild_id] = await self.song_source[interaction.guild_id][1]\
+            try:
+                self.vc[interaction.guild_id] = await self.song_source[interaction.guild_id][1]\
                                                         .connect(cls=wavelink.Player)
-            self.vc[interaction.guild_id].interaction = interaction
+            except discord.errors.ClientException:
+                pass
+            finally:
+                self.vc[interaction.guild_id].interaction = interaction
 
         await self.vc[interaction.guild_id].stop()
         await self.vc[interaction.guild_id].play(self.song_source[interaction.guild_id][0])
@@ -323,7 +329,9 @@ class music_cog(commands.Cog):
 
 
             case "queue":
+                await interaction.response.defer()
                 await self.nEXT_queue(interaction)
+                return
 
             case "stop":
                 await self.vc[guildid].stop()
@@ -357,19 +365,21 @@ class music_cog(commands.Cog):
                 await interaction.response.defer()
 
             case "next":
-                if self.vc[guildid] == None:
+                try:
                     await interaction.response.defer()
+                except:
+                    pass
+
+                if self.vc[guildid] == None:
                     return
                 
                 if self.loop[guildid] == 1:
                     await self.change_song(self.vc[guildid].interaction)
-                    await interaction.response.defer()
                     return
                 
                 if self.loop[guildid] == 2:
                     self.song_position[guildid] += 1
 
-                await interaction.response.defer()
                 await self.change_song(self.vc[guildid].interaction)
                 self.bot.dispatch("return_message", self.vc[guildid].interaction)
 
@@ -495,6 +505,7 @@ class music_cog(commands.Cog):
     @group.command(name="display", description="Displaying user list")
     @app_commands.describe(page="List page")
     async def user_list_print(self, interaction: discord.Interaction, page: int = 0):
+        await interaction.response.defer()
         cursor = self.dbconn.cursor()
         cursor.execute(f"SELECT music_name, music_url FROM music_data WHERE user_id = %s", (interaction.user.id,))
         lst = cursor.fetchall()
@@ -506,7 +517,7 @@ class music_cog(commands.Cog):
         page = int(page) if page != 0 else pages
 
         if page > pages or page <= 0:
-            await interaction.response.send_message(embed=
+            await interaction.followup.send(embed=
                                                     error_embed("873",
                                                     "Incorrect Page", "Requested page is not exist."),
                                                     ephemeral = True)
@@ -535,7 +546,7 @@ class music_cog(commands.Cog):
         embed.add_field(name="📄 User list", value=retval)
         embed.set_footer(text=f"Page: {page} of {pages}\n")
 
-        await interaction.response.send_message(embed=embed, view=view, ephemeral = True)
+        await interaction.followup.send(embed=embed, view=view, ephemeral = True)
         await view.time_stop()
 
 
@@ -583,8 +594,8 @@ class music_cog(commands.Cog):
 
     
     @group.command(name="play", description="Plays songs from user list")
-    @app_commands.describe(position="Song position [optional]")
-    async def user_list_play(self, interaction: discord.Interaction, position: int = 0):
+    @app_commands.describe(position="Song numbers. Example: 1, 2, 3 - 5")
+    async def user_list_play(self, interaction: discord.Interaction, position: str):
         if interaction.user.voice is None:
             await interaction.response.send_message(embed=error_embed("870", "VC Error", "Can't get your voice channel"),
                                                     ephemeral=True)
@@ -601,44 +612,26 @@ class music_cog(commands.Cog):
                                                     ephemeral=True)
             return
         
-        if len(lst) < position:
+        """ if len(lst) < position:
             await interaction.response.send_message(embed=error_embed("873.2", "Can`t read song!",
                                                     "Position out of range for your saved list!"),
                                                     ephemeral=True)
-            return
-
-        if int(position) != 0:
-            song = await self.get_song(lst[int(position) - 1][1])
-            
-            await interaction.response.send_message("Processing...", ephemeral=True)
-
-            if song is None:
-                await interaction.edit_original_response(
-                    embed=error_embed("872", "Import error", 
-                    f"Unknown error occurred while importing track **{lst[int(position) - 1][0]}**")
-                )
-                return
-
-            if song[1]:
-                for x in song[0].tracks: 
-                    self.music_queue[interaction.guild_id].append([x, voice_channel, interaction.user])
-            else: self.music_queue[interaction.guild_id].append([song[0], voice_channel, interaction.user])
-
-            if self.vc[interaction.guild_id] is None or not self.vc[interaction.guild_id].playing\
-                    and len(self.music_queue[interaction.guild_id]) == 1:
-                self.bot.dispatch("handle_music", interaction)
-                return
-            
-            self.bot.dispatch("return_message", interaction)
-            return
+            return """
+        
+        songs = strparser.parse_input(position)
         
         error_string = ""
         await interaction.response.send_message("Processing...", ephemeral=True)
-        for i, item in enumerate(lst):
-            song = await self.get_song(item[1])
+        for song_id in songs:
+            if len(lst) < song_id:
+                error_string += f"\n- Song {song_id} not found in list"
+                await interaction.edit_original_response(content=f"Error while importing songs: {error_string}")
+                continue
+            
+            song = await self.get_song(lst[song_id][1])
 
             if song is None:
-                error_string += f"\n- {lst[i][0]} [{i}]"
+                error_string += f"\n- {lst[song_id][0]} [{song_id}]"
                 await interaction.edit_original_response(content=f"Error while importing songs: {error_string}")
                                                                              
                 continue
@@ -651,9 +644,10 @@ class music_cog(commands.Cog):
             if self.vc[interaction.guild_id] is None or not self.vc[interaction.guild_id].playing\
                     and len(self.music_queue[interaction.guild_id]) == 1:
                 self.bot.dispatch("handle_music", interaction)
-                continue
-        
-        self.bot.dispatch("return_message", interaction)
+                await asyncio.sleep(1)
+
+        if len(songs) > 1:
+            self.bot.dispatch("return_message", interaction)
 
 
     @group.command(name="add_current", description="Adds current song to the playlist")

@@ -1,4 +1,4 @@
-print("AT PROJECT Limited, 2022 - 2024;  AT_nEXT-v3.5")
+print("AT PROJECT Limited, 2022 - 2024;  AT_nEXT-v3.5.1")
 print("Product licensed by GPLv3, file `LICENSE`")
 print("The license applies to all project files since ATLB-v3.2-gpl3")
 import os
@@ -80,10 +80,6 @@ conn = psycopg2.connect(
         user = DBUSER,
         password = DBPASS)
 logger.info("Connected to PSQL database")
-
-if not os.path.exists('logs'):
-    os.mkdir('logs')
-
 
 if None in [TOKEN, PASSWD, DBHOST, DBPASS, DBUSER]:
     raise(FileError('.env', 'corrupt'))
