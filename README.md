@@ -41,6 +41,14 @@ Don't forget to replace `DISCORD_TOKEN` with your value.
 
 With the configuration in place, your bot is now ready to use. Simply run the `docker-compose up -d` command. Bot, Lavalink and PostgreSQL DB will be created and initialized automatically.
 
+### Warning
+
+If you will modify the `application.yml` or `docker-compose.yaml`, to prevent them from being overwritten, use the following commands:
+
+```git update-index --skip-worktree application.yml```
+
+```git update-index --skip-worktree docker-compose.yaml```
+
 ## Commands
 
 | Command Name      | Description                                        |
