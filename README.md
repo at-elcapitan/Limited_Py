@@ -106,5 +106,3 @@ services:
     ports:
       - "2333:2333"
 ```
-
-And do not forget to replace `LVHOST` variable from `docker.env` file with the real Lavalink address.
