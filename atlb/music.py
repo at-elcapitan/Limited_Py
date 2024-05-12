@@ -11,9 +11,32 @@ from discord import ButtonStyle
 from discord.ext import commands
 from discord import app_commands
 
-import strparser
+import player
 import messages
+import strparser
 from embeds import error_embed, event_embed
+
+class PlayerNotFoundException(Exception):
+    def __init__(self, player_guild: int):
+        super().__init__(f"Player not found with guild {player_guild}")
+
+
+class ServerController():
+    def __init__(self, guilds: list) -> None:
+        self.players = {}
+
+        for guild in guilds:
+            self.players.append({guild : player.Player(guild)})
+
+    def get_player(self, guild: int) -> player.Player:
+        if not guild in self.players.keys:
+            raise PlayerNotFoundException(guild)
+        
+        return self.players[guild]
+    
+    def create_player(self, guild: int):
+        self.players.append({guild : player.Player(guild)})
+
 
 class music_cog(commands.Cog):
     group = app_commands.Group(name = "list", description = "user list commands group")
@@ -262,7 +285,7 @@ class music_cog(commands.Cog):
             else:
                 try: song = await wavelink.SoundCloudTrack.search(query)
                 except: return None
-
+                
                 if len(song) == 0:
                     return None
                 song = song[0]
