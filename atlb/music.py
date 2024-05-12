@@ -601,6 +601,13 @@ class music_cog(commands.Cog):
                                                     ephemeral=True)
             return
         
+        try:
+            songs = strparser.parse_input(position)
+        except strparser.ParseException:
+            await interaction.response.send_message(embed=error_embed("876", "Can`t read input!", "Your input is invalid"),
+                                                    ephemeral=True)
+            return
+        
         voice_channel = interaction.user.voice.channel
 
         cursor = self.dbconn.cursor()
@@ -611,15 +618,7 @@ class music_cog(commands.Cog):
             await interaction.response.send_message(embed=error_embed("873.1", "Can`t read list!", "Error: your list is empty!"),
                                                     ephemeral=True)
             return
-        
-        """ if len(lst) < position:
-            await interaction.response.send_message(embed=error_embed("873.2", "Can`t read song!",
-                                                    "Position out of range for your saved list!"),
-                                                    ephemeral=True)
-            return """
-        
-        songs = strparser.parse_input(position)
-        
+            
         error_string = ""
         await interaction.response.send_message("Processing...", ephemeral=True)
         for song_id in songs:

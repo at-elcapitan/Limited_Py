@@ -10,12 +10,19 @@ def parse_input(string: str) -> set:
 
     if (len(parsed_string) == 0):
         raise ParseException("Unable to parse string")
+    
+    if (len(parsed_string) == 1):
+        try:
+            result.add(int(parsed_string[0] - 1))
+            return result
+        except ValueError:
+            raise ValueError(f"Unable to parse token {token}")
 
     for token in parsed_string:
         if "-" in token:
             parsed_token = token.split("-")
             try:
-                parsed_token = [int(x) for x in parsed_token]
+                parsed_token = [(int(x) - 1) for x in parsed_token]
             except ValueError:
                 raise ParseException(f"Unable to parse token `{token}`")
 
@@ -23,7 +30,7 @@ def parse_input(string: str) -> set:
                 raise ParseException(f"Unable to parse token `{token}`."
                                      " First value is bigger than the second.")
 
-            result.update(range(parsed_token[0] - 1, parsed_token[1]))
+            result.update(range(parsed_token[0] - 1, parsed_token[1] - 1))
             continue
 
         try:
