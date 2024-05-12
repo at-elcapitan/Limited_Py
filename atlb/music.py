@@ -1,4 +1,4 @@
-# AT PROJECT Limited 2022 - 2024; AT_nEXT-v3.5.1
+# AT PROJECT Limited 2022 - 2024; AT_nEXT-v3.5.2
 import math
 import asyncio
 import datetime
@@ -505,7 +505,7 @@ class music_cog(commands.Cog):
     @group.command(name="display", description="Displaying user list")
     @app_commands.describe(page="List page")
     async def user_list_print(self, interaction: discord.Interaction, page: int = 0):
-        await interaction.response.defer()
+        await interaction.response.defer(ephemeral = True)
         cursor = self.dbconn.cursor()
         cursor.execute(f"SELECT music_name, music_url FROM music_data WHERE user_id = %s", (interaction.user.id,))
         lst = cursor.fetchall()
