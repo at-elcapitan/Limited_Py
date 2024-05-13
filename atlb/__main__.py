@@ -1,4 +1,4 @@
-print("AT PROJECT Limited, 2022 - 2024;  AT_nEXT-v3.5.2")
+print("AT PROJECT Limited, 2022 - 2024;  AT_nEXT-v3.6-beta.1")
 print("Product licensed by GPLv3, file `LICENSE`")
 print("The license applies to all project files since ATLB-v3.2-gpl3")
 import os
@@ -17,8 +17,8 @@ from exceptions import FileError
 from music import music_cog
 
 # For development
-# from dotenv import load_dotenv
-# load_dotenv()
+from dotenv import load_dotenv
+load_dotenv()
 
 # Logger setup
 colorama.init(autoreset=True)
@@ -89,8 +89,7 @@ logger.info("Files checked")
 # Bot configuration
 @bot.event
 async def on_ready():
-    guilds = [guild.id for guild in bot.guilds]
-    await bot.add_cog(music_cog(bot, conn, guilds, logger))
+    await bot.add_cog(music_cog(bot, conn, logger))
     await bot.change_presence(status=discord.Status.online, activity=discord.Game("Link, start.."))
     bot.dispatch("guilds_autosync")
 
