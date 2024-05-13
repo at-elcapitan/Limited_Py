@@ -1,3 +1,4 @@
+# AT PROJECT Limited 2022 - 2024; AT_nEXT-v3.6-beta.1
 from enum import Enum
 
 from wavelink import Playable, Player as WPlayer

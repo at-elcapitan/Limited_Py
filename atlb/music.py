@@ -1,4 +1,4 @@
-# AT PROJECT Limited 2022 - 2024; AT_nEXT-v3.5.2
+# AT PROJECT Limited 2022 - 2024; AT_nEXT-v3.6-beta.1
 import math
 import asyncio
 import datetime
