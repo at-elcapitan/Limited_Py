@@ -34,8 +34,11 @@ class ServerController():
         
         return self.players[guild]
     
-    def create_player(self, guild: int):
-        self.players.append({guild : player.Player(guild)})
+    def create_player(self, guild: int, 
+                      voice_client: discord.VoiceProtocol) -> player.Player:
+        pl = player.Player(guild, voice_client)
+        self.players.append({guild : pl})
+        return pl
 
 
 class music_cog(commands.Cog):
@@ -45,28 +48,13 @@ class music_cog(commands.Cog):
         self.logger = logger
         self.bot: commands.Bot = bot
         self.dbconn = connection
-        self.vc = {}
-        self.music_queue = {}
-        self.song_source = {}
-        self.song_title = {}
-        self.song_position = {}
-        self.loop = {}
         self.msg = {}
 
-        for guild in guilds:
-            self.vc[guild] = None
-            self.music_queue[guild] = []
-            self.song_source[guild] = None
-            self.song_title[guild] = None
-            self.song_position[guild] = 0
-            self.loop[guild] = False
-            self.msg[guild] = None
-
+        self.controller = ServerController(guilds)
 
     async def bot_cleanup(self):
         for message in self.msg:
             if self.msg[message] is not None: await self.msg[message].delete()
-
 
     async def play(self, interaction: discord.Interaction, song):
         if song is None:
@@ -101,16 +89,10 @@ class music_cog(commands.Cog):
         await interaction.response.send_message("Processing...", ephemeral=True)
         self.bot.dispatch("return_message", interaction)
 
-
     def set_none_song(self, interaction: discord.Interaction):
-        self.music_queue[interaction.guild_id] = []
-        self.song_source[interaction.guild_id] = []
-        self.song_title[interaction.guild_id] = ""
-        self.loop[interaction.guild_id] = 0
-        self.song_position[interaction.guild_id] = 0
+        self.controller.get_player(interaction.guild_id).clear_list()
 
-
-    async def change_song(self, interaction: discord.Interaction):
+    """ async def change_song(self, interaction: discord.Interaction):
         if self.song_position[interaction.guild_id] == len(self.music_queue[interaction.guild_id]) - 1\
                 and self.loop[interaction.guild_id] == 0:
             self.set_none_song(interaction)
@@ -127,19 +109,18 @@ class music_cog(commands.Cog):
         if self.loop[interaction.guild_id] == 0:
             self.song_position[interaction.guild_id] += 1
         
-        self.bot.dispatch("handle_music", interaction)
-
+        self.bot.dispatch("handle_music", interaction) """
     
     async def nEXT_queue(self, interaction: Interaction):
-        guildid = interaction.guild.id
+        int_player = self.controller.get_player(interaction.guild_id)
 
         retval = ""
         embed = discord.Embed(color=0x915AF2)
 
-        page = math.ceil((self.song_position[guildid] + 1) / 10 + 0.1)
-        pages = math.ceil(len(self.music_queue[guildid]) / 10 + 0.1)
+        page = math.ceil((int_player.get_position() + 1) / 10 + 0.1)
+        pages = math.ceil(int_player.get_list_length() / 10 + 0.1)
 
-        view = messages.ListView(self.music_queue[guildid], pages, page, True, self.song_position[guildid])
+        view = messages.ListView(int_player, pages, page, True)
 
         if page == 1:
             srt, stp = 0, 10
@@ -148,15 +129,15 @@ class music_cog(commands.Cog):
             stp = 10 * page
 
         for i in range(srt, stp):
-            if i > len(self.music_queue[guildid]) - 1:
+            if i > int_player.get_list_length() - 1:
                 break
-            if len(self.music_queue[guildid][i][0].title) > 65:
-                z = len(self.music_queue[guildid][i][0].title) - 65
-                title = self.music_queue[guildid][i][0].title[:-z] + "..."
+            if len(int_player.get_song(i).title) > 65:
+                z = len(int_player.get_song(i).title) - 65
+                title = int_player.get_song(i).title[:-z] + "..."
             else:
-                title = self.music_queue[guildid][i][0].title
+                title = int_player.get_song(i).title
 
-            if i == self.song_position[guildid]:
+            if i == int_player.get_position():
                 retval += f"**{i + 1}. " + title + "\n**"
                 continue
             retval += f"{i + 1}. " + title + "\n"
@@ -167,64 +148,50 @@ class music_cog(commands.Cog):
         await interaction.followup.send(embed=embed, view=view, ephemeral=True)
         await view.time_stop()
 
-
     # Listeners
     @commands.Cog.listener()
     async def on_handle_music(self, interaction: discord.Interaction):
-        self.song_source[interaction.guild_id] = self.music_queue[interaction.guild_id]\
-                                            [self.song_position[interaction.guild_id]]
-        self.song_title[interaction.guild_id] = self.song_source[interaction.guild_id][0].title
-
-        if self.vc[interaction.guild_id] is None:
+        try:
+            int_player = self.controller.get_player(interaction.guild_id)
+        except PlayerNotFoundException:
             try:
-                self.vc[interaction.guild_id] = await self.song_source[interaction.guild_id][1]\
-                                                        .connect(cls=wavelink.Player)
+                voice_client = interaction.channel.connect(cls=wavelink.Player)
             except discord.errors.ClientException:
-                pass
-            finally:
-                self.vc[interaction.guild_id].interaction = interaction
+                pass    
+            int_player = self.controller.create_player(interaction.guild_id, voice_client)
 
-        await self.vc[interaction.guild_id].stop()
-        await self.vc[interaction.guild_id].play(self.song_source[interaction.guild_id][0])
+        await int_player.get_voice_client().stop()
+        await int_player.get_voice_client().play(int_player.get_current_song())
 
         self.bot.dispatch("return_message", interaction)
-    
 
     @commands.Cog.listener()    
     async def on_guilds_autosync(self):
         fmt = await self.bot.tree.sync()
         self.logger.info(f"Synced \x1b[39;1m{len(fmt)}\x1b[39;0m commands [startup sync]")
 
-
     @commands.Cog.listener()
     async def on_guild_join(self, guild):
         fmt = await self.bot.tree.sync()
         self.logger.info(f"Synced {len(fmt)} commands. Initiated by \x1b[39;1m{guild} [{guild.id}]\x1b[39;0m guild"
                          " (on_guild_join)")
-        self.vc[guild] = None
-        self.music_queue[guild] = []
-        self.song_source[guild] = None
-        self.song_title[guild] = None
-        self.song_position[guild] = 0
-        self.loop[guild] = False
-        self.msg[guild] = None
-
 
     @commands.Cog.listener()
     async def on_return_message(self, interaction: discord.Interaction):
+        int_player = self.controller.get_player(interaction.guild_id)
         view = ui.View()
     
-        if self.vc[interaction.guild_id].paused: clab1 = "▶️ Resume" 
+        if int_player.get_voice_client().paused: clab1 = "▶️ Resume" 
         else: clab1 = "⏸️ Pause"
 
-        match self.loop[interaction.guild_id]:
-            case 0:
+        match int_player.get_loop_state():
+            case player.LoopState.STRAIGHT:
                 clab2 = ["🔁", ButtonStyle.gray]
                 loop_on = "turned off"
-            case 1:
+            case player.LoopState.LOOP:
                 clab2 = ["🔁", ButtonStyle.success]
                 loop_on = "on playlist"
-            case 2:
+            case player.LoopState.CURRENT:
                 clab2 = ["🔂", ButtonStyle.success]
                 loop_on = "current song"
 
@@ -244,22 +211,22 @@ class music_cog(commands.Cog):
         for x in items:
             view.add_item(x)
 
-        if len(self.music_queue[interaction.guild_id]) != 0:
+        if int_player.get_list_length() != 0:
             song_len_formatted = datetime.datetime\
-                                 .fromtimestamp(self.song_source[interaction.guild_id][0].length / 1000)\
+                                 .fromtimestamp(int_player.get_current_song().length / 1000)\
                                  .strftime("%M:%S")
-            embed = discord.Embed(title=f"{self.song_title[interaction.guild_id]}", 
+            embed = discord.Embed(title=f"{int_player.get_current_song()}", 
                                   description=f"Song length: {song_len_formatted}\n\n> URL: [link]"
-                                    f"({self.song_source[interaction.guild_id][0].uri})\n> Ordered by:"
-                                    f" `{self.song_source[interaction.guild_id][2].name}`", color=0xa31eff,)
-            footer = f"Loop: {loop_on}\nPosition: {self.song_position[interaction.guild_id] + 1} "\
-                     f"of {len(self.music_queue[interaction.guild_id])}\nVolume: {self.vc[interaction.guild_id].volume}%"
+                                    f"({int_player.get_current_song().uri})\n> Ordered by:"
+                                    f" `{int_player.get_current_song().name}`", color=0xa31eff,)
+            footer = f"Loop: {loop_on}\nPosition: {int_player.get_position() + 1} "\
+                     f"of {int_player.get_list_length()}\nVolume: {int_player.get_voice_client().volume}%"
         else:
             embed = discord.Embed(title="Music is not playing", 
                                   description=f"Song length: 00:00\n\n> URL: \n> Ordered by: ",
                                   color=0xa31eff)
             footer=f"Loop: {loop_on}\nPosition: 0 of 0 \n"\
-                   f"Volume: {self.vc[interaction.guild_id].volume}%"
+                   f"Volume: {int_player.get_voice_client()}%"
 
         embed.set_footer(text=footer)
 
@@ -313,8 +280,8 @@ class music_cog(commands.Cog):
         player = payload.player
         reason = payload.reason
 
-        if reason == "stopped" and not self.vc[player.guild.id] == None\
-                and len(self.music_queue[player.guild.id]) != 0:
+        if reason == "stopped" and\
+                self.controller.get_player(player.guild.id).get_list_length() != 0:
             self.bot.dispatch("return_message", player.interaction)
 
         if reason == 'finished':
