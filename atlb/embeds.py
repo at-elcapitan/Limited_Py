@@ -1,11 +1,11 @@
-# AT PROJECT Limited 2022 - 2024; AT_nEXT-v3.4.1
+# AT PROJECT Limited 2022 - 2024; AT_nEXT-v3.6
 import discord
 
 def default():
     embed = discord.Embed(title="ENTIRE command list", description="List of ALL system commands", color=0xa31eff)
     embed.add_field(name="Global COMMANDS", value="`sc.inspect`", inline=False)
     embed.add_field(name="Music", value="`/youtube`, `/soundcloud`, `/spotify`, `/resend_control`, `/seek`, `/clear`")
-    embed.add_field(name="User list [Music]", value="`/list_add`, `/list_display`, `/list_remove`, `/list_play`")
+    embed.add_field(name="User list [Music]", value="`/list add`, `/list display`, `/list remove`, `/list play`")
     return embed
 
 

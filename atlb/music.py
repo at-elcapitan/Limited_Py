@@ -1,4 +1,4 @@
-# AT PROJECT Limited 2022 - 2024; AT_nEXT-v3.6-beta.2
+# AT PROJECT Limited 2022 - 2024; AT_nEXT-v3.6
 import math
 import datetime
 
@@ -591,8 +591,8 @@ class music_cog(commands.Cog):
         await interaction.response.send_message("Processing...", ephemeral=True)
         
         for song_id in songs:
-            if len(lst) < song_id:
-                error_string += f"\n- Song {song_id} not found in list"
+            if len(lst) - 1 < song_id:
+                error_string += f"\n- Song {song_id + 1} not found in list"
                 await interaction.edit_original_response(content=f"Error while importing songs: {error_string}")
                 continue
             
