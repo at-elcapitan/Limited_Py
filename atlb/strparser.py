@@ -1,4 +1,4 @@
-# AT PROJECT Limited 2022 - 2024; AT_nEXT-v3.5.1
+# AT PROJECT Limited 2022 - 2024; AT_nEXT-v3.6-beta.2
 class ParseException(Exception):
     def __init__(self, text):
         super().__init__(text)
@@ -13,7 +13,7 @@ def parse_input(string: str) -> set:
     
     if (len(parsed_string) == 1):
         try:
-            result.add(int(parsed_string[0] - 1))
+            result.add(int(parsed_string[0]) - 1)
             return result
         except ValueError:
             raise ValueError(f"Unable to parse token {token}")

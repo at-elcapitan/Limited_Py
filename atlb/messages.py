@@ -1,4 +1,4 @@
-# AT PROJECT Limited 2022 - 2024; ATLB-v3.2-gpl3
+# AT PROJECT Limited 2022 - 2024; ATLB-v3.6-beta.2
 import asyncio
 
 from discord import ui
@@ -6,19 +6,19 @@ from discord import Embed
 from discord import Interaction
 from discord import ButtonStyle
 
-class ListView(ui.View):
-    def __init__(self, ulist: list, pages: int, position: int, is_queue: bool = False, 
-                 current_position: int = None):
-        super().__init__()
+from player import Track
 
-        self.page = position
+class ListView(ui.View):
+    def __init__(self, lst: list | Track, list_length: int, pages: int,
+                 page: int, is_queue: bool = False, position: int = None):
+        super().__init__()
+        self.length = list_length
+        self.position = position
+        self.page = page
         self.pages = pages
         self.time = 0
-        self.is_queue = is_queue 
-        self.song_position = current_position
-
-        self.ulist = ulist
-
+        self.is_queue = is_queue
+        self.lst: list[Track | str] = lst
 
     async def time_stop(self):
         while True:
@@ -28,7 +28,6 @@ class ListView(ui.View):
             if self.time > 10:
                 self.stop()
                 return
-
 
     async def __print_list(self, interaction: Interaction):
         retval = ""
@@ -41,15 +40,18 @@ class ListView(ui.View):
             stp = 10 * self.page - 1
     
         for i in range(srt, stp):
-            if i > len(self.ulist) - 1:
+            if i > self.length - 1:
                 break
-            
-            title = self.ulist[i][0] if not self.is_queue else self.ulist[i][0].title
+
+            if type(self.lst[i]) == Track:
+                title = self.lst[i].get_track().title
+            else:
+                title = self.lst[i][0]
 
             if len(title) > 65:
                 title = title[:-(len(title) - 65)] + "..."
 
-            if self.is_queue and i == self.song_position:
+            if self.is_queue and i == self.player.position:
                 retval += f"**{i + 1}. " + title + "\n**"
                 continue
 
@@ -59,7 +61,6 @@ class ListView(ui.View):
         embed.set_footer(text=f"Page: {self.page} of {self.pages}\n")
         
         await interaction.response.edit_message(embed=embed)
-
 
     @ui.button(label="⬅️ Previous", style=ButtonStyle.primary)
     async def prev_button(self, interaction: Interaction, button: ui.Button) -> None:
@@ -77,7 +78,6 @@ class ListView(ui.View):
         self.page = self.pages
         self.time = 0
         await self.__print_list(interaction)
-
 
     @ui.button(label="Next ➡️", style=ButtonStyle.primary)
     async def next_button(self, interaction: Interaction, button: ui.Button) -> None:
