@@ -1,6 +1,5 @@
-# AT PROJECT Limited 2022 - 2024; AT_nEXT-v3.6-beta.1
+# AT PROJECT Limited 2022 - 2024; AT_nEXT-v3.6-beta.2
 import math
-import asyncio
 import datetime
 
 import discord
@@ -107,7 +106,8 @@ class music_cog(commands.Cog):
         page = math.ceil((int_player.get_position() + 1) / 10 + 0.1)
         pages = math.ceil(int_player.get_list_length() / 10 + 0.1)
 
-        view = messages.ListView(int_player, pages, page, True)
+        view = messages.ListView(int_player.get_list(), int_player.get_list_length(), 
+                                 pages, page, True, int_player.get_position())
 
         if page == 1:
             srt, stp = 0, 10
@@ -227,7 +227,6 @@ class music_cog(commands.Cog):
             await self.msg[interaction.guild_id].delete()
             self.msg[interaction.guild_id] = await interaction.channel.send(embed=embed, view=view)
 
-
     async def get_song(self, query, type: str = None):
         playlist = False
         
@@ -260,8 +259,7 @@ class music_cog(commands.Cog):
             song = song[0]
 
         return [song, playlist]
-        
-
+       
     @commands.Cog.listener()
     async def on_wavelink_track_end(self, payload: wavelink.TrackEndEventPayload):
         payload_player = payload.player
@@ -283,7 +281,6 @@ class music_cog(commands.Cog):
             self.bot.dispatch("handle_music", interaction)
             self.bot.dispatch("return_message", interaction)
 
-
     @commands.Cog.listener()
     async def on_interaction(self, interaction: Interaction):
         if interaction.type is not discord.InteractionType.component:
@@ -293,7 +290,10 @@ class music_cog(commands.Cog):
             return
         
         button_id = interaction.data["custom_id"]
-        int_player = self.controller.get_player(interaction.guild_id)
+        try:
+            int_player = self.controller.get_player(interaction.guild.id)
+        except PlayerNotFoundException:
+            return
         voice_client = int_player.get_voice_client()
 
         match button_id:
@@ -363,7 +363,6 @@ class music_cog(commands.Cog):
                 self.bot.dispatch("handle_music", interaction)
                 self.bot.dispatch("return_message", interaction)
     
-
     # Commands
     @app_commands.command(name="youtube", description="Play YouTube track")
     @app_commands.describe(query="Song name or link")
@@ -392,14 +391,12 @@ class music_cog(commands.Cog):
         song = await self.get_song(query, 'sc')
         await self.play(interaction, song)
 
-
     @app_commands.command(name="resend_control", description="Resends music control panel")
     async def resend_song_ctl(self, interaction: discord.Interaction):
         await self.msg[interaction.guild_id].delete()
         self.msg[interaction.guild_id] = None
         await interaction.response.send_message("Processing...", ephemeral=True)
         self.bot.dispatch("return_message", interaction)
-
 
     @app_commands.command(name="seek", description="Seeks current soundtrack")
     @app_commands.describe(seconds="Seconds to seek")
@@ -434,7 +431,6 @@ class music_cog(commands.Cog):
                 text=f"Track **{int_player.get_current_song().get_track().title}** seeked for `{txt}`"),
                 ephemeral= True)
 
-
     @app_commands.command(name="remove", description="Deleting soundtrack from the queue")
     @app_commands.describe(position="Song position")
     async def clear(self, interaction: discord.Interaction, position: int = None):
@@ -454,7 +450,6 @@ class music_cog(commands.Cog):
                     ephemeral = True
                 )
         
-
     @app_commands.command(name="jmp", description="Jump to a track")
     @app_commands.describe(position="Song position")
     async def song_jump(self, interaction: discord.Interaction, position: int):
@@ -471,7 +466,7 @@ class music_cog(commands.Cog):
                     ephemeral = True
                 )
 
-"""    # Userlist
+    # Userlist
     @group.command(name="display", description="Displaying user list")
     @app_commands.describe(page="List page")
     async def user_list_print(self, interaction: discord.Interaction, page: int = 0):
@@ -484,7 +479,7 @@ class music_cog(commands.Cog):
         embed = discord.Embed(color=0x915AF2)
 
         pages = math.ceil(len(lst) / 10 + 0.1)
-        page = int(page) if page != 0 else pages
+        page = page if page != 0 else pages
 
         if page > pages or page <= 0:
             await interaction.followup.send(embed=
@@ -493,7 +488,7 @@ class music_cog(commands.Cog):
                                                     ephemeral = True)
             return
         
-        view = messages.ListView(lst, pages, page)
+        view = messages.ListView(lst, len(lst), pages, page)
 
         if page == 1:
             srt, stp = 0, 10
@@ -519,7 +514,6 @@ class music_cog(commands.Cog):
         await interaction.followup.send(embed=embed, view=view, ephemeral = True)
         await view.time_stop()
 
-
     @group.command(name="remove", description="Removing song by position")
     @app_commands.describe(position="position")
     async def user_list_clear(self, interaction: discord.Interaction, position: int):
@@ -534,7 +528,6 @@ class music_cog(commands.Cog):
         self.dbconn.commit()
         await interaction.response.send_message(embed=event_embed(name="✅ Success!", text= f'Track **{name}** deleted'),
                                                 ephemeral=True)
-
 
     @group.command(name="add", description="Removing song by position")
     @app_commands.describe(query="Song name or link")
@@ -561,7 +554,6 @@ class music_cog(commands.Cog):
 
         await interaction.response.send_message(embed=event_embed(name="✅ Success!", text= f'Song added to the list \n **{title}**'),
                                                 ephemeral=True)
-
     
     @group.command(name="play", description="Plays songs from user list")
     @app_commands.describe(position="Song numbers. Example: 1, 2, 3 - 5")
@@ -578,7 +570,13 @@ class music_cog(commands.Cog):
                                                     ephemeral=True)
             return
         
-        voice_channel = interaction.user.voice.channel
+        try:
+            int_player = self.controller.get_player(interaction.guild_id)
+        except PlayerNotFoundException:
+            voice_channel = await interaction.user.voice\
+                            .channel.connect(cls=wavelink.Player)
+            int_player = self.controller\
+                        .create_player(interaction, voice_channel)
 
         cursor = self.dbconn.cursor()
         cursor.execute(f"SELECT music_name, music_url FROM music_data WHERE user_id = %s", (interaction.user.id,))
@@ -591,6 +589,7 @@ class music_cog(commands.Cog):
             
         error_string = ""
         await interaction.response.send_message("Processing...", ephemeral=True)
+        
         for song_id in songs:
             if len(lst) < song_id:
                 error_string += f"\n- Song {song_id} not found in list"
@@ -601,23 +600,18 @@ class music_cog(commands.Cog):
 
             if song is None:
                 error_string += f"\n- {lst[song_id][0]} [{song_id}]"
-                await interaction.edit_original_response(content=f"Error while importing songs: {error_string}")
-                                                                             
+                await interaction.edit_original_response(content=f"Error while importing songs: {error_string}")                                                     
                 continue
-
             if song[1]:
                 for x in song[0].tracks: 
-                    self.music_queue[interaction.guild_id].append([x, voice_channel, interaction.user])
-            else: self.music_queue[interaction.guild_id].append([song[0], voice_channel, interaction.user])
+                    int_player.add_song(x, interaction.user.name)
+            else: int_player.add_song(song[0], interaction.user.name)
 
-            if self.vc[interaction.guild_id] is None or not self.vc[interaction.guild_id].playing\
-                    and len(self.music_queue[interaction.guild_id]) == 1:
+            if not voice_channel.playing and int_player.get_list_length() == 1:
                 self.bot.dispatch("handle_music", interaction)
-                await asyncio.sleep(1)
 
         if len(songs) > 1:
             self.bot.dispatch("return_message", interaction)
-
 
     @group.command(name="add_current", description="Adds current song to the playlist")
     async def add_current(self, interaction):
@@ -635,4 +629,4 @@ class music_cog(commands.Cog):
 
         await interaction.response.send_message(embed=event_embed(name="✅ Success!", 
                                                 text=f'Song added to the list \n **{song.title}**'),
-                                                ephemeral=True) """
+                                                ephemeral=True)

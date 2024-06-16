@@ -1,4 +1,4 @@
-# AT PROJECT Limited 2022 - 2024; ATLB-v3.2-gpl3
+# AT PROJECT Limited 2022 - 2024; ATLB-v3.6-beta.2
 import asyncio
 
 from discord import ui
@@ -6,16 +6,19 @@ from discord import Embed
 from discord import Interaction
 from discord import ButtonStyle
 
-from player import Player
+from player import Track
 
 class ListView(ui.View):
-    def __init__(self, player: Player, pages: int, position: int, is_queue: bool = False):
+    def __init__(self, lst: list | Track, list_length: int, pages: int,
+                 page: int, is_queue: bool = False, position: int = None):
         super().__init__()
-        self.page = position
+        self.length = list_length
+        self.position = position
+        self.page = page
         self.pages = pages
         self.time = 0
         self.is_queue = is_queue
-        self.player: Player = player
+        self.lst: list[Track | str] = lst
 
     async def time_stop(self):
         while True:
@@ -28,7 +31,6 @@ class ListView(ui.View):
 
     async def __print_list(self, interaction: Interaction):
         retval = ""
-        ulist = self.player.get_list()
         embed = Embed(color=0x915AF2)
 
         if self.page == 1:
@@ -38,15 +40,18 @@ class ListView(ui.View):
             stp = 10 * self.page - 1
     
         for i in range(srt, stp):
-            if i > self.player.get_list_length() - 1:
+            if i > self.length - 1:
                 break
-            
-            title = ulist[i].title
+
+            if type(self.lst[i]) == Track:
+                title = self.lst[i].get_track().title
+            else:
+                title = self.lst[i][0]
 
             if len(title) > 65:
                 title = title[:-(len(title) - 65)] + "..."
 
-            if self.is_queue and i == self.player.get_position():
+            if self.is_queue and i == self.player.position:
                 retval += f"**{i + 1}. " + title + "\n**"
                 continue
 

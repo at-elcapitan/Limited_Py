@@ -11,5 +11,3 @@ class FileError(Exception):
         self.filename = filename
 
         super().__init__(f'`{self.filename}` {self.message}')
-
-
