@@ -1,4 +1,4 @@
-# AT PROJECT Limited 2022 - 2024; AT_nEXT-v3.6-beta.2
+# AT PROJECT Limited 2022 - 2024; AT_nEXT-v3.7
 class ParseException(Exception):
     def __init__(self, text):
         super().__init__(text)
@@ -6,7 +6,7 @@ class ParseException(Exception):
 
 def parse_input(string: str) -> set:
     parsed_string = string.split(',')
-    result = set()
+    result = list()
 
     if (len(parsed_string) == 0):
         raise ParseException("Unable to parse string")
