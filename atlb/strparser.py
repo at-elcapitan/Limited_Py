@@ -13,10 +13,10 @@ def parse_input(string: str) -> set:
     
     if (len(parsed_string) == 1):
         try:
-            result.add(int(parsed_string[0]) - 1)
+            result.append(int(parsed_string[0]) - 1)
             return result
         except ValueError:
-            raise ValueError(f"Unable to parse token {token}")
+            raise ValueError(f"Unable to parse token {parsed_string}")
 
     for token in parsed_string:
         if "-" in token:
