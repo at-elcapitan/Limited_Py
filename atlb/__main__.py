@@ -17,8 +17,8 @@ from exceptions import FileError
 from music import music_cog
 
 # For development
-from dotenv import load_dotenv
-load_dotenv()
+# from dotenv import load_dotenv
+# load_dotenv()
 
 # Logger setup
 colorama.init(autoreset=True)
