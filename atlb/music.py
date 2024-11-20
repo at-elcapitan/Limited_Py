@@ -101,9 +101,6 @@ class music_cog(commands.Cog):
               
         self.bot.dispatch("handle_music", interaction)
         
-        
-        
-    
     async def nEXT_queue(self, interaction: Interaction):
         int_player = self.controller.get_player(interaction.guild_id)
 
@@ -612,7 +609,7 @@ class music_cog(commands.Cog):
             song = await self.get_song(lst[song_id][1])
 
             if song is None:
-                error_string += f"\n- {lst[song_id][0]} [{song_id}]"
+                error_string += f"\n- {lst[song_id][0]} [{song_id + 1}]"
                 await interaction.edit_original_response(content=f"Error while importing songs: {error_string}")                                                     
                 continue
             if song[1]:
@@ -629,11 +626,21 @@ class music_cog(commands.Cog):
     @group.command(name="add_current", description="Adds current song to the playlist")
     async def add_current(self, interaction):
         try:
-            song: wavelink.GenericTrack = self.song_source[interaction.guild_id][0]
-        except:
+            int_player = self.controller.get_player(interaction.guild_id)
+
+        except PlayerNotFoundException:
+            await interaction.response.send_message(embed=error_embed("870", "VC Error", "Can't get your voice channel"),
+                                                    ephemeral=True)
+            return
+        
+        song = int_player.get_current_song()
+
+        if song == None:
             await interaction.response.send_message(embed=error_embed("872.3", "Not found", "May be you are not playing any song"),
                                                     ephemeral=True)
             return
+        
+        song = song.get_track()
         
         cursor = self.dbconn.cursor()
         cursor.execute("INSERT INTO music_data (music_name, music_url, user_id) VALUES (%s, %s, %s)", 
