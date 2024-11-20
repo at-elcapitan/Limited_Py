@@ -1,4 +1,4 @@
-print("AT PROJECT Limited, 2022 - 2024;  AT_nEXT-v3.7.1")
+print("AT PROJECT Limited, 2022 - 2024;  AT_nEXT-v3.6.2")
 print("Product licensed by GPLv3, file `LICENSE`")
 print("The license applies to all project files since ATLB-v3.2-gpl3")
 import os
