@@ -1,4 +1,4 @@
-# AT PROJECT Limited 2022 - 2024; AT_nEXT-v3.7
+# AT PROJECT Limited 2022 - 2024; AT_nEXT-v3.7.1
 import math
 import datetime
 
@@ -87,14 +87,21 @@ class music_cog(commands.Cog):
                     int_player.add_song(x, interaction.user.name)
         else: int_player.add_song(song[0], interaction.user.name)
         
-        if not int_player.get_voice_client().playing\
-                and int_player.get_list_length() == 1:    
+        try:
             await interaction.response.send_message("Processing...", ephemeral=True)
-            self.bot.dispatch("handle_music", interaction)
+        except discord.errors.NotFound:
+            interaction.channel.send("Unexpected error, cannot send message.")
+            await int_player.voice_client.disconnect()
             return
+
+        if int_player.get_voice_client().playing\
+                and int_player.get_list_length() != 1:
+            self.bot.dispatch("return_message", interaction)
+            return
+              
+        self.bot.dispatch("handle_music", interaction)
         
-        await interaction.response.send_message("Processing...", ephemeral=True)
-        self.bot.dispatch("return_message", interaction)
+        
         
     
     async def nEXT_queue(self, interaction: Interaction):
@@ -375,6 +382,12 @@ class music_cog(commands.Cog):
             return
 
         song = await self.get_song(query)
+        
+        if song is None:
+            await interaction.response.send_message(embed=error_embed("872", "Not found", "Can't find song"),
+                                                    ephemeral=True)
+            return
+
         await self.play(interaction, song)
 
     @app_commands.command(name="soundcloud", description="Play SoundCloud track")

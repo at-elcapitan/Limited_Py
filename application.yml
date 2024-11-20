@@ -14,11 +14,13 @@ plugins:
       - MUSIC
       - ANDROID_TESTSUITE
       - WEB
+      - WEBEMBEDDED
+      - TVHTML5EMBEDDED
 
 lavalink:
   lavalink:
   plugins:
-    - dependency: "dev.lavalink.youtube:youtube-plugin:1.4.0"
+    - dependency: "dev.lavalink.youtube:youtube-plugin:1.8.3"
       snapshot: false
   server:
     password: "youshallnotpass"

@@ -1,4 +1,4 @@
-print("AT PROJECT Limited, 2022 - 2024;  AT_nEXT-v3.7")
+print("AT PROJECT Limited, 2022 - 2024;  AT_nEXT-v3.7.1")
 print("Product licensed by GPLv3, file `LICENSE`")
 print("The license applies to all project files since ATLB-v3.2-gpl3")
 import os
@@ -17,8 +17,8 @@ from exceptions import FileError
 from music import music_cog
 
 # For development
-# from dotenv import load_dotenv
-# load_dotenv()
+from dotenv import load_dotenv
+load_dotenv()
 
 # Logger setup
 colorama.init(autoreset=True)
