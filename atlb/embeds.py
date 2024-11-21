@@ -21,8 +21,3 @@ def event_embed(title = None, text = None, name = ""):
     embed = discord.Embed(title=title, color=0x915AF2)
     embed.add_field(name=name, value=text, inline=False)
     return embed
-
-
-def disconnected_embed():
-    embed = discord.Embed(title="Timed out", description="Disconnected from the voice channel due to inactivity.", color=0xFF0000)
-    return embed
