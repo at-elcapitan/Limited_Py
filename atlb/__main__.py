@@ -18,8 +18,8 @@ print("Product licensed by GPLv3, file `LICENSE`")
 print("The license applies to all project files since ATLB-v3.2-gpl3")
 
 # For development
-from dotenv import load_dotenv
-load_dotenv()
+# from dotenv import load_dotenv
+# load_dotenv()
 
 # Setting up custom formatter for handler
 colorama.init(autoreset=True)

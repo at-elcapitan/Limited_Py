@@ -1,5 +1,5 @@
 discord
-wavelink==3.3.0
+wavelink==3.4.1
 pydantic
 colorama
 psycopg2
