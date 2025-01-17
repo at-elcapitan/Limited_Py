@@ -1,12 +1,15 @@
 # Limited nEXT Bot
 
+> [!WARNING]  
+> This repository is archived and won't c
+
 Limited nEXT is a music bot for Discord, part of the 'Limited' bot family. It is written in Python and utilizes the Discord.py 2.0 library along with the Wavelink library for music functionality.
 
 ## About
 
 Limited nEXT is one of the bots in the 'Limited' series, which includes:
 
-- [Limited nEXT](https://github.com/at-elcapitan/Limited_Py) (this bot)
+- ~[Limited nEXT](https://github.com/at-elcapitan/Limited_Py) (this bot)~ replaced by: [Limited TNiC](https://github.com/at-elcapitan/Limited-TNiC)
 - [Limited C/Link](https://github.com/at-elcapitan/Limited-C_Link)
 - [Limited jEXT](https://github.com/at-elcapitan/AT-Limited_jEXT)
 
