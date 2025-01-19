@@ -404,7 +404,7 @@ class music_cog(commands.Cog):
                                                     ephemeral=True)
             return
 
-        await self.play(interaction, response.song)
+        await self.play(interaction, response)
 
     @app_commands.command(name="soundcloud", description="Play SoundCloud track")
     @app_commands.describe(query="Song name or link")
