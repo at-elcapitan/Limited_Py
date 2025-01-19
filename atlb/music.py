@@ -234,7 +234,7 @@ class music_cog(commands.Cog):
         )
 
         footer = f"Loop: {loop_on}\nPosition: 0 of 0 \nVolume: {interaction_player.get_voice_client().volume}%"
-        embed.set_footer(footer)
+        embed.set_footer(text = footer)
 
         return embed
 
