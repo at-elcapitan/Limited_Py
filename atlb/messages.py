@@ -1,97 +1,96 @@
-# AT PROJECT Limited 2022 - 2024; AT_nEXT-v3.6-beta.2
+# AT PROJECT Limited 2022 - 2024; nEXT-v4.0_beta.1
+
 import asyncio
-
-from discord import ui
-from discord import Embed
-from discord import Interaction
-from discord import ButtonStyle
-
+from discord import ui, Embed, Interaction, ButtonStyle
 from player import Track
 
+
 class ListView(ui.View):
-    def __init__(self, lst: list | Track, list_length: int, pages: int,
-                 page: int, is_queue: bool = False, position: int = None):
+    ITEMS_PER_PAGE = 10
+    TIMEOUT_SECONDS = 10
+
+    def __init__(
+            self,
+            lst: list[Track],
+            list_length: int,
+            pages: int,
+            page: int,
+            is_queue: bool = False,
+            position: int | None = None
+        ):
         super().__init__()
+
+        self.lst = lst
         self.length = list_length
-        self.position = position
-        self.page = page
         self.pages = pages
-        self.time = 0
+        self.page = page
         self.is_queue = is_queue
-        self.lst: list[Track | str] = lst
+        self.position = position
+
+        self._elapsed = 0
 
     async def time_stop(self):
-        while True:
+        while not self.is_finished():
             await asyncio.sleep(1)
-            self.time += 1
-            
-            if self.time > 10:
+            self._elapsed += 1
+
+            if self._elapsed >= self.TIMEOUT_SECONDS:
                 self.stop()
-                return
-
-    async def __print_list(self, interaction: Interaction):
-        retval = ""
-        embed = Embed(color=0x915AF2)
-
-        if self.page == 1:
-            srt, stp = 0, 9
-        else:
-            srt = 10 * (self.page - 1) - 1
-            stp = 10 * self.page - 1
-    
-        for i in range(srt, stp):
-            if i > self.length - 1:
                 break
 
-            if type(self.lst[i]) == Track:
-                title = self.lst[i].get_track().title
+    async def _render_page(self, interaction: Interaction):
+        embed = Embed(color=0x915AF2)
+
+        start = (self.page - 1) * self.ITEMS_PER_PAGE
+        end = start + self.ITEMS_PER_PAGE
+        items = self.lst[start:end]
+
+        lines = []
+
+        for index, item in enumerate(items, start=start):
+            if isinstance(item, Track):
+                title = item.get_track().title
             else:
-                title = self.lst[i][0]
+                title = item[0] if isinstance(item, (list, tuple)) else str(item)
 
             if len(title) > 65:
-                title = title[:-(len(title) - 65)] + "..."
+                title = title[:65] + "..."
 
-            if self.is_queue and i == self.player.position:
-                retval += f"**{i + 1}. " + title + "\n**"
-                continue
+            line = f"{index + 1}. {title}"
 
-            retval += f"{i + 1}. " + title + "\n"
-        
-        embed.add_field(name="📄 User list", value=retval)
-        embed.set_footer(text=f"Page: {self.page} of {self.pages}\n")
-        
-        await interaction.response.edit_message(embed=embed)
+            if self.is_queue and self.position is not None and index == self.position:
+                line = f"**{line}**"
+
+            lines.append(line)
+
+        embed.add_field(
+            name="📄 User list",
+            value="\n".join(lines) if lines else "No items to display.",
+            inline=False,
+        )
+        embed.set_footer(text=f"Page: {self.page} of {self.pages}")
+
+        await interaction.response.edit_message(embed=embed, view=self)
+
+    def _reset_timeout(self):
+        self._elapsed = 0
 
     @ui.button(label="⬅️ Previous", style=ButtonStyle.primary)
-    async def prev_button(self, interaction: Interaction, button: ui.Button) -> None:
-        if self.page != 1:
-            self.page -= 1
-            self.time = 0
-            
-            await self.__print_list(interaction)
-            return
-        
-        if self.pages == 1:
+    async def prev_button(self, interaction: Interaction, _: ui.Button):
+        if self.pages <= 1:
             await interaction.response.defer()
             return
 
-        self.page = self.pages
-        self.time = 0
-        await self.__print_list(interaction)
+        self.page = self.page - 1 if self.page > 1 else self.pages
+        self._reset_timeout()
+        await self._render_page(interaction)
 
     @ui.button(label="Next ➡️", style=ButtonStyle.primary)
-    async def next_button(self, interaction: Interaction, button: ui.Button) -> None:
-        if self.page != self.pages:
-            self.page += 1
-            self.time = 0
-
-            await self.__print_list(interaction)
-            return
-
-        if self.pages == 1:
+    async def next_button(self, interaction: Interaction, _: ui.Button):
+        if self.pages <= 1:
             await interaction.response.defer()
             return
 
-        self.page = 1
-        self.time = 0
-        await self.__print_list(interaction)
+        self.page = self.page + 1 if self.page < self.pages else 1
+        self._reset_timeout()
+        await self._render_page(interaction)

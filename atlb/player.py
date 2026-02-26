@@ -1,7 +1,7 @@
-# AT PROJECT Limited 2022 - 2024; AT_nEXT-v3.6-beta.1
+# AT PROJECT Limited 2022 - 2024; nEXT-v4.0_beta.1
 from enum import Enum
 
-from wavelink import Playable, Player as WPlayer
+from wavelink import Playable, Player
 from discord import Interaction
 
 class LoopState(Enum):
@@ -33,14 +33,15 @@ class Track():
         return self.user_requested
 
 
-class Player():
+class InteractionPlayer():
     def __init__(self, interaction: Interaction,
-                 voice_client: WPlayer) -> None:
+                 voice_client: Player) -> None:
         self.interaction: Interaction = interaction
-        self.voice_client: WPlayer = voice_client
+        self.voice_client: Player = voice_client
         self.track_list: list[Track] = list()
         self.loop = LoopState.STRAIGHT
         self.position: int = 0
+        self.msg = None
 
     def next_song(self, change_track: bool = False) -> None:
         if len(self.track_list) - 1 == self.position and\
@@ -59,19 +60,22 @@ class Player():
         if self.position == 0:
             self.position = len(self.track_list) - 1
             return
+        
         self.position -= 1
 
     def get_current_song(self) -> Track:
         if len(self.track_list) == 0:
             return None
+        
         return self.track_list[self.position]
     
     def get_song(self, position: int) -> Track:
         if position > len(self.track_list) - 1:
             raise ValueError
+        
         return self.track_list[position]
     
-    def get_voice_client(self) -> WPlayer:
+    def get_voice_client(self) -> Player:
         return self.voice_client
         
     def clear_list(self) -> None:
@@ -94,15 +98,18 @@ class Player():
     def set_position(self, position: int) -> None:
         if position > len(self.track_list) - 1:
             raise IndexError
+        
         self.position = position
     
     def change_loop_state(self) -> None:
         if self.loop == LoopState.CURRENT:
             self.loop = LoopState.STRAIGHT
             return
+        
         if self.loop == LoopState.LOOP:
             self.loop = LoopState.CURRENT
             return
+        
         self.loop = LoopState.LOOP
         
     def add_song(self, song: Playable, user: str) -> None:
@@ -113,6 +120,7 @@ class Player():
         return self.interaction
     
     def remove_song(self, position: int) -> bool:
+        """Returns true if you need to change track after removing (current track was removed)"""
         if position > len(self.track_list):
             raise IndexError
         

@@ -6,6 +6,7 @@ def default():
     embed.add_field(name="Global COMMANDS", value="`sc.inspect`", inline=False)
     embed.add_field(name="Music", value="`/youtube`, `/soundcloud`, `/spotify`, `/resend_control`, `/seek`, `/clear`")
     embed.add_field(name="User list [Music]", value="`/list add`, `/list display`, `/list remove`, `/list play`")
+
     return embed
 
 
