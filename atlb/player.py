@@ -1,8 +1,11 @@
-# AT PROJECT Limited 2022 - 2024; nEXT-v4.0_beta.1
+# AT PROJECT Limited 2022 - 2024; nEXT-v4.0_beta.2
 from enum import Enum
 
+import discord
+from discord import Interaction, Message
 from wavelink import Playable, Player
-from discord import Interaction
+
+from logger import logger
 
 class LoopState(Enum):
     STRAIGHT = 0
@@ -41,7 +44,7 @@ class InteractionPlayer():
         self.track_list: list[Track] = list()
         self.loop = LoopState.STRAIGHT
         self.position: int = 0
-        self.msg = None
+        self.msg: Message = None
 
     def next_song(self, change_track: bool = False) -> None:
         if len(self.track_list) - 1 == self.position and\
@@ -96,6 +99,7 @@ class InteractionPlayer():
         return self.loop
     
     def set_position(self, position: int) -> None:
+        """Sets new position. Raises IndexError"""
         if position > len(self.track_list) - 1:
             raise IndexError
         
@@ -120,7 +124,10 @@ class InteractionPlayer():
         return self.interaction
     
     def remove_song(self, position: int) -> bool:
-        """Returns true if you need to change track after removing (current track was removed)"""
+        """Returns true if you need to change track after removing (current track was removed)
+        
+        Raises IndexError
+        """
         if position > len(self.track_list):
             raise IndexError
         
@@ -136,3 +143,60 @@ class InteractionPlayer():
         
         self.track_list.pop(position)
         return False    
+
+    def get_msg(self) -> Message | None:
+        return self.msg
+    
+    async def delete_message(self):
+        """Raises discord.HTTPException to be handled at parrent method"""
+        try:
+            await self.msg.delete()
+        except discord.NotFound:
+            return
+        except discord.Forbidden as e:
+            logger.warning(
+                f"Unable to delete message, forbidden. {e}"
+            )
+        except discord.HTTPException as e:
+            logger.error(f"Unexpected HTTP exception. {e}")
+            raise discord.HTTPException
+
+        self.msg = None
+
+    async def send_message(self,
+                           embed: discord.Embed,
+                           view: discord.ui.View,
+                           interaction: discord.Interaction):
+        """Raises: discord.HTTPException from interaction.channel.send"""
+        try:
+            self.msg = await interaction.channel.send(embed=embed, view=view)
+        except discord.NotFound as e:
+            logger.warning(e)
+        except discord.Forbidden as e:
+            logger.warning(
+                f"Unable to delete message, forbidden. {e}"
+            )
+        except discord.HTTPException as e:
+            logger.error(f"Unexpected HTTP exception. {e}")
+            raise discord.HTTPException
+
+
+    async def edit_message(self,
+                           view: discord.ui.View, 
+                           embed: discord.Embed):
+        """Raises: discord.HTTPException, discord.NotFound (if self.msg is None)
+
+        Not handles: discord.NotFound from discord.Message.edit (to be handled in parrent function)
+        """
+        if self.msg is None:
+            raise discord.NotFound
+
+        try:
+            await self.msg.edit(view=view, embed=embed)
+        except discord.Forbidden as e:
+            logger.warning(
+                f"Unable to delete message, forbidden. {e}"
+            )
+        except discord.HTTPException as e:
+            logger.error(f"Unexpected HTTP exception. {e}")
+            raise discord.HTTPException
