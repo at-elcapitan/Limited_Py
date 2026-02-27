@@ -1,4 +1,4 @@
-# AT PROJECT Limited 2022 - 2024; nEXT-v4.0_beta.1
+# AT PROJECT Limited 2022 - 2024; nXRE-v3.7_beta.2
 import math
 import datetime
 
@@ -30,7 +30,7 @@ class SongSearchResult():
 
 class ServerController():
     def __init__(self) -> None:
-        self.players: list[player.InteractionPlayer] = {}
+        self.players = {}
 
     def get_player(self, guild: int) -> player.InteractionPlayer:
         if guild not in self.players.keys():
@@ -51,7 +51,7 @@ class ServerController():
         del self.players[guild]
 
     async def cleanup(self):
-        for pl in self.players:
+        for pl in self.players.values():
             try:
                 await pl.delete_message()
             except discord.HTTPException as e:
@@ -117,7 +117,7 @@ class music_cog(commands.Cog):
         try:
             await interaction.response.send_message("Processing...", ephemeral=True)
         except discord.errors.NotFound:
-            interaction.channel.send("Unexpected error, cannot send message.")
+            await interaction.channel.send("Unexpected error, cannot send message.")
             await interaction_player.voice_client.disconnect()
             return
 
@@ -326,8 +326,8 @@ class music_cog(commands.Cog):
         
         try:
             await pl.edit_message(view, embed)
-        except discord.NotFound:
-            await pl.send_message(view, embed)
+        except player.NotFound:
+            await pl.send_message(embed, view, interaction)
 
     async def get_song(self, query) -> SongSearchResult | None:
         try:
@@ -414,7 +414,7 @@ class music_cog(commands.Cog):
                 await voice_client.disconnect()
 
                 try:
-                    interaction_player.delete_message()
+                    await interaction_player.delete_message()
                 except discord.HTTPException as e:
                     logger.error(f"Unexpected HTTP exception: {e}")
 

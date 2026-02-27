@@ -3,3 +3,4 @@ wavelink==3.4.1
 pydantic
 colorama
 psycopg2
+pynacl

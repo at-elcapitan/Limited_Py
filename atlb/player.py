@@ -1,4 +1,4 @@
-# AT PROJECT Limited 2022 - 2024; nEXT-v4.0_beta.2
+# AT PROJECT Limited 2022 - 2024; nXRE-v3.7_beta.2
 from enum import Enum
 
 import discord
@@ -22,6 +22,9 @@ class NoneVoiceClientException(Exception):
     def __init__(self) -> None:
         super().__init__("Voice client is None")
 
+class NotFound(Exception):
+    def __init__(self) -> None:
+        super().__init__("Message not initialized (not found)")
 
 class Track():
     def __init__(self, track: Playable,
@@ -149,6 +152,9 @@ class InteractionPlayer():
     
     async def delete_message(self):
         """Raises discord.HTTPException to be handled at parrent method"""
+        if self.msg is None:
+            return
+        
         try:
             await self.msg.delete()
         except discord.NotFound:
@@ -159,7 +165,7 @@ class InteractionPlayer():
             )
         except discord.HTTPException as e:
             logger.error(f"Unexpected HTTP exception. {e}")
-            raise discord.HTTPException
+            raise e
 
         self.msg = None
 
@@ -178,7 +184,7 @@ class InteractionPlayer():
             )
         except discord.HTTPException as e:
             logger.error(f"Unexpected HTTP exception. {e}")
-            raise discord.HTTPException
+            raise e
 
 
     async def edit_message(self,
@@ -189,7 +195,7 @@ class InteractionPlayer():
         Not handles: discord.NotFound from discord.Message.edit (to be handled in parrent function)
         """
         if self.msg is None:
-            raise discord.NotFound
+            raise NotFound
 
         try:
             await self.msg.edit(view=view, embed=embed)
@@ -199,4 +205,4 @@ class InteractionPlayer():
             )
         except discord.HTTPException as e:
             logger.error(f"Unexpected HTTP exception. {e}")
-            raise discord.HTTPException
+            raise e

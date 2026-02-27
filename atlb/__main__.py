@@ -5,6 +5,7 @@ import discord
 import psycopg2
 import wavelink
 
+import utils
 import embeds
 from exceptions import FileError
 from music import music_cog
@@ -53,7 +54,7 @@ async def on_ready():
     node: wavelink.Node = wavelink.Node(uri=f'http://{LVHOST}', password=PASSWD)
     await wavelink.Pool.connect(client=bot, nodes=[node])
 
-    logger.info("Bot ready")
+    utils.send_postinit_message()
     
 
 @bot.event
