@@ -23,13 +23,17 @@ Clone this repository to your local machine using the Git program:
 Create a `docker.env` file in the bot's directory and fill it with your specific values. The file should follow this pattern:
 
 ```yaml
-DISCORD_TOKEN = your_token
-PASSWD = youshallnotpass
-LVHOST = lavalink:2333
-DBHOST = postgres
-DBUSER = postgres
-DBPASS = yourpassword
+DISCORD_TOKEN=your_token
+PASSWD=youshallnotpass
+LVHOST=lavalink:2333
+DBHOST=postgres
+DBUSER=postgres
+DBPASS=yourpassword
+LOGLEVEL=INFO
 ```
+
+> [!NOTE]
+> LOGLEVEL is an optional environment variable. You can remove it and loglevel will be set to INFO
 
 Don't forget to replace `DISCORD_TOKEN` with your value. 
 

@@ -1,5 +1,7 @@
-discord
-wavelink==3.4.1
+discord.py
+mafic
 pydantic
 colorama
 psycopg2
+pynacl
+davey

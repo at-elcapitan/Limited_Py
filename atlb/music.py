@@ -1,18 +1,19 @@
-# AT PROJECT Limited 2022 - 2024; AT_nEXT-v3.6.3
+# AT PROJECT nEXT Reemerged; nXRE-v3.7_beta.4
 import math
 import datetime
 
+import mafic
 import discord
-import wavelink
 from discord import ui
 from discord import Interaction
 from discord import ButtonStyle
 from discord.ext import commands
 from discord import app_commands
 
+import utils
 import player
 import messages
-import strparser
+from logger import logger
 from embeds import error_embed, event_embed
 
 class PlayerNotFoundException(Exception):
@@ -30,62 +31,76 @@ class ServerController():
     def __init__(self) -> None:
         self.players = {}
 
-    def get_player(self, guild: int) -> player.Player:
-        if not guild in self.players.keys():
+    def get_player(self, guild: int) -> player.InteractionPlayer:
+        if guild not in self.players.keys():
             raise PlayerNotFoundException(guild)
         
         return self.players[guild]
     
     def create_player(self, interaction: discord.Interaction,
-                      voice_channel: discord.VoiceChannel) -> player.Player:
-        pl = player.Player(interaction, voice_channel)
+                      voice_channel: discord.VoiceChannel) -> player.InteractionPlayer:
+        pl = player.InteractionPlayer(interaction, voice_channel)
         self.players[interaction.guild_id] = pl
         return pl
     
     def remove_player(self, guild) -> None:
-        if not guild in self.players.keys():
+        if guild not in self.players.keys():
             raise PlayerNotFoundException
     
         del self.players[guild]
+
+    async def cleanup(self):
+        for pl in self.players.values():
+            try:
+                await pl.delete_message()
+            except discord.HTTPException as e:
+                logger.error(f"Unable to clean message (HTTP exception): {e}")
 
 
 class music_cog(commands.Cog):
     group = app_commands.Group(name = "list", description = "user list commands group")
 
-    def __init__(self, bot, connection, logger):
+    def __init__(self, bot, connection):
         self.controller = ServerController()
         self.bot: commands.Bot = bot
         self.dbconn = connection
-        self.logger = logger
-        self.msg = {}
 
-    async def is_user_in_voice(self, interaction: discord.Interaction) -> bool:
+    # Technical functions
+    async def check_user_in_voice(self, interaction: discord.Interaction) -> bool:
         if interaction.user.voice is None:
-                await interaction.response.send_message(
-                    embed=error_embed("870", "VC Error", "Can't get your voice channel"),
-                                      ephemeral=True)
-                return False
+            await interaction.response.send_message(
+                embed=error_embed("870", "VC Error", "Can't get your voice channel"),
+                                    ephemeral=True)
+            return False
 
         return True
-
+    
+    def format_seconds(self, seconds: int) -> str:
+        if seconds >= 60:
+            m = seconds // 60
+            s = seconds % 60
+            return f"{m}m {s:02d}s"
+        
+        return f"{seconds}s"
+    
     async def bot_cleanup(self):
-        for message in self.msg:
-            if self.msg[message] is not None: await self.msg[message].delete()
+        await self.controller.cleanup()
 
     async def play(self, interaction: discord.Interaction, response: SongSearchResult):
-        if not await self.is_user_in_voice(interaction):
+        interaction_player: player.InteractionPlayer = None
+
+        if not await self.check_user_in_voice(interaction):
             return
         
         try:
-            interaction_player = self.controller.get_player(interaction.guild_id)
-            voice_channel = interaction_player.get_voice_client()
+            interaction_player = self.controller.get_player(interaction.guild.id)
         except PlayerNotFoundException:
-            voice_channel = await interaction.user.voice\
-                            .channel.connect(cls=wavelink.Player)
-            interaction_player = self.controller\
-                        .create_player(interaction, voice_channel)
+            logger.error("Player must be initialized, but was not found (play)")
+            return
 
-        if response.song is None:
+        voice_client: mafic.Player = interaction_player.get_voice_client()
+
+        if response is None:
             await interaction.response.send_message(embed=error_embed("872", 
                                 "Not found", "Can't find song"), ephemeral = True)
             return
@@ -93,74 +108,109 @@ class music_cog(commands.Cog):
         song = response.song
 
         if response.is_playlist:
-                for x in song.tracks: interaction_player.add_song(x, interaction.user.name)
-        else: interaction_player.add_song(song, interaction.user.name)
+            for x in song.tracks: 
+                interaction_player.add_song(x, interaction.user.name)
+        else: 
+            interaction_player.add_song(song, interaction.user.name)
         
         try:
             await interaction.response.send_message("Processing...", ephemeral=True)
         except discord.errors.NotFound:
-            interaction.channel.send("Unexpected error, cannot send message.")
-            await interaction_player.voice_client.disconnect()
+            await interaction.channel.send("Unexpected error, cannot send message.")
+            await voice_client.disconnect()
             return
 
-        if voice_channel.playing and interaction_player.get_list_length() != 1:
+        if not voice_client.paused and interaction_player.get_list_length() != 1:
             self.bot.dispatch("return_message", interaction)
             return
               
         self.bot.dispatch("handle_music", interaction)
 
-    async def nEXT_queue(self, interaction: Interaction):
-        interaction_player = self.controller.get_player(interaction.guild_id)
+    async def next_queue(self, interaction: Interaction):
+        try:
+            pl = self.controller.get_player(interaction.guild_id)
+        except PlayerNotFoundException:
+            logger.error("Player must be initialized, but was not found (next_queue)")
+            return
+        
+        items_per_page = 10
 
-        page = math.ceil((interaction_player.get_position() + 1) / 10 + 0.1)
-        pages = math.ceil(interaction_player.get_list_length() / 10 + 0.1)
+        playlist = pl.get_list()
+        total_items = pl.get_list_length()
+        current_position = pl.get_position()
+
+        current_page = math.ceil((current_position + 1) / items_per_page)
+        total = max(1, math.ceil(total_items / items_per_page))
 
         view = messages.ListView(
-            interaction_player.get_list(),
-            interaction_player.get_list_length(),
-            pages,
-            page,
+            playlist,
+            total_items,
+            total,
+            current_page,
             True,
-            interaction_player.get_position()
+            current_position
         )
 
         embed = discord.Embed(color=0x915AF2)
-        embed.add_field(name="📄 Playlist", value=self.generate_playlist_text(interaction_player, page))
-        embed.set_footer(text=f"Page: {page} of {pages}")
+        embed.add_field(
+            name="📄 Playlist",
+            value=self.generate_playlist_text(pl, current_page),
+            inline=False
+        )
+        embed.set_footer(text=f"Page: {current_page} of {total}")
 
-        await interaction.followup.send(embed=embed, view=view, ephemeral=True)
+        await interaction.followup.send(
+            embed=embed,
+            view=view,
+            ephemeral=True
+        )
+
         await view.time_stop()
 
     def generate_playlist_text(self, interaction_player, page):
         start = 10 * (page - 1) if page > 1 else 0
         end = 10 * page
 
-        playlist_text = []
+        playlist_text = ""
+
         for i in range(start, end):
             try:
                 track = interaction_player.get_song(i).get_track()
             except ValueError:
                 break
 
-            title = self.truncate_title(track.title)
+            title = utils.truncate_title(track.title)
 
             if i == interaction_player.get_position():
-                playlist_text.append(f"**{i + 1}. {title}**")
+                playlist_text = playlist_text + f"**{i + 1}. {title}**"
                 continue
 
-            playlist_text.append(f"{i + 1}. {title}")
+            playlist_text = playlist_text + f"\n{i + 1}. {title}"
 
-        return "\n".join(playlist_text)
-
-    def truncate_title(self, title, max_length=65):
-        if len(title) > max_length:
-            return title[:max_length - 3] + "..."
-        return title
+        return playlist_text
 
     # Listeners
+    # Syncers
+    @commands.Cog.listener()    
+    async def on_guilds_sync(self):
+        fmt = await self.bot.tree.sync()
+        logger.info(f"Synced \x1b[39;1m{len(fmt)}\x1b[39;0m commands [startup sync]")
+
+    @commands.Cog.listener()
+    async def on_guild_join(self, guild):
+        fmt = await self.bot.tree.sync()
+        logger.info(f"Synced {len(fmt)} commands. Initiated by \x1b[39;1m{guild} [{guild.id}]\x1b[39;0m guild"
+                         " (on_guild_join)")
+    
+    # Music handler
     @commands.Cog.listener()
     async def on_handle_music(self, interaction: discord.Interaction):
-        interaction_player = self.controller.get_player(interaction.guild_id)
+        try:
+            interaction_player = self.controller.get_player(interaction.guild_id)
+        except PlayerNotFoundException:
+            logger.error("Player must be initialized but not found (on_handle_music)")
+            return
+
         voice_client = interaction_player.get_voice_client()
 
         await voice_client.stop()
@@ -168,62 +218,98 @@ class music_cog(commands.Cog):
         
         self.bot.dispatch("return_message", interaction)
 
-    @commands.Cog.listener()    
-    async def on_guilds_autosync(self):
-        fmt = await self.bot.tree.sync()
-        self.logger.info(f"Synced \x1b[39;1m{len(fmt)}\x1b[39;0m commands [startup sync]")
-
-    @commands.Cog.listener()
-    async def on_guild_join(self, guild):
-        fmt = await self.bot.tree.sync()
-        self.logger.info(f"Synced {len(fmt)} commands. Initiated by \x1b[39;1m{guild} [{guild.id}]\x1b[39;0m guild"
-                         " (on_guild_join)")
-
+    # Message handler
     @commands.Cog.listener()
     async def on_return_message(self, interaction: discord.Interaction):
-        interaction_player = self.controller.get_player(interaction.guild_id)
-        track = interaction_player.get_current_song()
+        PRIMARY_ROW = 1
+        SECONDARY_ROW = 2
+
+        try:
+            pl = self.controller.get_player(interaction.guild_id)
+        except PlayerNotFoundException:
+            logger.error("Player must be initialized but not found (on_return_message)")
+            return
+        
+        track = pl.get_current_song()
+        voice_client = pl.get_voice_client()
+
         view = ui.View()
 
-        stop_pause_btn = "▶️ Resume" if interaction_player.get_voice_client().paused else "⏸️ Pause"
-
-        loop_state = interaction_player.get_loop_state()
-        loop_btn, footer_loop_text = self.get_loop_info(loop_state)
+        # Dynamic button states
+        pause_label = "▶️ Resume" if voice_client.paused else "⏸️ Pause"
+        loop_icon, loop_style, footer_loop_text = self.get_loop_info(
+            pl.get_loop_state()
+        )
 
         buttons = [
-            ("🔈 Down", "down", 1), ("⏮️ Previous", "prev", 1),
-            (stop_pause_btn, "pause", 1), ("⏭️ Next", "next", 1),
-            ("🔊 Up", "up", 1), ("📄 Queue", "queue", 2),
-            ("🧹 Clear", "clearq", 2), ("⏹️ Stop", "stop", 2),
-            (f"{loop_btn[0]} Loop", "loop", 2), ("⏪ Restart", "beg", 2)
+            ("🔈 Down", "down", PRIMARY_ROW),
+            ("⏮️ Previous", "prev", PRIMARY_ROW),
+            (pause_label, "pause", PRIMARY_ROW),
+            ("⏭️ Next", "next", PRIMARY_ROW),
+            ("🔊 Up", "up", PRIMARY_ROW),
+            ("📄 Queue", "queue", SECONDARY_ROW),
+            ("🧹 Clear", "clearq", SECONDARY_ROW),
+            ("⏹️ Stop", "stop", SECONDARY_ROW),
+            ("⏪ Restart", "beg", SECONDARY_ROW),
+            (f"{loop_icon} Loop", "loop", SECONDARY_ROW),
         ]
 
         for label, custom_id, row in buttons:
-            style = loop_btn[1] if custom_id == "loop" else ButtonStyle.primary if row == 1 else ButtonStyle.gray
-            view.add_item(ui.Button(label=label, style=style, custom_id=custom_id, row=row))
+            style = (
+                loop_style
+                if custom_id == "loop"
+                else ButtonStyle.primary
+                if row == PRIMARY_ROW
+                else ButtonStyle.gray
+            )
 
-        embed = self.create_embed(track, footer_loop_text, interaction_player)
-        await self.send_or_update_message(interaction, embed, view)
+            view.add_item(
+                ui.Button(
+                    label=label,
+                    style=style,
+                    custom_id=custom_id,
+                    row=row,
+                )
+            )
+
+        embed = self.create_embed(track, footer_loop_text, pl)
+
+        try:
+            await self.send_or_update_message(interaction, embed, view)
+        except discord.HTTPException as e:
+            logger.error(f"Unable to send/update message, {e}")
+        except PlayerNotFoundException:
+            logger.error(
+                "Unexpected PlayerNotFoundException in on_return_message: player must exist"
+            )
 
     def get_loop_info(self, loop_state):
-        loop_info = {
-            player.LoopState.STRAIGHT: (["🔁", ButtonStyle.gray], "turned off"),
-            player.LoopState.LOOP: (["🔁", ButtonStyle.success], "on playlist"),
-            player.LoopState.CURRENT: (["🔂", ButtonStyle.success], "current song")
+        loop_map = {
+            player.LoopState.STRAIGHT: ("🔁", ButtonStyle.gray, "turned off"),
+            player.LoopState.LOOP: ("🔁", ButtonStyle.success, "on playlist"),
+            player.LoopState.CURRENT: ("🔂", ButtonStyle.success, "current song"),
         }
 
-        return loop_info.get(loop_state, (["🔁", ButtonStyle.gray], "unknown"))
+        return loop_map.get(loop_state, ("🔁", ButtonStyle.gray, "unknown"))
 
-    def create_embed(self, track, loop_on, interaction_player) -> discord.Embed:
+    def create_embed(self, 
+                     track: player.PlayableTrack, 
+                     loop_on, 
+                     interaction_player: player.InteractionPlayer
+                     ) -> discord.Embed:
+        voice_client = interaction_player.get_voice_client()
+
         if track:
-            song_len = datetime.datetime.fromtimestamp(track.get_track().length / 1000).strftime("%M:%S")
+            current_track = track.get_track()
+
+            song_len = datetime.datetime.fromtimestamp(current_track.length / 1000).strftime("%M:%S")
             embed = discord.Embed(
-                title=track.get_track().title,
-                description=f"Song length: {song_len}\n\n> URL: [link]({track.get_track().uri})\n> Ordered by: `{track.get_user_requested()}`",
+                title=current_track.title,
+                description=f"Song length: {song_len}\n\n> URL: [link]({current_track.uri})\n> Ordered by: `{track.get_user_requested()}`",
                 color=0xa31eff
             )
 
-            footer = f"Loop: {loop_on}\nPosition: {interaction_player.get_position() + 1} of {interaction_player.get_list_length()}\nVolume: {interaction_player.get_voice_client().volume}%"
+            footer = f"Loop: {loop_on}\nPosition: {interaction_player.get_position() + 1} of {interaction_player.get_list_length()}\nVolume: {voice_client._volume}%"
             embed.set_footer(text = footer)
             return embed
         
@@ -233,75 +319,61 @@ class music_cog(commands.Cog):
             color=0xa31eff
         )
 
-        footer = f"Loop: {loop_on}\nPosition: 0 of 0 \nVolume: {interaction_player.get_voice_client().volume}%"
+        footer = f"Loop: {loop_on}\nPosition: 0 of 0 \nVolume: {voice_client._volume}%"
         embed.set_footer(text = footer)
 
         return embed
 
-    async def send_or_update_message(self, interaction, embed, view):
-        if interaction.guild_id not in self.msg:
-            self.msg[interaction.guild_id] = await interaction.channel.send(embed=embed, view=view)
-            return
+    async def send_or_update_message(self, 
+                                     interaction: discord.Interaction, 
+                                     embed: discord.Embed, 
+                                     view: ui.View):
+        """Not handles: PlayerNotFoundException, discord.HTTPException to be handled at parent method"""
+        pl = self.controller.get_player(interaction.guild_id)
         
         try:
-            await self.msg[interaction.guild_id].edit(embed=embed, view=view)
-        except:
-            await self.msg[interaction.guild_id].delete()
-            self.msg[interaction.guild_id] = await interaction.channel.send(embed=embed, view=view)
+            await pl.edit_message(view, embed)
+        except player.NotFound:
+            await pl.send_message(embed, view, interaction)
 
-    async def get_song(self, query, type: str = None):
-        # Checkin wether query is a soundcloud song
-        if type == 'sc':
-            if 'sets' in query:
-                try:    playlist = await wavelink.SoundCloudPlaylist.search(query)
-                except: return SongSearchResult(None, False)
-                
-                return SongSearchResult(playlist, True)
-        
-            try:    song = await wavelink.SoundCloudTrack.search(query)
-            except: return SongSearchResult(None, False)
-            
-            if len(song) == 0:
-                return SongSearchResult(None, False)
-            
-            song = song[0]
-            return SongSearchResult(song, False)
-        
-        # Checking whether query is YouTube playlist
-        if '&list' in query:
-            try:    song = await wavelink.YouTubePlaylist.search(query)
-            except: return SongSearchResult(None, False)
+    async def get_song(self, voice_client: mafic.Player, query) -> SongSearchResult | None:
+        song = await voice_client.fetch_tracks(query)
 
-            return SongSearchResult(song, True)
-        
-        # Nah, it isn't. So, it's YouTube video
-        try:    song = await wavelink.Playable.search(query)
-        except: return SongSearchResult(None, False)
+        if song is None:
+            return None
 
-        if len(song) == 0:
-            return SongSearchResult(None, False)
+        if type(song) is mafic.Playlist:
+            return SongSearchResult(song, is_playlist=True)
+        
         song = song[0]
 
-        return SongSearchResult(song, False)
+        return SongSearchResult(song, is_playlist=False)
        
     @commands.Cog.listener()
-    async def on_wavelink_track_end(self, payload: wavelink.TrackEndEventPayload):
-        payload_player = payload.player
-        reason = payload.reason
-        interaction_player = self.controller.get_player(payload_player.guild.id)
+    async def on_track_end(self, event: mafic.TrackEndEvent):
+        payload_player: mafic.Player = event.player
+        reason = event.reason
+
+        try:
+            interaction_player = self.controller.get_player(payload_player.guild.id)
+        except PlayerNotFoundException:
+            logger.error("Player must be initialized but not found (on_wavelink_track_end)")
+            return
+
         interaction = interaction_player.get_interaction()
 
-        if reason == "stopped" and\
+        if reason == mafic.EndReason.STOPPED and\
                 interaction_player.get_list_length() != 0:
             self.bot.dispatch("return_message", interaction)
 
-        if reason == 'finished':
+        if reason == mafic.EndReason.FINISHED:
             try:
                 interaction_player.next_song()
             except player.EndOfListException:
                 interaction_player.clear_list()
                 self.bot.dispatch("return_message", interaction)
                 return
+            
             self.bot.dispatch("handle_music", interaction)
             self.bot.dispatch("return_message", interaction)
 
@@ -318,20 +390,21 @@ class music_cog(commands.Cog):
         try:
             interaction_player = self.controller.get_player(interaction.guild.id)
         except PlayerNotFoundException:
+            logger.error("Player must be initialized, but was not found (on_interaction)")
             return
         
         voice_client = interaction_player.get_voice_client()
 
         match button_id:
             case "down":
-                if not voice_client.volume == 0:
-                    await voice_client.set_volume(voice_client.volume - 10)
+                if not voice_client._volume == 0:
+                    await voice_client.set_volume(voice_client._volume - 10)
                     self.bot.dispatch("return_message", interaction)
                     await interaction.response.defer()
 
             case "up":
-                if not voice_client.volume == 150:
-                    await voice_client.set_volume(voice_client.volume + 10)
+                if not voice_client._volume == 150:
+                    await voice_client.set_volume(voice_client._volume + 10)
                     self.bot.dispatch("return_message", interaction)
                     await interaction.response.defer()
 
@@ -340,19 +413,20 @@ class music_cog(commands.Cog):
                 self.bot.dispatch("return_message", interaction)
                 await interaction.response.defer()
 
-
             case "queue":
                 await interaction.response.defer()
-                await self.nEXT_queue(interaction)
+                await self.next_queue(interaction)
 
             case "stop":
                 await voice_client.stop()
                 await voice_client.disconnect()
-                self.controller.remove_player(interaction.guild_id)
 
-                await self.msg[interaction.guild_id].delete()
-                del self.msg[interaction.guild_id]
-                
+                try:
+                    await interaction_player.delete_message()
+                except discord.HTTPException as e:
+                    logger.error(f"Unexpected HTTP exception: {e}")
+
+                self.controller.remove_player(interaction.guild_id)
                 await interaction.response.defer()
 
             case "clearq":
@@ -370,7 +444,7 @@ class music_cog(commands.Cog):
                 await interaction.response.defer()
 
             case "beg":
-                await voice_client.seek()
+                await voice_client.seek(0)
                 await interaction.response.defer()
 
             case "next":
@@ -380,6 +454,8 @@ class music_cog(commands.Cog):
                     interaction_player.next_song(True)
                 except player.EndOfListException:
                     interaction_player.clear_list()
+                    await voice_client.stop()
+
                     self.bot.dispatch("return_message", interaction)
                     return
                 
@@ -397,31 +473,63 @@ class music_cog(commands.Cog):
     @app_commands.command(name="youtube", description="Play YouTube track")
     @app_commands.describe(query="Song name or link")
     async def play_yt(self, interaction: discord.Interaction, query: str):
-        response = await self.get_song(query)
+        try:
+            interaction_player = self.controller.get_player(interaction.guild_id)
+            voice_client = interaction_player.get_voice_client()
+        except PlayerNotFoundException:
+            voice_client = await interaction.user.voice.channel.connect(cls=mafic.Player)
+            interaction_player = self.controller.create_player(interaction, voice_client)
         
-        if response.song is None:
+        voice_client = interaction_player.get_voice_client()
+
+        response = await self.get_song(voice_client, query)
+        
+        if response is None:
             await interaction.response.send_message(embed=error_embed("872", "Not found", "Can't find song"),
                                                     ephemeral=True)
             return
 
         await self.play(interaction, response)
 
+    """
     @app_commands.command(name="soundcloud", description="Play SoundCloud track")
     @app_commands.describe(query="Song name or link")
     async def play_soundcloud(self, interaction: discord.Interaction, query: str):
         response = await self.get_song(query, 'sc')
 
-        if response.song is None:
+        if response is None:
             await interaction.response.send_message(embed=error_embed("872", "Not found", "Can't find song"),
                                                     ephemeral=True)
             return
         
         await self.play(interaction, response)
+    """
 
     @app_commands.command(name="resend_control", description="Resends music control panel")
     async def resend_song_ctl(self, interaction: discord.Interaction):
-        await self.msg[interaction.guild_id].delete()
-        self.msg[interaction.guild_id] = None
+        try:
+            pl = self.controller.get_player(interaction.guild_id)
+        except PlayerNotFoundException:
+            interaction.response.send_message(
+                ephemeral=True,
+                embed=error_embed(
+                    "870.1", "VC Error", "Music player not found (bot is not connected)"
+                )
+            )
+
+        try:
+            pl.delete_message()
+        except discord.HTTPException as e:
+            interaction.response.send_message(
+                ephemeral=True,
+                embed=error_embed(
+                    "HTTP/4xx", 
+                    "Deletion error", 
+                    "Unable to delete original message, contact administrator"
+                )
+            )
+            logger.error(f"Unexpected HTTP exception: {e}")
+
         await interaction.response.send_message("Processing...", ephemeral=True)
         self.bot.dispatch("return_message", interaction)
 
@@ -431,75 +539,98 @@ class music_cog(commands.Cog):
         try:
             interaction_player = self.controller.get_player(interaction.guild_id)
         except PlayerNotFoundException:
+            await interaction.response.send_message(
+                embed=error_embed(
+                    "870.1", 
+                    "Change error", 
+                    "Not connected to voice channel."
+                ),
+                ephemeral = True
+            )
+            return
+
+        voice_client = interaction_player.get_voice_client()
+        if voice_client.current is None:
+            await interaction.response.send_message(
+                embed=error_embed("870.2", "Seek error", "Nothing is currently playing."),
+                ephemeral=True
+            )
+            return
+
+        pos_ms = voice_client.position + seconds * 1000
+        await voice_client.seek(pos_ms)
+
+        txt = self.format_seconds(seconds)
+        current_song = interaction_player.get_current_song().get_track().title
+
+        await interaction.response.send_message(
+            embed=event_embed(name="✅ Seek complete", text=f"Track **{current_song}** seeked for `{txt}`"),
+            ephemeral=True
+        )
+
+    @app_commands.command(name="remove", description="Deleting soundtrack from the queue")
+    @app_commands.describe(position="Song position")
+    async def clear(self, interaction: discord.Interaction, position: int = None):
+        try:
+            interaction_player = self.controller.get_player(interaction.guild_id)
+        except PlayerNotFoundException:
             await interaction.response.send_message(embed=error_embed("870.1", "Change error", 
                                                     "Not connected to voice channel."),
                                                     ephemeral = True)
             return
 
-        voice_client = interaction_player.get_voice_client()
-
-        if voice_client.playing:
-            pos = voice_client.position + (seconds * 1000)
-            await voice_client.seek(pos)
-            
-            if seconds > 60:
-                m = int(seconds // 60)
-                s = int(seconds %  60)
-
-                if s > 9:
-                    txt = f'{m}m {s}s'
-                else:
-                    txt = f'{m}m 0{s}s'
-
-            else:
-                txt = f'{int(seconds)}s'
-
-            await interaction.response.send_message(embed=event_embed(name="✅ Seek complete", 
-                text=f"Track **{interaction_player.get_current_song().get_track().title}** seeked for `{txt}`"),
-                ephemeral= True)
-
-    @app_commands.command(name="remove", description="Deleting soundtrack from the queue")
-    @app_commands.describe(position="Song position")
-    async def clear(self, interaction: discord.Interaction, position: int = None):
-        interaction_player = self.controller.get_player(interaction.guild_id)
         try:
-            if interaction_player.remove_song(position - 1):
-                self.bot.dispatch("return_message", interaction)
-                self.bot.dispatch("handle_music", interaction)
-                await interaction.response.send_message("Removed", ephemeral=True)
-                return
-            self.bot.dispatch("return_message", interaction)
-            await interaction.response.send_message("Removed", ephemeral=True)
+            change_tack_needed = interaction_player.remove_song(position - 1)
         except IndexError:
             await interaction.response.send_message(embed = error_embed(
                     "870",
                     "Incorrect position", "Track does not exist."),
                     ephemeral = True
                 )
+            
+        if change_tack_needed:
+            self.bot.dispatch("return_message", interaction)
+            self.bot.dispatch("handle_music", interaction)
+            await interaction.response.send_message("Removed", ephemeral=True)
+            return
+        
+        self.bot.dispatch("return_message", interaction)
+        await interaction.response.send_message("Removed", ephemeral=True)
         
     @app_commands.command(name="jmp", description="Jump to a track")
     @app_commands.describe(position="Song position")
     async def song_jump(self, interaction: discord.Interaction, position: int):
         try:
-            self.controller.get_player(interaction.guild_id)\
-                            .set_position(position - 1)
-            await interaction.response.send_message("Processing...", ephemeral=True)
-            self.bot.dispatch("handle_music", interaction)
-            await interaction.response.defer()
-        except:
+            self.controller.get_player(interaction.guild_id).set_position(position - 1)
+        except IndexError:
             await interaction.response.send_message(embed = error_embed(
                     "870",
                     "Incorrect position", "Track does not exist."),
                     ephemeral = True
                 )
+        except PlayerNotFoundException:
+            await interaction.response.send_message(
+                embed = error_embed(
+                    "870.1",
+                    "Player not found", 
+                    "Maybe you are not listening music"
+                ),
+                ephemeral = True
+            )
+            
+        await interaction.response.send_message("Processing...", ephemeral=True)
+        self.bot.dispatch("handle_music", interaction)
+        await interaction.response.defer()
 
-    # Userlist
+    # TODO: Revork and enable at 3.8
+"""     # Userlist
     @group.command(name="display", description="Displaying user list")
     @app_commands.describe(page="List page")
     async def user_list_print(self, interaction: discord.Interaction, page: int = 0):
         await interaction.response.defer(ephemeral = True)
+
         cursor = self.dbconn.cursor()
-        cursor.execute(f"SELECT music_name, music_url FROM music_data WHERE user_id = %s", (interaction.user.id,))
+        cursor.execute("SELECT music_name, music_url FROM music_data WHERE user_id = %s", (interaction.user.id,))
         songs_list = cursor.fetchall()
 
         retval = ""
@@ -545,13 +676,13 @@ class music_cog(commands.Cog):
     @app_commands.describe(position="position")
     async def user_list_clear(self, interaction: discord.Interaction, position: int):
         cursor = self.dbconn.cursor()
-        cursor.execute(f"SELECT music_name, music_url, id FROM music_data WHERE user_id = %s", (interaction.user.id,))
+        cursor.execute("SELECT music_name, music_url, id FROM music_data WHERE user_id = %s", (interaction.user.id,))
         songs_list = cursor.fetchall()
 
         id = songs_list[position - 1][2]
         name = songs_list[position - 1][0]
 
-        cursor.execute(f'DELETE FROM music_data WHERE id = %s', (id,))
+        cursor.execute('DELETE FROM music_data WHERE id = %s', (id,))
         self.dbconn.commit()
         await interaction.response.send_message(embed=event_embed(name="✅ Success!", text= f'Track **{name}** deleted'),
                                                 ephemeral=True)
@@ -566,7 +697,7 @@ class music_cog(commands.Cog):
     async def user_list_add(self, interaction: discord.Interaction, provider: app_commands.Choice[str], query: str):
         response = await self.get_song(query, provider.value)
 
-        if response.song is None:
+        if response is None:
             await interaction.response.send_message(embed=error_embed("872", "Not found", "Can't find song"),
                                                     ephemeral=True)
             return
@@ -607,7 +738,7 @@ class music_cog(commands.Cog):
                         .create_player(interaction, voice_channel)
 
         cursor = self.dbconn.cursor()
-        cursor.execute(f"SELECT music_name, music_url FROM music_data WHERE user_id = %s", (interaction.user.id,))
+        cursor.execute("SELECT music_name, music_url FROM music_data WHERE user_id = %s", (interaction.user.id,))
         songs_list = cursor.fetchall()
 
         if len(songs_list) == 0:
@@ -636,7 +767,8 @@ class music_cog(commands.Cog):
             if response.is_playlist:
                 for x in song.tracks:
                     interaction_player.add_song(x, interaction.user.name)
-            else: interaction_player.add_song(song, interaction.user.name)
+            else: 
+                interaction_player.add_song(song, interaction.user.name)
 
             if not voice_channel.playing and interaction_player.get_list_length() == 1:
                 self.bot.dispatch("handle_music", interaction)
@@ -648,7 +780,6 @@ class music_cog(commands.Cog):
     async def add_current(self, interaction):
         try:
             int_player = self.controller.get_player(interaction.guild_id)
-
         except PlayerNotFoundException:
             await interaction.response.send_message(embed=error_embed("870", "VC Error", "Can't get your voice channel"),
                                                     ephemeral=True)
@@ -656,7 +787,7 @@ class music_cog(commands.Cog):
         
         song = int_player.get_current_song()
 
-        if song == None:
+        if song is None:
             await interaction.response.send_message(embed=error_embed("872.3", "Not found", "May be you are not playing any song"),
                                                     ephemeral=True)
             return
@@ -670,4 +801,4 @@ class music_cog(commands.Cog):
 
         await interaction.response.send_message(embed=event_embed(name="✅ Success!", 
                                                 text=f'Song added to the list \n **{song.title}**'),
-                                                ephemeral=True)
+                                                ephemeral=True) """
