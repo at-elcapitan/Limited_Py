@@ -1,7 +1,14 @@
+# AT PROJECT nEXT Reemerged; nXRE-v3.7_beta.4
+import os
 import sys
 import logging
 
 import colorama
+from dotenv import load_dotenv
+
+load_dotenv()
+
+LOGLEVEL = os.environ.get('LOGLEVEL')
 
 colorama.init(autoreset=True)
 class ColoredFormatter(logging.Formatter):
@@ -30,5 +37,13 @@ output_handler = logging.StreamHandler(sys.stdout)
 output_handler.setFormatter(ColoredFormatter())
 
 logger = logging.getLogger('discord')
-logger.setLevel(logging.INFO)
+logger.setLevel(
+    getattr(logging, LOGLEVEL, logging.INFO)
+)
+logger.addHandler(output_handler)
+
+mafic_logger = logging.getLogger('mafic')
+logger.setLevel(
+    getattr(logging, LOGLEVEL, logging.INFO)
+)
 logger.addHandler(output_handler)

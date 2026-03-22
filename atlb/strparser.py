@@ -1,4 +1,4 @@
-# AT PROJECT Limited 2022 - 2024; nEXT-v4.0_beta.1
+# AT PROJECT nEXT Reemerged; nEXT-v4.0_beta.1
 class ParseException(Exception):
     def __init__(self, text):
         super().__init__(text)

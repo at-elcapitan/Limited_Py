@@ -1,8 +1,7 @@
-# AT PROJECT Limited 2022 - 2024; nEXT-v4.0_beta.1
-
+# AT PROJECT nEXT Reemerged; nXRE-v3.7_beta.4
 import asyncio
 from discord import ui, Embed, Interaction, ButtonStyle
-from player import Track
+from player import PlayableTrack
 
 
 class ListView(ui.View):
@@ -11,7 +10,7 @@ class ListView(ui.View):
 
     def __init__(
             self,
-            lst: list[Track],
+            lst: list[PlayableTrack],
             list_length: int,
             pages: int,
             page: int,
@@ -48,7 +47,7 @@ class ListView(ui.View):
         lines = []
 
         for index, item in enumerate(items, start=start):
-            if isinstance(item, Track):
+            if isinstance(item, PlayableTrack):
                 title = item.get_track().title
             else:
                 title = item[0] if isinstance(item, (list, tuple)) else str(item)

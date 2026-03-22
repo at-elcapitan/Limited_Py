@@ -1,9 +1,9 @@
 import os
 from dotenv import load_dotenv
 
+import mafic
 import discord
 import psycopg2
-import wavelink
 
 import utils
 import embeds
@@ -24,8 +24,22 @@ DBHOST = os.environ.get('DBHOST')         # PSQL database host ip address
 DBNAME = os.environ.get('DBNAME')         # PSQL database name
 
 bot = Bot(commands_prefix = "sc.", intents=discord.Intents.all())
+host_splitted = LVHOST.split(":")
 
+if (len(host_splitted) != 2):
+    logger.critical("Unexpected lavalink host:port value")
+    exit(-1)
+
+HOST = host_splitted[0]
+try:
+    PORT = int(host_splitted[1])
+except ValueError:
+    logger.critical("Unexpected lavalink port value")
+    exit(-1)
+
+# TODO: turn on at beta.4
 def db_connect():
+    return None
     try:
         conn = psycopg2.connect(
             host = DBHOST,
@@ -51,15 +65,19 @@ async def on_ready():
     
     bot.dispatch("guilds_sync")
 
-    node: wavelink.Node = wavelink.Node(uri=f'http://{LVHOST}', password=PASSWD)
-    await wavelink.Pool.connect(client=bot, nodes=[node])
+    await bot.pool.create_node(
+        host=HOST,
+        port=PORT,
+        label="Primary",
+        password=PASSWD
+    )
 
     utils.send_postinit_message()
     
 
 @bot.event
-async def on_wavelink_node_ready(payload: wavelink.NodeReadyEventPayload):
-    logger.info(f"Node \x1b[39;1mID: {payload.node.identifier}\x1b[39;0m ready.")
+async def on_node_ready(node: mafic.Node):
+    logger.info(f"Node \x1b[39;1mSession ID: {node.session_id}\x1b[39;0m ready.")
 
 
 @bot.command()

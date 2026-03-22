@@ -1,9 +1,9 @@
-# AT PROJECT Limited 2022 - 2024; nXRE-v3.7_beta.2
+# AT PROJECT nEXT Reemerged; nXRE-v3.7_beta.4
 import math
 import datetime
 
+import mafic
 import discord
-import wavelink
 from discord import ui
 from discord import Interaction
 from discord import ButtonStyle
@@ -13,7 +13,6 @@ from discord import app_commands
 import utils
 import player
 import messages
-import strparser
 from logger import logger
 from embeds import error_embed, event_embed
 
@@ -69,10 +68,10 @@ class music_cog(commands.Cog):
     # Technical functions
     async def check_user_in_voice(self, interaction: discord.Interaction) -> bool:
         if interaction.user.voice is None:
-                await interaction.response.send_message(
-                    embed=error_embed("870", "VC Error", "Can't get your voice channel"),
-                                      ephemeral=True)
-                return False
+            await interaction.response.send_message(
+                embed=error_embed("870", "VC Error", "Can't get your voice channel"),
+                                    ephemeral=True)
+            return False
 
         return True
     
@@ -89,17 +88,17 @@ class music_cog(commands.Cog):
 
     async def play(self, interaction: discord.Interaction, response: SongSearchResult):
         interaction_player: player.InteractionPlayer = None
-        voice_channel: wavelink.Player = None
 
         if not await self.check_user_in_voice(interaction):
             return
         
         try:
-            interaction_player = self.controller.get_player(interaction.guild_id)
-            voice_channel = interaction_player.get_voice_client()
+            interaction_player = self.controller.get_player(interaction.guild.id)
         except PlayerNotFoundException:
-            voice_channel = await interaction.user.voice.channel.connect(cls=wavelink.Player)
-            interaction_player = self.controller.create_player(interaction, voice_channel)
+            logger.error("Player must be initialized, but was not found (play)")
+            return
+
+        voice_client: mafic.Player = interaction_player.get_voice_client()
 
         if response is None:
             await interaction.response.send_message(embed=error_embed("872", 
@@ -109,8 +108,8 @@ class music_cog(commands.Cog):
         song = response.song
 
         if response.is_playlist:
-                for x in song.tracks: 
-                    interaction_player.add_song(x, interaction.user.name)
+            for x in song.tracks: 
+                interaction_player.add_song(x, interaction.user.name)
         else: 
             interaction_player.add_song(song, interaction.user.name)
         
@@ -118,10 +117,10 @@ class music_cog(commands.Cog):
             await interaction.response.send_message("Processing...", ephemeral=True)
         except discord.errors.NotFound:
             await interaction.channel.send("Unexpected error, cannot send message.")
-            await interaction_player.voice_client.disconnect()
+            await voice_client.disconnect()
             return
 
-        if voice_channel.playing and interaction_player.get_list_length() != 1:
+        if not voice_client.paused and interaction_player.get_list_length() != 1:
             self.bot.dispatch("return_message", interaction)
             return
               
@@ -293,16 +292,24 @@ class music_cog(commands.Cog):
 
         return loop_map.get(loop_state, ("🔁", ButtonStyle.gray, "unknown"))
 
-    def create_embed(self, track, loop_on, interaction_player) -> discord.Embed:
+    def create_embed(self, 
+                     track: player.PlayableTrack, 
+                     loop_on, 
+                     interaction_player: player.InteractionPlayer
+                     ) -> discord.Embed:
+        voice_client = interaction_player.get_voice_client()
+
         if track:
-            song_len = datetime.datetime.fromtimestamp(track.get_track().length / 1000).strftime("%M:%S")
+            current_track = track.get_track()
+
+            song_len = datetime.datetime.fromtimestamp(current_track.length / 1000).strftime("%M:%S")
             embed = discord.Embed(
-                title=track.get_track().title,
-                description=f"Song length: {song_len}\n\n> URL: [link]({track.get_track().uri})\n> Ordered by: `{track.get_user_requested()}`",
+                title=current_track.title,
+                description=f"Song length: {song_len}\n\n> URL: [link]({current_track.uri})\n> Ordered by: `{track.get_user_requested()}`",
                 color=0xa31eff
             )
 
-            footer = f"Loop: {loop_on}\nPosition: {interaction_player.get_position() + 1} of {interaction_player.get_list_length()}\nVolume: {interaction_player.get_voice_client().volume}%"
+            footer = f"Loop: {loop_on}\nPosition: {interaction_player.get_position() + 1} of {interaction_player.get_list_length()}\nVolume: {voice_client._volume}%"
             embed.set_footer(text = footer)
             return embed
         
@@ -312,7 +319,7 @@ class music_cog(commands.Cog):
             color=0xa31eff
         )
 
-        footer = f"Loop: {loop_on}\nPosition: 0 of 0 \nVolume: {interaction_player.get_voice_client().volume}%"
+        footer = f"Loop: {loop_on}\nPosition: 0 of 0 \nVolume: {voice_client._volume}%"
         embed.set_footer(text = footer)
 
         return embed
@@ -329,23 +336,23 @@ class music_cog(commands.Cog):
         except player.NotFound:
             await pl.send_message(embed, view, interaction)
 
-    async def get_song(self, query) -> SongSearchResult | None:
-        try:
-            song = await wavelink.Playable.search(query)
-        except wavelink.LavalinkLoadException:
+    async def get_song(self, voice_client: mafic.Player, query) -> SongSearchResult | None:
+        song = await voice_client.fetch_tracks(query)
+
+        if song is None:
             return None
 
-        if len(song) == 0:
-            return None
+        if type(song) is mafic.Playlist:
+            return SongSearchResult(song, is_playlist=True)
         
         song = song[0]
 
         return SongSearchResult(song, is_playlist=False)
        
     @commands.Cog.listener()
-    async def on_wavelink_track_end(self, payload: wavelink.TrackEndEventPayload):
-        payload_player = payload.player
-        reason = payload.reason
+    async def on_track_end(self, event: mafic.TrackEndEvent):
+        payload_player: mafic.Player = event.player
+        reason = event.reason
 
         try:
             interaction_player = self.controller.get_player(payload_player.guild.id)
@@ -355,17 +362,18 @@ class music_cog(commands.Cog):
 
         interaction = interaction_player.get_interaction()
 
-        if reason == "stopped" and\
+        if reason == mafic.EndReason.STOPPED and\
                 interaction_player.get_list_length() != 0:
             self.bot.dispatch("return_message", interaction)
 
-        if reason == 'finished':
+        if reason == mafic.EndReason.FINISHED:
             try:
                 interaction_player.next_song()
             except player.EndOfListException:
                 interaction_player.clear_list()
                 self.bot.dispatch("return_message", interaction)
                 return
+            
             self.bot.dispatch("handle_music", interaction)
             self.bot.dispatch("return_message", interaction)
 
@@ -389,14 +397,14 @@ class music_cog(commands.Cog):
 
         match button_id:
             case "down":
-                if not voice_client.volume == 0:
-                    await voice_client.set_volume(voice_client.volume - 10)
+                if not voice_client._volume == 0:
+                    await voice_client.set_volume(voice_client._volume - 10)
                     self.bot.dispatch("return_message", interaction)
                     await interaction.response.defer()
 
             case "up":
-                if not voice_client.volume == 150:
-                    await voice_client.set_volume(voice_client.volume + 10)
+                if not voice_client._volume == 150:
+                    await voice_client.set_volume(voice_client._volume + 10)
                     self.bot.dispatch("return_message", interaction)
                     await interaction.response.defer()
 
@@ -436,7 +444,7 @@ class music_cog(commands.Cog):
                 await interaction.response.defer()
 
             case "beg":
-                await voice_client.seek()
+                await voice_client.seek(0)
                 await interaction.response.defer()
 
             case "next":
@@ -465,7 +473,16 @@ class music_cog(commands.Cog):
     @app_commands.command(name="youtube", description="Play YouTube track")
     @app_commands.describe(query="Song name or link")
     async def play_yt(self, interaction: discord.Interaction, query: str):
-        response = await self.get_song(query)
+        try:
+            interaction_player = self.controller.get_player(interaction.guild_id)
+            voice_client = interaction_player.get_voice_client()
+        except PlayerNotFoundException:
+            voice_client = await interaction.user.voice.channel.connect(cls=mafic.Player)
+            interaction_player = self.controller.create_player(interaction, voice_client)
+        
+        voice_client = interaction_player.get_voice_client()
+
+        response = await self.get_song(voice_client, query)
         
         if response is None:
             await interaction.response.send_message(embed=error_embed("872", "Not found", "Can't find song"),
@@ -533,7 +550,7 @@ class music_cog(commands.Cog):
             return
 
         voice_client = interaction_player.get_voice_client()
-        if not voice_client.playing:
+        if voice_client.current is None:
             await interaction.response.send_message(
                 embed=error_embed("870.2", "Seek error", "Nothing is currently playing."),
                 ephemeral=True
@@ -605,7 +622,7 @@ class music_cog(commands.Cog):
         self.bot.dispatch("handle_music", interaction)
         await interaction.response.defer()
 
-    # Userlist
+"""     # Userlist
     # TODO: Revork at beta.3
     @group.command(name="display", description="Displaying user list")
     @app_commands.describe(page="List page")
@@ -784,4 +801,4 @@ class music_cog(commands.Cog):
 
         await interaction.response.send_message(embed=event_embed(name="✅ Success!", 
                                                 text=f'Song added to the list \n **{song.title}**'),
-                                                ephemeral=True)
+                                                ephemeral=True) """

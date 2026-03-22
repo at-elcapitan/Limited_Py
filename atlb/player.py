@@ -1,9 +1,9 @@
-# AT PROJECT Limited 2022 - 2024; nXRE-v3.7_beta.2
+# AT PROJECT nEXT Reemerged; nXRE-v3.7_beta.4
 from enum import Enum
 
 import discord
 from discord import Interaction, Message
-from wavelink import Playable, Player
+import mafic
 
 from logger import logger
 
@@ -26,13 +26,13 @@ class NotFound(Exception):
     def __init__(self) -> None:
         super().__init__("Message not initialized (not found)")
 
-class Track():
-    def __init__(self, track: Playable,
+class PlayableTrack():
+    def __init__(self, track: mafic.Track,
                  user_requested: str) -> None:
         self.user_requested: str = user_requested
-        self.track: Playable = track
+        self.track: mafic.Track = track
     
-    def get_track(self) -> Playable:
+    def get_track(self) -> mafic.Track:
         return self.track
     
     def get_user_requested(self) -> str:
@@ -41,10 +41,10 @@ class Track():
 
 class InteractionPlayer():
     def __init__(self, interaction: Interaction,
-                 voice_client: Player) -> None:
+                 voice_client: mafic.Player) -> None:
         self.interaction: Interaction = interaction
-        self.voice_client: Player = voice_client
-        self.track_list: list[Track] = list()
+        self.voice_client: mafic.Player = voice_client
+        self.track_list: list[PlayableTrack] = list()
         self.loop = LoopState.STRAIGHT
         self.position: int = 0
         self.msg: Message = None
@@ -69,19 +69,19 @@ class InteractionPlayer():
         
         self.position -= 1
 
-    def get_current_song(self) -> Track:
+    def get_current_song(self) -> PlayableTrack:
         if len(self.track_list) == 0:
             return None
         
         return self.track_list[self.position]
     
-    def get_song(self, position: int) -> Track:
+    def get_song(self, position: int) -> PlayableTrack:
         if position > len(self.track_list) - 1:
             raise ValueError
         
         return self.track_list[position]
     
-    def get_voice_client(self) -> Player:
+    def get_voice_client(self) -> mafic.Player:
         return self.voice_client
         
     def clear_list(self) -> None:
@@ -95,7 +95,7 @@ class InteractionPlayer():
     def get_list_length(self) -> int:
         return len(self.track_list)
     
-    def get_list(self) -> list[Track]:
+    def get_list(self) -> list[PlayableTrack]:
         return self.track_list
     
     def get_loop_state(self) -> LoopState:
@@ -119,8 +119,8 @@ class InteractionPlayer():
         
         self.loop = LoopState.LOOP
         
-    def add_song(self, song: Playable, user: str) -> None:
-        track = Track(song, user)
+    def add_song(self, song: mafic.Track, user: str) -> None:
+        track = PlayableTrack(song, user)
         self.track_list.append(track)
 
     def get_interaction(self):
