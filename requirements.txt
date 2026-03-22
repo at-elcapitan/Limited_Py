@@ -5,3 +5,4 @@ colorama
 psycopg2
 pynacl
 davey
+python_dotenv
