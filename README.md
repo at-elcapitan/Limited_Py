@@ -57,15 +57,9 @@ git update-index --skip-worktree docker-compose.yaml
 | ----------------- | -------------------------------------------------- |
 | sc.inspect        | Displays all command list                          |
 | /youtube          | Play a YouTube track                               |
-| /soundcloud       | Play a SoundCloud track                            |
 | /resend_control   | Resend the music control panel                     |
 | /seek             | Seek the current soundtrack                        |
 | /remove           | Delete a song from the queue                       |
-| /list display     | Display the user list                              |
-| /list remove      | Remove a song from the user list                   |
-| /list add         | Add a song to the user list                        |
-| /list add_current | Adds current (playing) song from queue to list     |
-| /list play        | Play songs from the user list                      |
 | /jmp              | Changes song to position                           |
 
 ## Using external PostgreSQL Database
