@@ -1,4 +1,4 @@
-# AT PROJECT nEXT Reemerged; nXRE-v3.7_beta.4
+# AT PROJECT nEXT Reemerged; nXRE-v3.7
 from mafic import NodePool
 from discord.ext import commands
 from logger import logger

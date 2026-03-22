@@ -3,7 +3,7 @@ from dotenv import load_dotenv
 
 import mafic
 import discord
-import psycopg2
+# import psycopg2
 
 import utils
 import embeds
@@ -18,10 +18,10 @@ load_dotenv()
 TOKEN  = os.environ.get('DISCORD_TOKEN')  # Discord token
 PASSWD = os.environ.get('PASSWD')         # Lavalink password
 LVHOST = os.environ.get('LVHOST')         # Lavalink host ip address
-DBUSER = os.environ.get('DBUSER')         # PSQL database username  
+""" DBUSER = os.environ.get('DBUSER')         # PSQL database username  
 DBPASS = os.environ.get('DBPASS')         # PSQL database password
 DBHOST = os.environ.get('DBHOST')         # PSQL database host ip address
-DBNAME = os.environ.get('DBNAME')         # PSQL database name
+DBNAME = os.environ.get('DBNAME')         # PSQL database name """
 
 bot = Bot(commands_prefix = "sc.", intents=discord.Intents.all())
 host_splitted = LVHOST.split(":")
@@ -37,10 +37,10 @@ except ValueError:
     logger.critical("Unexpected lavalink port value")
     exit(-1)
 
-# TODO: turn on at beta.4
+# TODO: turn on at 3.8
 def db_connect():
     return None
-    try:
+"""     try:
         conn = psycopg2.connect(
             host = DBHOST,
             database = DBNAME,
@@ -52,7 +52,7 @@ def db_connect():
         exit(-1)
         
     logger.info("Connected to PSQL database")
-    return conn
+    return conn """
 
 
 @bot.event
@@ -77,7 +77,7 @@ async def on_ready():
 
 @bot.event
 async def on_node_ready(node: mafic.Node):
-    logger.info(f"Node \x1b[39;1mSession ID: {node.session_id}\x1b[39;0m ready.")
+    logger.info(f"Node Session ID: \x1b[39;1m{node.session_id}\x1b[39;0m ready.")
 
 
 @bot.command()
@@ -85,7 +85,7 @@ async def inspect(ctx):
     await ctx.send(embed=embeds.default())
 
 if __name__ == "__main__":
-    if None in [TOKEN, PASSWD, DBHOST, DBPASS, DBUSER, DBNAME]:
+    if None in [TOKEN, PASSWD, LVHOST]: # , DBHOST, DBPASS, DBUSER, DBNAME
         raise(FileError('.env', 'corrupt'))
     logger.info("Files checked")
 

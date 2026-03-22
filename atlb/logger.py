@@ -1,4 +1,4 @@
-# AT PROJECT nEXT Reemerged; nXRE-v3.7_beta.4
+# AT PROJECT nEXT Reemerged; nXRE-v3.7
 import os
 import sys
 import logging

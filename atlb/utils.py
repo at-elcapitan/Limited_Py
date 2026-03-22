@@ -1,4 +1,4 @@
-# AT PROJECT nEXT Reemerged; nXRE-v3.7_beta.4
+# AT PROJECT nEXT Reemerged; nXRE-v3.7
 from datetime import datetime
 
 import discord
@@ -22,7 +22,7 @@ def send_postinit_message():
 
     print()
     print(f"  __          {Colors.CYAN}{Colors.BOLD}nXRE {Colors.ENDC}{Colors.YELLOW}Release Lambda{Colors.ENDC}",
-          f"{Colors.BOLD}{Colors.CYAN}Version {Colors.ENDC}{Colors.YELLOW}3.7β3{Colors.ENDC}")
+          f"{Colors.BOLD}{Colors.CYAN}Version {Colors.ENDC}{Colors.YELLOW}3λ7{Colors.ENDC}")
     print("  \\ \\")
     print(f"   > \\        {Colors.CYAN}{Colors.BOLD}Start Time:         {Colors.ENDC}{start_time}")
     print(f"  / ^ \\       {Colors.CYAN}{Colors.BOLD}discord.py Version: {Colors.ENDC}{discord.__version__}")

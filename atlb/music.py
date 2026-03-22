@@ -622,8 +622,8 @@ class music_cog(commands.Cog):
         self.bot.dispatch("handle_music", interaction)
         await interaction.response.defer()
 
+    # TODO: Revork and enable at 3.8
 """     # Userlist
-    # TODO: Revork at beta.3
     @group.command(name="display", description="Displaying user list")
     @app_commands.describe(page="List page")
     async def user_list_print(self, interaction: discord.Interaction, page: int = 0):

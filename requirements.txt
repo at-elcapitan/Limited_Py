@@ -4,3 +4,4 @@ pydantic
 colorama
 psycopg2
 pynacl
+davey
