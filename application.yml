@@ -13,18 +13,18 @@ plugins:
     # The clients to use for track loading. See below for a list of valid clients.
     # Clients are queried in the order they are given (so the first client is queried first and so on...)
     clients:
-      - MUSIC
-      - ANDROID_VR
-      - WEB
-      - WEBEMBEDDED 
+    - MUSIC
+    - ANDROID_VR
+    - WEB
+    - WEBEMBEDDED
 
 lavalink:
   lavalink:
   plugins:
-    - dependency: "dev.lavalink.youtube:youtube-plugin:1.18.0"
-      snapshot: false
+  - dependency: dev.lavalink.youtube:youtube-plugin:1.18.0
+    snapshot: false
   server:
-    password: "youshallnotpass"
+    password: youshallnotpass
     sources:
       youtube: false
       bandcamp: true
@@ -63,5 +63,5 @@ metrics:
     endpoint: /metrics
 
 sentry:
-  dsn: ""
-  environment: ""
+  dsn: ''
+  environment: ''

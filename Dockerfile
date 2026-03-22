@@ -1,9 +1,11 @@
 FROM python:3.10-alpine
-WORKDIR /docker_nextbot
-RUN apk add --no-cache gcc musl-dev linux-headers postgresql libpq-dev
+
+WORKDIR /opt/nxre
+
 COPY requirements.txt requirements.txt
-RUN pip install -r requirements.txt
 COPY atlb/ atlb/
-ENV TZ=Europe/Kyiv
-COPY . .
+
+RUN apk add --no-cache gcc musl-dev linux-headers postgresql libpq-dev
+RUN pip install --no-cache-dir -r requirements.txt
+
 CMD ["python", "atlb"]

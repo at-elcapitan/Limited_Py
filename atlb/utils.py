@@ -1,8 +1,9 @@
-# AT PROJECT nEXT Reemerged; nXRE-v3.7
+# AT PROJECT nEXT Reemerged; nXRE-v3.7.1
 from datetime import datetime
 
 import discord
-import wavelink
+import mafic
+
 
 class Colors:
     CYAN = '\033[96m'
@@ -11,20 +12,22 @@ class Colors:
     YELLOW = '\033[93m'
     UNDERLINE = '\033[4m'
 
+
 def truncate_title(title, max_length=65):
     if len(title) > max_length:
         return title[:max_length - 3] + "..."
     
     return title
 
+
 def send_postinit_message():
     start_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
     print()
     print(f"  __          {Colors.CYAN}{Colors.BOLD}nXRE {Colors.ENDC}{Colors.YELLOW}Release Lambda{Colors.ENDC}",
-          f"{Colors.BOLD}{Colors.CYAN}Version {Colors.ENDC}{Colors.YELLOW}3λ7{Colors.ENDC}")
+          f"{Colors.BOLD}{Colors.CYAN}Version {Colors.ENDC}{Colors.YELLOW}3.7.1 Rλ{Colors.ENDC}")
     print("  \\ \\")
-    print(f"   > \\        {Colors.CYAN}{Colors.BOLD}Start Time:         {Colors.ENDC}{start_time}")
-    print(f"  / ^ \\       {Colors.CYAN}{Colors.BOLD}discord.py Version: {Colors.ENDC}{discord.__version__}")
-    print(f" /_/ \\_\\      {Colors.CYAN}{Colors.BOLD}wavelink Version:   {Colors.ENDC}{wavelink.__version__}")
+    print(f"   > \\        {Colors.CYAN}{Colors.BOLD}Start Time:          {Colors.ENDC}{start_time}")
+    print(f"  / ^ \\       {Colors.CYAN}{Colors.BOLD}discord.py Version:  {Colors.ENDC}{discord.__version__}")
+    print(f" /_/ \\_\\      {Colors.CYAN}{Colors.BOLD}mafic Version:       {Colors.ENDC}{mafic.__version__}")
     print()

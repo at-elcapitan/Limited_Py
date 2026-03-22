@@ -3,7 +3,6 @@ __pycache__
 
 # Bot
 logs
-lvlnk
 *.env
 files
 venv
@@ -11,9 +10,7 @@ venvl
 run.sh
 *.jar
 plugins/
+pg_data/
 
 # VS Code
 .vscode
-
-# Snyk Security Extension - AI Rules (auto-generated)
-.github/instructions/snyk_rules.instructions.md
