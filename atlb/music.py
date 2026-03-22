@@ -1,4 +1,4 @@
-# AT PROJECT nEXT Reemerged; nXRE-v3.7_beta.4
+# AT PROJECT nEXT Reemerged; nXRE-v3.7.1
 import math
 import datetime
 
@@ -15,6 +15,7 @@ import player
 import messages
 from logger import logger
 from embeds import error_embed, event_embed
+
 
 class PlayerNotFoundException(Exception):
     def __init__(self, player_guild: int):
@@ -116,7 +117,11 @@ class music_cog(commands.Cog):
         try:
             await interaction.response.send_message("Processing...", ephemeral=True)
         except discord.errors.NotFound:
-            await interaction.channel.send("Unexpected error, cannot send message.")
+            await interaction.channel.send(
+                "Unexpected error, cannot send message. Try executing command later"
+            )
+            
+            self.controller.remove_player(interaction.guild_id)
             await voice_client.disconnect()
             return
 
@@ -297,8 +302,6 @@ class music_cog(commands.Cog):
                      loop_on, 
                      interaction_player: player.InteractionPlayer
                      ) -> discord.Embed:
-        voice_client = interaction_player.get_voice_client()
-
         if track:
             current_track = track.get_track()
 
@@ -309,7 +312,7 @@ class music_cog(commands.Cog):
                 color=0xa31eff
             )
 
-            footer = f"Loop: {loop_on}\nPosition: {interaction_player.get_position() + 1} of {interaction_player.get_list_length()}\nVolume: {voice_client._volume}%"
+            footer = f"Loop: {loop_on}\nPosition: {interaction_player.get_position() + 1} of {interaction_player.get_list_length()}\nVolume: {interaction_player.current_volume}%"
             embed.set_footer(text = footer)
             return embed
         
@@ -319,7 +322,7 @@ class music_cog(commands.Cog):
             color=0xa31eff
         )
 
-        footer = f"Loop: {loop_on}\nPosition: 0 of 0 \nVolume: {voice_client._volume}%"
+        footer = f"Loop: {loop_on}\nPosition: 0 of 0 \nVolume: {interaction_player.current_volume}%"
         embed.set_footer(text = footer)
 
         return embed
@@ -357,7 +360,7 @@ class music_cog(commands.Cog):
         try:
             interaction_player = self.controller.get_player(payload_player.guild.id)
         except PlayerNotFoundException:
-            logger.error("Player must be initialized but not found (on_wavelink_track_end)")
+            logger.error("Player must be initialized but not found (on_track_end)")
             return
 
         interaction = interaction_player.get_interaction()
@@ -397,14 +400,16 @@ class music_cog(commands.Cog):
 
         match button_id:
             case "down":
-                if not voice_client._volume == 0:
-                    await voice_client.set_volume(voice_client._volume - 10)
+                if not interaction_player.current_volume == 0:
+                    await voice_client.set_volume(interaction_player.current_volume - 10)
+                    interaction_player.add_volume(-10)
                     self.bot.dispatch("return_message", interaction)
                     await interaction.response.defer()
 
             case "up":
-                if not voice_client._volume == 150:
-                    await voice_client.set_volume(voice_client._volume + 10)
+                if not interaction_player.current_volume == 150:
+                    await voice_client.set_volume(interaction_player.current_volume + 10)
+                    interaction_player.add_volume(10)
                     self.bot.dispatch("return_message", interaction)
                     await interaction.response.defer()
 

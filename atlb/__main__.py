@@ -1,8 +1,10 @@
 import os
+import asyncio
 from dotenv import load_dotenv
 
 import mafic
 import discord
+from aiohttp.client_exceptions import ClientConnectionError
 # import psycopg2
 
 import utils
@@ -65,12 +67,20 @@ async def on_ready():
     
     bot.dispatch("guilds_sync")
 
-    await bot.pool.create_node(
-        host=HOST,
-        port=PORT,
-        label="Primary",
-        password=PASSWD
-    )
+    while True:
+        try:
+            await bot.pool.create_node(
+                host=HOST,
+                port=PORT,
+                label="Primary",
+                password=PASSWD
+            )
+        except ClientConnectionError:
+            logger.warning("Unable to connect to lavalink, retrying")
+
+            await asyncio.sleep(5)
+            continue
+        break
 
     utils.send_postinit_message()
     

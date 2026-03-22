@@ -1,6 +1,6 @@
 # nEXT Reemerged (nXRE)
 
-nXRE (formerly nEXT) is a music bot for Discord. It is written in Python and utilizes the Discord.py 2.0 library along with the Wavelink library for music functionality.
+Limited nEXT is a music bot for Discord, part of the 'Limited' bot family. It is written in Python and utilizes the Discord.py 2.0 library along with the Mafic library for music functionality.
 
 ## About
 
@@ -17,10 +17,9 @@ Clone this repository to your local machine using the Git program:
  git clone https://github.com/at-elcapitan/Limited_Py.git
 ```
 
-
 ### Configuring
 
-Create a `docker.env` file in the bot's directory and fill it with your specific values. The file should follow this pattern:
+Create a `.env` file in the bot's directory and fill it with your specific values. The file should follow this pattern:
 
 ```yaml
 DISCORD_TOKEN=your_token
@@ -61,40 +60,3 @@ git update-index --skip-worktree docker-compose.yaml
 | /seek             | Seek the current soundtrack                        |
 | /remove           | Delete a song from the queue                       |
 | /jmp              | Changes song to position                           |
-
-## Using external PostgreSQL Database
-
-For using your own external DB, you have to edit `docker-compose.yaml`. Use this pattern:
-
-```yaml
-version: '3.8'
-
-services:
-  nEXT:
-    restart: unless-stopped
-    image: atproject/limitednext:lastest
-    container_name: limitednext
-    build:
-      context: .
-      dockerfile: ./Dockerfile
-    network_mode: host
-    depends_on:
-      - lavalink
-    command: python atlb
-    env_file: docker.env
-
-  lavalink:
-    image: ghcr.io/lavalink-devs/lavalink:4
-    container_name: lavalink
-    restart: unless-stopped
-    environment:
-      - _JAVA_OPTIONS=-Xmx6G
-      - SERVER_PORT=2333
-      - LAVALINK_SERVER_PASSWORD=youshallnotpass
-    volumes:
-      - ./application.yml:/opt/Lavalink/application.yml
-    expose:
-      - 2333
-    ports:
-      - "2333:2333"
-```

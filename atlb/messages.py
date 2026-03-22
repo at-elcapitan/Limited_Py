@@ -1,4 +1,4 @@
-# AT PROJECT nEXT Reemerged; nXRE-v3.7_beta.4
+# AT PROJECT nEXT Reemerged; nXRE-v3.7
 import asyncio
 from discord import ui, Embed, Interaction, ButtonStyle
 from player import PlayableTrack

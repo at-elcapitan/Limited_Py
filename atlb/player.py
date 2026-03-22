@@ -1,4 +1,4 @@
-# AT PROJECT nEXT Reemerged; nXRE-v3.7
+# AT PROJECT nEXT Reemerged; nXRE-v3.7.1
 from enum import Enum
 
 import discord
@@ -22,9 +22,11 @@ class NoneVoiceClientException(Exception):
     def __init__(self) -> None:
         super().__init__("Voice client is None")
 
+
 class NotFound(Exception):
     def __init__(self) -> None:
         super().__init__("Message not initialized (not found)")
+
 
 class PlayableTrack():
     def __init__(self, track: mafic.Track,
@@ -48,6 +50,7 @@ class InteractionPlayer():
         self.loop = LoopState.STRAIGHT
         self.position: int = 0
         self.msg: Message = None
+        self.current_volume = 100
 
     def next_song(self, change_track: bool = False) -> None:
         if len(self.track_list) - 1 == self.position and\
@@ -100,6 +103,9 @@ class InteractionPlayer():
     
     def get_loop_state(self) -> LoopState:
         return self.loop
+    
+    def add_volume(self, volume: int):
+        self.current_volume += volume
     
     def set_position(self, position: int) -> None:
         """Sets new position. Raises IndexError"""
